@@ -198,11 +198,11 @@ function HouseholdForm({
       TransitionComponent={Transition}
       keepMounted
       PaperProps={{
-        sx: { minWidth: "900px" },
+        sx: { minWidth: "500px" },
       }}
     >
       <>
-        <DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>
           {selectedHousehold ? "Edit Household" : "Add Household"}
         </DialogTitle>
         <DialogContent>
@@ -211,13 +211,9 @@ function HouseholdForm({
               {error}
             </Alert>
           )}
-
-          {/* INPUT GRID */}
           <Box
             sx={{
               display: "grid",
-              gridTemplateRows: { xs: "auto", md: "repeat(2, 1fr)" },
-              gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
               gridAutoFlow: "row",
               gap: 2,
             }}

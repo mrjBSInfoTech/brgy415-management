@@ -21,9 +21,19 @@ const handleError = (error) => {
     throw new Error("Server not responding");
   } else {
     // Something else happened
-    throw new Error("Unexpected error occurred");
+    console.error("Request error:", error.message);
+    throw new Error("Unexpected error occurred: " + error.message);
   }
 };
+
+// Interceptor to add token to all requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 /* ============================
    AUTHENTICATION REQUESTS
@@ -45,6 +55,8 @@ export const loginUser = async ({ username, password }) => {
 // LOGOUT (frontend only)
 export const logoutUser = () => {
   localStorage.removeItem("token");
+  localStorage.removeItem("official_account_id");
+  localStorage.removeItem("password_changed");
   localStorage.removeItem("username");
   localStorage.removeItem("first_name");
   localStorage.removeItem("last_name");
@@ -64,4 +76,17 @@ export const isAuthenticated = () => {
 // GET TOKEN
 export const getToken = () => {
   return localStorage.getItem("token");
+};
+
+// CHANGE PASSWORD
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    const res = await api.put("/authentication/changePassword", {
+      currentPassword,
+      newPassword,
+    });
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
 };

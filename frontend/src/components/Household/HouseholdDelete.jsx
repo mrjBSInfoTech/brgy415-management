@@ -81,7 +81,7 @@ function HouseholdDelete({
       keepMounted
     >
       <>
-        <DialogTitle>Delete Household</DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>Delete Household</DialogTitle>
         <DialogContent>
           <Typography>
             Are you sure you want to delete <strong>{householdName}</strong>? This action cannot be undone.

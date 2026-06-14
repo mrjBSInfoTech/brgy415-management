@@ -199,7 +199,7 @@ function FilesForm({
       }}
     >
       <>
-        <DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>
           {selectedFile ? "Edit File" : "Add File"}
         </DialogTitle>
         <DialogContent>

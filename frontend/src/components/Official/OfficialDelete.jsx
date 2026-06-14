@@ -81,7 +81,7 @@ function OfficialDelete({
       keepMounted
     >
       <>
-        <DialogTitle>Delete Official</DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>Delete Official</DialogTitle>
         <DialogContent>
           <Typography>
             Are you sure you want to delete <strong>{officialName}</strong>? This action cannot be undone.

@@ -73,7 +73,7 @@ export default function ResidentCard({ residents, onEdit, onDelete, households =
           <Box
             sx={{
               width: "100%",
-              height: 200,
+              height: 300,
               position: "relative",
               backgroundColor: "#f5f5f5",
               overflow: "hidden",

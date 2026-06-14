@@ -304,7 +304,7 @@ function AnnouncementForm({
       }}
     >
       <>
-        <DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>
           {selectedAnnouncement ? "Edit Announcement" : "Add Announcement"}
         </DialogTitle>
         <DialogContent>

@@ -13,6 +13,8 @@ import DialogActions from "@mui/material/DialogActions";
 import Fade from "@mui/material/Fade";
 import Slide from "@mui/material/Slide";
 import Modal from "@mui/material/Modal";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import { modalStyles } from "../theme/modalTheme";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Stack, Avatar, Typography, Divider, IconButton } from "@mui/material";
@@ -31,8 +33,10 @@ import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import GroupIcon from "@mui/icons-material/Group";
 import HistoryIcon from "@mui/icons-material/History";
 import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PersonIcon from "@mui/icons-material/Person";
 import PostAddIcon from "@mui/icons-material/PostAdd";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 // Animation transition
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -51,6 +55,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 export default function DashboardLayout({ children }) {
+  const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState("");
@@ -61,6 +66,8 @@ export default function DashboardLayout({ children }) {
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+  const [openInfoDialog, setOpenInfoDialog] = useState(false);
+  const openMenu = Boolean(anchorEl);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("username");
@@ -76,6 +83,14 @@ export default function DashboardLayout({ children }) {
     setImage(storedImage || "");
   }, []);
 
+  // Open/Close option handlers
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   // Simulated router (for Toolpad)
   const router = {
     pathname: location.pathname,
@@ -90,6 +105,7 @@ export default function DashboardLayout({ children }) {
     localStorage.removeItem("can_add");
     localStorage.removeItem("can_edit");
     localStorage.removeItem("can_delete");
+    localStorage.removeItem("password_changed");
     localStorage.removeItem("first_name");
     localStorage.removeItem("last_name");
     localStorage.removeItem("position");
@@ -142,6 +158,7 @@ export default function DashboardLayout({ children }) {
       icon: <PostAddIcon />,
       pattern: "/announcements",
     },
+    // Only for Admin Panel
     ...(isAdmin
       ? [
           {
@@ -164,7 +181,13 @@ export default function DashboardLayout({ children }) {
             pattern: "/citizens",
           },
         ]
-      : []), // Only for Admins
+      : []), 
+    {
+      segment: "settings",
+      title: "Settings",
+      icon: <SettingsIcon />,
+      pattern: "/settings",
+    },
   ];
 
   const branding = {
@@ -212,6 +235,8 @@ export default function DashboardLayout({ children }) {
         borderColor: "divider",
         backgroundColor: theme.palette.background.sidebar,
         color: theme.palette.text.sidebar,
+        // Force it down if the parent allows flex growth
+        mt: "auto",
       }}
     >
       <Stack direction="row" spacing={1.5} alignItems="center">
@@ -285,14 +310,14 @@ export default function DashboardLayout({ children }) {
             },
           }}
         >
-          <DialogTitle>Log out</DialogTitle>
+          <DialogTitle sx={{fontWeight:'bold'}}>Log out</DialogTitle>
           <DialogContent>
             <DialogContentText>
               Are you sure you want to log out?
             </DialogContentText>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose} color="primary">
+            <Button onClick={handleClose} color="secondary">
               Cancel
             </Button>
             <Button onClick={handleLogout} variant="contained" color="primary">
@@ -306,6 +331,18 @@ export default function DashboardLayout({ children }) {
             sidebarFooter: SidebarFooter,
           }}
           sx={{
+            "& .MuiDrawer-paper .MuiBox-root": {
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+            },
+
+            "& .MuiDrawer-paper": {
+              backgroundColor: theme.palette.background.sidebar,
+              color: theme.palette.text.sidebar,
+              borderRight: "none",
+            },
+
             "& .MuiDrawer-paper": {
               backgroundColor: theme.palette.background.sidebar,
               color: theme.palette.text.sidebar,

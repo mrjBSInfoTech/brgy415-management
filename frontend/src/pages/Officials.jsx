@@ -3,6 +3,10 @@ import { Helmet } from "react-helmet-async";
 import {
   Box,
   Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
   Paper,
   TextField,
   Typography,
@@ -47,6 +51,7 @@ export default function Officials() {
   const [searchQuery, setSearchQuery] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [sortOption, setSortOption] = useState("verified");
   const [loading, setLoading] = useState(false);
   const [part, setPart] = useState(1);
 
@@ -209,10 +214,11 @@ export default function Officials() {
   // Filter officials based on search query
   const filteredOfficials = useMemo(() => {
     return officials.filter((official) => {
-      const fullName = `${official.first_name || ""} ${official.last_name || ""}`.toLowerCase();
+      const fullName =
+        `${official.first_name || ""} ${official.last_name || ""}`.toLowerCase();
       const position = (official.position || "").toLowerCase();
-      const matchesSearch = 
-        fullName.includes(searchQuery.toLowerCase()) || 
+      const matchesSearch =
+        fullName.includes(searchQuery.toLowerCase()) ||
         position.includes(searchQuery.toLowerCase());
       return matchesSearch;
     });
@@ -232,6 +238,14 @@ export default function Officials() {
   // Toggle handlers
   const goToPartTwo = () => setPart(2);
   const goToPartOne = () => setPart(1);
+
+  useEffect(() => {
+    if (sortOption === "officials") {
+      setPart(1);
+    } else if (sortOption === "access") {
+      setPart(2);
+    }
+  }, [sortOption]);
 
   return (
     <Box p={3}>
@@ -298,6 +312,31 @@ export default function Officials() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
+              width: { xs: "100%", md: "auto" },
+            }}
+          >
+            <FormControl
+              size="small"
+              sx={{
+                width: { xs: "100%", sm: 180 },
+              }}
+            >
+              <InputLabel>Page</InputLabel>
+              <Select
+                value={sortOption}
+                label="Sort"
+                onChange={(e) => setSortOption(e.target.value)}
+              >
+                <MenuItem value="officials">Officials</MenuItem>
+                <MenuItem value="access">Access Control</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
         </Box>
       </Paper>
 
@@ -315,6 +354,7 @@ export default function Officials() {
             <Typography variant="h6" sx={{ mb: 2 }}>
               Official List
             </Typography>
+            {/*
             <Button
               variant="contained"
               color="primary"
@@ -329,6 +369,7 @@ export default function Officials() {
             >
               Access Control
             </Button>
+            */}
           </Box>
           {loading && (
             <LinearProgress
@@ -381,6 +422,7 @@ export default function Officials() {
             <Typography variant="h6" sx={{ mb: 2 }}>
               Official Access Control
             </Typography>
+            {/* // For future use 
             <Button
               variant="contained"
               color="primary"
@@ -395,6 +437,7 @@ export default function Officials() {
             >
               Back
             </Button>
+            */}
           </Box>
           {loading && (
             <LinearProgress

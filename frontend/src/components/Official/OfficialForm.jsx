@@ -88,34 +88,6 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   );
 });
 
-// Helper function to get local date string (YYYY-MM-DD) without timezone conversion
-const getLocalDateString = (dateValue = null) => {
-  let date;
-  
-  if (dateValue) {
-    // If a date value is provided, parse it
-    if (dateValue instanceof Date) {
-      date = dateValue;
-    } else {
-      // If it's a string like "2024-03-13" or "2024-03-13T00:00:00", just extract the date part
-      const dateStr = String(dateValue);
-      if (dateStr.includes('T')) {
-        return dateStr.split('T')[0]; // Already in correct format, just extract
-      }
-      return dateStr; // Already in YYYY-MM-DD format
-    }
-  } else {
-    // Use today's local date
-    date = new Date();
-  }
-  
-  // Get local date components (not UTC)
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
-
 function OfficialForm({
   open,
   handleClose,
@@ -123,14 +95,6 @@ function OfficialForm({
   selectedOfficial,
   mode = "form",
 }) {
-  // Helper function to get local date without timezone conversion
-  const getLocalDateString = () => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  };
 
   const [formData, setFormData] = useState({
     first_name: "",
@@ -179,8 +143,8 @@ function OfficialForm({
         last_name: selectedOfficial.last_name
           ? String(selectedOfficial.last_name)
           : "",
-        dob: selectedOfficial.dob 
-          ? getLocalDateString(selectedOfficial.dob)
+        dob: selectedOfficial.dob
+          ? String(selectedOfficial.dob)
           : "",
         position: selectedOfficial.position
           ? String(selectedOfficial.position)
@@ -197,7 +161,9 @@ function OfficialForm({
 
       // Set image preview for existing official only
       if (selectedOfficial.image) {
-        setImagePreview(`http://localhost:5000/uploads/uploadOfficial/${selectedOfficial.image}`);
+        setImagePreview(
+          `http://localhost:5000/uploads/uploadOfficial/${selectedOfficial.image}`,
+        );
       } else {
         setImagePreview(null);
       }
@@ -260,14 +226,25 @@ function OfficialForm({
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
     if (file) {
-      // Store the actual File object and clear old image data
-      setFormData((prev) => ({
-        ...prev,
-        file: file,
-        image: "", // Clear previous image filename when new file is selected
-      }));
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadError(
+          `File size exceeds 2MB limit. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+          "error",
+        );
+        setImagePreview(null);
+        setFormData((prev) => ({
+          ...prev,
+          file: null,
+          image: "",
+        }));
+        return;
+      }
+
+      setUploadError(""); // Clear error if file is valid
 
       // Create preview
       const reader = new FileReader();
@@ -355,14 +332,18 @@ function OfficialForm({
     <Dialog
       open={open}
       onClose={handleClose}
+      disableRestoreFocus
       TransitionComponent={Transition}
       keepMounted
       PaperProps={{
-        sx: { minWidth: "1000px" },
+        sx: {
+          minWidth: { xs: "90%", sm: "600px", md: "600px" },
+          width: "100%",
+        },
       }}
     >
       <>
-        <DialogTitle>
+        <DialogTitle sx={{ fontWeight: "bold" }}>
           {selectedOfficial ? "Edit Official" : "Add Official"}
         </DialogTitle>
         <DialogContent>
@@ -372,119 +353,21 @@ function OfficialForm({
             </Alert>
           )}
 
-          <Box sx={{ display: "flex", gap: 3 }}>
-            {/* LEFT SIDE - INPUT GRID */}
-            <Box
-              sx={{
-                flex: 3,
-                display: "grid",
-                gridTemplateRows: { xs: "auto", md: "repeat(3, 1fr)" },
-                gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-                gridAutoFlow: "row",
-                gap: 2,
-              }}
-            >
-              {/* First Name */}
-              <TextField
-                label="First Name"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-                autoFocus
-              />
+          {uploadError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {uploadError}
+            </Alert>
+          )}
 
-              {/* Middle Name */}
-              <TextField
-                label="Middle Name"
-                name="middle_name"
-                value={formData.middle_name}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Last Name */}
-              <TextField
-                label="Last Name"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Date of Birth */}
-              <TextField
-                label="Date of Birth"
-                name="dob"
-                type="date"
-                value={formData.dob}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-                margin="dense"
-              />
-
-
-              {/* Email */}
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Phone Number */}
-              <TextField
-                label="Phone Number"
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Position */}
-              <FormControl fullWidth margin="dense">
-                <InputLabel>Position</InputLabel>
-                <Select
-                  label="Position"
-                  name="position"
-                  value={formData.position}
-                  onChange={handleChange}
-                >
-                  <MenuItem value="Barangay Captain">Barangay Captain</MenuItem>
-                  <MenuItem value="Secretary">Secretary</MenuItem>
-                  <MenuItem value="Treasurer">Treasurer</MenuItem>
-                  <MenuItem value="Kagawad">Kagawad</MenuItem>
-                  <MenuItem value="Barangay Tanod">Barangay Tanod</MenuItem>
-                  <MenuItem value="Health Worker">SK Chairman</MenuItem>
-                  <MenuItem value="Midwife">SK Kagawad</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* Address */}
-              <TextField
-                label="Address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-                multiline
-                rows={1}
-                sx={{ gridColumn: "2 / -1" }}
-              />
-            </Box>
-
-            {/* Image Upload with Permanent Preview Box */}
-            <Box sx={{ flex: 1 }}>
-              {/* ALWAYS VISIBLE PREVIEW CONTAINER */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+              alignItems: "center",
+            }}
+          >
+            <Box sx={{ width: "100%", maxWidth: "300px" }}>
               <Box
                 sx={{
                   width: "100%",
@@ -520,6 +403,114 @@ function OfficialForm({
                 accept="image/*"
                 onChange={handleFileChange}
                 style={{ width: "100%" }}
+              />
+            </Box>
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: "600px",
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+                gap: 2,
+              }}
+            >
+              {/* First Name */}
+              <TextField
+                label="First Name"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Middle Name */}
+              <TextField
+                label="Middle Name"
+                name="middle_name"
+                value={formData.middle_name}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Last Name */}
+              <TextField
+                label="Last Name"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Date of Birth*/}
+              <TextField
+                label="Date of Birth"
+                name="dob"
+                type="date"
+                value={formData.dob}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Phone Number */}
+              <TextField
+                label="Phone Number"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Email */}
+              <TextField
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Position*/}
+              <FormControl
+                fullWidth
+                margin="dense"
+                sx={{ gridColumn: "1 / -1" }}
+              >
+                <InputLabel>Position</InputLabel>
+                <Select
+                  label="Position"
+                  name="position"
+                  value={formData.position}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="Barangay Captain">Barangay Captain</MenuItem>
+                  <MenuItem value="Secretary">Secretary</MenuItem>
+                  <MenuItem value="Treasurer">Treasurer</MenuItem>
+                  <MenuItem value="Kagawad">Kagawad</MenuItem>
+                  <MenuItem value="Barangay Tanod">Barangay Tanod</MenuItem>
+                  <MenuItem value="Health Worker">SK Chairman</MenuItem>
+                  <MenuItem value="Midwife">SK Kagawad</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Address - Full Width */}
+              <TextField
+                label="Address"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+                multiline
+                rows={2}
+                sx={{ gridColumn: "1 / -1" }}
               />
             </Box>
           </Box>

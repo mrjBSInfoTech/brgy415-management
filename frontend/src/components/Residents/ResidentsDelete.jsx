@@ -81,7 +81,7 @@ function ResidentsDelete({
       keepMounted
     >
       <>
-        <DialogTitle>Delete Resident</DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>Delete Resident</DialogTitle>
         <DialogContent>
           <Typography>
             Are you sure you want to delete <strong>{residentName}</strong>? This action cannot be undone.

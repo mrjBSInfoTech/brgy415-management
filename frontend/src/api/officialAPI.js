@@ -179,6 +179,16 @@ export const updateOfficial = async (id, officialData) => {
   }
 };
 
+// Update official account (password, permissions, etc.)
+export const updateOfficialAccount = async (id, accountData) => {
+  try {
+    const res = await api.put(`/official-accounts/${id}`, accountData);
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // Delete official
 export const deleteOfficial = async (id) => {
   try {

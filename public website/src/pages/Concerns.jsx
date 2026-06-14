@@ -252,7 +252,7 @@ export default function Concerns() {
                   </Typography>
                   <Box sx={{ display: "flex", gap: 2 }}>
                     <a
-                      href="https://www.facebook.com"
+                      href= "https://youtu.be/dQw4w9WgXcQ?si=lMr__bgF9rhooSLt"//"https://www.facebook.com"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -265,7 +265,7 @@ export default function Concerns() {
                       />
                     </a>
                     <a
-                      href="https://www.instagram.com"
+                      href= "https://youtu.be/dQw4w9WgXcQ?si=lMr__bgF9rhooSLt"//"https://www.instagram.com"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -278,7 +278,7 @@ export default function Concerns() {
                       />
                     </a>
                     <a
-                      href="https://www.x.com"
+                      href= "https://youtu.be/dQw4w9WgXcQ?si=lMr__bgF9rhooSLt"//"https://www.x.com"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -343,7 +343,7 @@ export default function Concerns() {
                   if (loggedIn) {
                     handleSubmitConcern();
                   } else {
-                    showSnackbar("Please log in to send a message");
+                    showSnackbar("Please log in to send a message", "error");
                   }
                 }}
               >

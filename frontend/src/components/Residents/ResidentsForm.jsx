@@ -122,13 +122,27 @@ function ResidentsForm({
   useEffect(() => {
     if (selectedResident) {
       setFormData({
-        first_name: selectedResident.first_name ? String(selectedResident.first_name) : "",
-        middle_name: selectedResident.middle_name ? String(selectedResident.middle_name) : "",
-        last_name: selectedResident.last_name ? String(selectedResident.last_name) : "",
-        gender: selectedResident.gender ? String(selectedResident.gender).toLowerCase() : "",
-        dob: selectedResident.dob ? String(selectedResident.dob).split('T')[0] : "",
-        address: selectedResident.address ? String(selectedResident.address) : "",
-        phone_number: selectedResident.phone_number ? String(selectedResident.phone_number) : "",
+        first_name: selectedResident.first_name
+          ? String(selectedResident.first_name)
+          : "",
+        middle_name: selectedResident.middle_name
+          ? String(selectedResident.middle_name)
+          : "",
+        last_name: selectedResident.last_name
+          ? String(selectedResident.last_name)
+          : "",
+        gender: selectedResident.gender
+          ? String(selectedResident.gender).toLowerCase()
+          : "",
+        dob: selectedResident.dob
+          ? String(selectedResident.dob)
+          : "",
+        address: selectedResident.address
+          ? String(selectedResident.address)
+          : "",
+        phone_number: selectedResident.phone_number
+          ? String(selectedResident.phone_number)
+          : "",
         email: selectedResident.email ? String(selectedResident.email) : "",
         household_id: selectedResident.household_id || "",
         image: selectedResident.image ? String(selectedResident.image) : "",
@@ -198,10 +212,28 @@ function ResidentsForm({
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB in bytes
 
     if (file) {
-      const reader = new FileReader();
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        setUploadError(
+          `File size exceeds 2MB limit. Your file is ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+          "error",
+        );
+        setImagePreview(null);
+        setFormData((prev) => ({
+          ...prev,
+          file: null,
+          image: "",
+        }));
+        return;
+      }
 
+      setUploadError(""); // Clear error if file is valid
+
+      // Create preview
+      const reader = new FileReader();
       reader.onloadend = () => {
         setFormData({ ...formData, image: reader.result });
         setImagePreview(reader.result); // <-- IMPORTANT
@@ -249,14 +281,18 @@ function ResidentsForm({
     <Dialog
       open={open}
       onClose={handleClose}
+      disableRestoreFocus
       TransitionComponent={Transition}
       keepMounted
       PaperProps={{
-        sx: { minWidth: "1000px" },
+        sx: {
+          minWidth: { xs: "90%", sm: "600px", md: "600px" },
+          width: "100%",
+        },
       }}
     >
       <>
-        <DialogTitle>
+        <DialogTitle sx={{ fontWeight: "bold" }}>
           {selectedResident ? "Edit Resident" : "Add Resident"}
         </DialogTitle>
         <DialogContent>
@@ -266,132 +302,21 @@ function ResidentsForm({
             </Alert>
           )}
 
-          <Box sx={{ display: "flex", gap: 3 }}>
-            {/* LEFT SIDE - INPUT GRID */}
-            <Box
-              sx={{
-                flex: 3,
-                display: "grid",
-                gridTemplateRows: { xs: "auto", md: "repeat(3, 1fr)" },
-                gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-                gridAutoFlow: "row",
-                gap: 2,
-              }}
-            >
-              {/* First Name */}
-              <TextField
-                label="First Name"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-                autoFocus
-              />
+          {uploadError && (
+            <Alert severity="error" sx={{ mb: 2, width: "100%" }}>
+              {uploadError}
+            </Alert>
+          )}
 
-              {/* Middle Name */}
-              <TextField
-                label="Middle Name"
-                name="middle_name"
-                value={formData.middle_name}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Last Name */}
-              <TextField
-                label="Last Name"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-              {/* Gender */}
-              <FormControl fullWidth margin="dense">
-                <InputLabel>Gender</InputLabel>
-                <Select
-                  label="Gender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                >
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                  </Select>
-              </FormControl>
-
-              {/* Date of Birth */}
-              <TextField
-                label="Date of Birth"
-                name="dob"
-                type="date"
-                value={formData.dob}
-                onChange={handleChange}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Phone Number */}
-              <TextField
-                label="Phone Number"
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Email */}
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              />
-
-              {/* Household */}
-              <FormControl fullWidth margin="dense">
-                <InputLabel>Household</InputLabel>
-                <Select
-                  label="Household"
-                  name="household_id"
-                  value={formData.household_id || ""}
-                  onChange={handleChange}
-                >
-                  <MenuItem value="">
-                    <em>No Household</em>
-                  </MenuItem>
-                  {households.map((household) => (
-                    <MenuItem key={household.household_id} value={household.household_id}>
-                      House #{household.house_number} - {household.head_family}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              {/* Address */}
-              <TextField
-                label="Address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-                multiline
-                rows={2}
-                sx={{ gridColumn: "1 / -1" }}
-              />
-            </Box>
-
-            {/* Image Upload with Permanent Preview Box */}
-            <Box sx={{ flex: 1 }}>
-              {/* ALWAYS VISIBLE PREVIEW CONTAINER */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 3,
+              alignItems: "center",
+            }}
+          >
+            <Box sx={{ width: "100%", maxWidth: "300px" }}>
               <Box
                 sx={{
                   width: "100%",
@@ -427,6 +352,131 @@ function ResidentsForm({
                 accept="image/*"
                 onChange={handleFileChange}
                 style={{ width: "100%" }}
+              />
+            </Box>
+
+            {/* INPUT GRID */}
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: "600px",
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
+                gap: 2,
+              }}
+            >
+              {/* First Name */}
+              <TextField
+                label="First Name"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+                autoFocus
+              />
+
+              {/* Middle Name */}
+              <TextField
+                label="Middle Name"
+                name="middle_name"
+                value={formData.middle_name}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Last Name */}
+              <TextField
+                label="Last Name"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Date of Birth*/}
+              <TextField
+                label="Date of Birth"
+                name="dob"
+                type="date"
+                value={formData.dob}
+                onChange={handleChange}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Gender - Full Width */}
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Gender</InputLabel>
+                <Select
+                  label="Gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="male">Male</MenuItem>
+                  <MenuItem value="female">Female</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Household - Full Width */}
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Household</InputLabel>
+                <Select
+                  label="Household"
+                  name="household_id"
+                  value={formData.household_id || ""}
+                  onChange={handleChange}
+                >
+                  <MenuItem value="">
+                    <em>No Household</em>
+                  </MenuItem>
+                  {households.map((household) => (
+                    <MenuItem
+                      key={household.household_id}
+                      value={household.household_id}
+                    >
+                      House #{household.house_number} - {household.head_family}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {/* Email */}
+              <TextField
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Phone Number */}
+              <TextField
+                label="Phone Number"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+              />
+
+              {/* Address - Full Width */}
+              <TextField
+                label="Address"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                fullWidth
+                margin="dense"
+                multiline
+                rows={2}
+                sx={{ gridColumn: "1 / -1" }}
               />
             </Box>
           </Box>

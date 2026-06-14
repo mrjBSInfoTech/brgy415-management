@@ -81,7 +81,7 @@ function AnnouncementDelete({
       keepMounted
     >
       <>
-        <DialogTitle>Delete Announcement</DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>Delete Announcement</DialogTitle>
         <DialogContent>
           <Typography>
             Are you sure you want to delete <strong>{announcementTitle}</strong>? This action cannot be undone.

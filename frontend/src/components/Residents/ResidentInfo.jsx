@@ -41,7 +41,7 @@ function ResidentInfo({
         sx: { minWidth: "350px" },
       }}
     >
-      <DialogTitle>Resident Information</DialogTitle>
+      <DialogTitle sx={{fontWeight: "bold"}}>Resident Information</DialogTitle>
 
       <DialogContent>
         {resident ? (

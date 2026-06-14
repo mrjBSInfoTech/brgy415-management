@@ -87,7 +87,7 @@
         keepMounted
       >
         <>
-          <DialogTitle>Delete File</DialogTitle>
+          <DialogTitle sx={{fontWeight: "bold"}}>Delete File</DialogTitle>
           <DialogContent>
             <Typography>
               Are you sure you want to delete <strong>{fileName}</strong>? This action cannot be undone.

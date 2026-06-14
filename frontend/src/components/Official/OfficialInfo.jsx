@@ -41,7 +41,7 @@ function OfficialInfo({
         sx: { minWidth: "350px" },
       }}
     >
-      <DialogTitle>Official Information</DialogTitle>
+      <DialogTitle sx={{fontWeight: "bold"}}>Official Information</DialogTitle>
 
       <DialogContent>
         {official ? (

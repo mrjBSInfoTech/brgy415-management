@@ -89,6 +89,8 @@ const Login = () => {
       const data = await loginUser({ username, password });
 
       localStorage.setItem("token", data.token);
+      localStorage.setItem("official_account_id", data.official_account_id);
+      localStorage.setItem("password_changed", data.password_changed);
       localStorage.setItem("username", data.username);
       localStorage.setItem("account_type", data.account_type);
       localStorage.setItem("can_add", data.can_add);
