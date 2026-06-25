@@ -87,6 +87,21 @@ const classifyMessage = (text) => {
   return "Low"; // Defaults to Low if no major keywords found
 };
 
+const triggerEspAlert = async (urgency) => {
+  try {
+    const ESP32_IP = await getEspAddress();
+    if (urgency === "High") {
+      await axios.get(`http://${ESP32_IP}/alert/high`, { timeout: 3000 });
+      console.log("ESP32 High alert triggered");
+    } else if (urgency === "Medium") {
+      await axios.get(`http://${ESP32_IP}/alert/medium`, { timeout: 3000 });
+      console.log("ESP32 Medium alert triggered");
+    }
+  } catch (error) {
+    console.error("ESP32 trigger error:", error.message || error);
+  }
+};
+
 // 🟢 GET all messages
 router.get("/", authenticateToken, (req, res) => {
   const sql = `SELECT 
@@ -159,19 +174,8 @@ router.post("/", authenticateToken, (req, res) => {
         return res.status(500).json({ message: err.message });
       }
 
-      // Trigger ESP32 alerts based on urgency
-      try {
-        const ESP32_IP = await getEspAddress();
-        if (urgency === "High") {
-          await axios.get(`http://${ESP32_IP}/alert/high`);
-          console.log("ESP32 High alert triggered");
-        } else if (urgency === "Medium") {
-          await axios.get(`http://${ESP32_IP}/alert/medium`);
-          console.log("ESP32 Medium alert triggered");
-        }
-      } catch (error) {
-        console.error("ESP32 trigger error:", error.message);
-      }
+      // Trigger ESP32 alerts based on urgency, but do not block saving the concern
+      await triggerEspAlert(urgency);
 
       res.json({
         message: "✅ Message categorized and sent",

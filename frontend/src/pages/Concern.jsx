@@ -30,8 +30,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { fetchConcerns, updateConcern } from "../api/concernAPI";
+import { fetchConcerns, updateConcern, deleteConcern } from "../api/concernAPI";
+import ConcernDelete from "../components/Concern/ConcernDelete";
 import ConcernCard from "../components/Concern/ConcernCard";
+import ConcernTable from "../components/Concern/ConcernTable";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
@@ -41,10 +43,12 @@ function SlideTransition(props) {
 export default function Concern() {
   const [concerns, setConcerns] = useState([]);
   const [selectedConcern, setSelectedConcern] = useState(null);
+  const [openConcernDelete, setOpenConcernDelete] = useState(false);
   const [concernErrorMessage, setConcernErrorMessage] = useState("");
   const [date, setDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [urgencyFilter, setUrgencyFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
   const [sortOption, setSortOption] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -72,13 +76,19 @@ export default function Concern() {
     loadConcerns();
   }, []);
 
+  // Open Delete Concern Modal
+  const handleOpenConcernDelete = (concern) => {
+    setSelectedConcern(concern);
+    setOpenConcernDelete(true);
+  };
+
+
   // ========== CONCERN HANDLERS ==========
   // Submit Concern
   const handleSubmitConcern = async (formData) => {
     try {
       await updateConcern(selectedConcern.message_id, formData);
       showSnackbar("Concern updated successfully");
-
       await loadConcerns();
     } catch (err) {
       console.error("Error saving concern:", err);
@@ -98,10 +108,11 @@ export default function Concern() {
   };
 
   // Delete concern
-  const handleDeleteConcern = async (concernId) => {
+  const handleDeleteConcern = async (concern) => {
     try {
       // You'll need to add a deleteConcern API function
-      // await deleteConcern(concernId);
+      await deleteConcern(concern.message_id);
+      setOpenConcernDelete(false);
       showSnackbar("Concern deleted");
       await loadConcerns();
     } catch (err) {
@@ -112,37 +123,59 @@ export default function Concern() {
 
   // Filter concerns by status, search query and urgency
   const filteredPendingConcerns = concerns.filter((concern) => {
-    const fullName = `${concern.first_name || ""} ${concern.last_name || ""}`.toLowerCase();
+    const fullName =
+      `${concern.first_name || ""} ${concern.last_name || ""}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase());
-    const matchesUrgency = urgencyFilter === "" || concern.message_urgency === urgencyFilter;
-    
+    const matchesUrgency =
+      urgencyFilter === "" || concern.message_urgency === urgencyFilter;
+    const matchesType =
+      typeFilter === "" ||
+      concern.message_type?.toLowerCase() === typeFilter.toLowerCase();
+
     const isPending = concern.status === "pending" || !concern.status;
 
     if (!date) {
-      return matchesSearch && matchesUrgency && isPending;
-    }
-
-    const concernDate = new Date(concern.date_posted).toDateString();
-    const selectedDate = date.toDate().toDateString(); 
-
-    return matchesSearch && matchesUrgency && isPending && concernDate === selectedDate;
-  });
-
-  const filteredSolvedConcerns = concerns.filter((concern) => {
-    const fullName = `${concern.first_name || ""} ${concern.last_name || ""}`.toLowerCase();
-    const matchesSearch = fullName.includes(searchQuery.toLowerCase());
-    const matchesUrgency = urgencyFilter === "" || concern.message_urgency === urgencyFilter;
-    
-    const isSolved = concern.status === "solved";
-
-    if (!date) {
-      return matchesSearch && matchesUrgency && isSolved;
+      return matchesSearch && matchesUrgency && matchesType && isPending;
     }
 
     const concernDate = new Date(concern.date_posted).toDateString();
     const selectedDate = date.toDate().toDateString();
 
-    return matchesSearch && matchesUrgency && isSolved && concernDate === selectedDate;
+    return (
+      matchesSearch &&
+      matchesUrgency &&
+      matchesType &&
+      isPending &&
+      concernDate === selectedDate
+    );
+  });
+
+  const filteredSolvedConcerns = concerns.filter((concern) => {
+    const fullName =
+      `${concern.first_name || ""} ${concern.last_name || ""}`.toLowerCase();
+    const matchesSearch = fullName.includes(searchQuery.toLowerCase());
+    const matchesUrgency =
+      urgencyFilter === "" || concern.message_urgency === urgencyFilter;
+    const matchesType =
+      typeFilter === "" ||
+      concern.message_type?.toLowerCase() === typeFilter.toLowerCase();
+
+    const isSolved = concern.status === "solved";
+
+    if (!date) {
+      return matchesSearch && matchesUrgency && matchesType && isSolved;
+    }
+
+    const concernDate = new Date(concern.date_posted).toDateString();
+    const selectedDate = date.toDate().toDateString();
+
+    return (
+      matchesSearch &&
+      matchesUrgency &&
+      matchesType &&
+      isSolved &&
+      concernDate === selectedDate
+    );
   });
 
   // Toggle handlers
@@ -272,6 +305,23 @@ export default function Concern() {
                     <MenuItem value="Low">Low</MenuItem>
                   </Select>
                 </FormControl>
+                <FormControl
+                  size="small"
+                  sx={{ width: { xs: "100%", sm: 180 } }}
+                >
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    name="type"
+                    label="Type"
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="complaint">Complaint</MenuItem>
+                    <MenuItem value="concerns">Concerns</MenuItem>
+                    <MenuItem value="feedback">Feedback</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
             </Box>
           </Paper>
@@ -288,10 +338,10 @@ export default function Concern() {
                 {concernErrorMessage}
               </Typography>
             ) : filteredPendingConcerns.length > 0 ? (
-              <ConcernCard
+              <ConcernTable
                 concerns={filteredPendingConcerns}
                 onEdit={handleSolveConcern}
-                onDelete={handleDeleteConcern}
+                onDelete={handleOpenConcernDelete}
               />
             ) : (
               <Typography
@@ -381,6 +431,23 @@ export default function Concern() {
                     <MenuItem value="Low">Low</MenuItem>
                   </Select>
                 </FormControl>
+                <FormControl
+                  size="small"
+                  sx={{ width: { xs: "100%", sm: 180 } }}
+                >
+                  <InputLabel>Type</InputLabel>
+                  <Select
+                    name="type"
+                    label="Type"
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                  >
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="complaint">Complaint</MenuItem>
+                    <MenuItem value="concerns">Concerns</MenuItem>
+                    <MenuItem value="feedback">Feedback</MenuItem>
+                  </Select>
+                </FormControl>
               </Box>
             </Box>
           </Paper>
@@ -395,10 +462,10 @@ export default function Concern() {
                 {concernErrorMessage}
               </Typography>
             ) : filteredSolvedConcerns.length > 0 ? (
-              <ConcernCard
+              <ConcernTable
                 concerns={filteredSolvedConcerns}
                 onEdit={handleSolveConcern}
-                onDelete={handleDeleteConcern}
+                onDelete={handleOpenConcernDelete}
               />
             ) : (
               <Typography
@@ -411,6 +478,13 @@ export default function Concern() {
           </Paper>
         </>
       )}
+      {/* Concern Modals */}
+      <ConcernDelete
+        open={openConcernDelete}
+        handleClose={() => setOpenConcernDelete(false)}
+        onSubmit={handleDeleteConcern}
+        selectedConcern={selectedConcern}
+      />
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbarOpen}

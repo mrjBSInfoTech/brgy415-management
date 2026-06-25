@@ -31,6 +31,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilesForm from "../components/Files/FilesForm";
 import FilesDelete from "../components/Files/FilesDelete";
 import { fetchFiles, addFile, deleteFile } from "../api/fileApi";
@@ -258,8 +259,6 @@ export default function Files() {
                 <MenuItem value="all">All Formats</MenuItem>
                 <MenuItem value="pdf">PDF</MenuItem>
                 <MenuItem value="doc">Docs</MenuItem>
-                <MenuItem value="jpg">JPEG</MenuItem>
-                <MenuItem value="png">PNG</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -322,12 +321,25 @@ export default function Files() {
                           fontSize: "0.85rem",
                           fontWeight: "bold",
                           color: "#1976d2",
+                          border: "1px solid #1976d2",
                         }}
                       >
                         {file.file_type?.toUpperCase()}
                       </Typography>
                     </TableCell>
                     <TableCell sx={{ textAlign: "center" }}>
+                      <Tooltip title="View">
+                        <IconButton
+                          size="small"
+                          color="success"
+                          onClick={() => {
+                            const fileUrl = `http://localhost:5000/uploads/uploadFiles/pdf/${file.file_name}`;
+                            window.open(fileUrl, "_blank");
+                          }}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Download">
                         <IconButton
                           size="small"

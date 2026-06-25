@@ -192,13 +192,19 @@ export default function Dashboard() {
     (resident) => resident.gender === "Female",
   ).length;
   const lowCount = concerns.filter(
-    (concern) => concern.message_urgency === "Low",
+    (concern) =>
+      concern.message_urgency === "Low" &&
+      (concern.status || "").toLowerCase() === "solved",
   ).length;
   const mediumCount = concerns.filter(
-    (concern) => concern.message_urgency === "Medium",
+    (concern) =>
+      concern.message_urgency === "Medium" &&
+      (concern.status || "").toLowerCase() === "solved",
   ).length;
   const highCount = concerns.filter(
-    (concern) => concern.message_urgency === "High",
+    (concern) =>
+      concern.message_urgency === "High" &&
+      (concern.status || "").toLowerCase() === "solved",
   ).length;
 
   return (
@@ -329,6 +335,13 @@ export default function Dashboard() {
           }}
           variant="outlined"
         >
+          <Typography
+            textAlign="center"
+            variant="h5"
+            sx={{ fontWeight: "bold", mb: 2 }}
+          >
+            Population 
+          </Typography>
           <Box
             sx={{
               display: "flex",
@@ -372,6 +385,14 @@ export default function Dashboard() {
           }}
           variant="outlined"
         >
+          <Typography
+            textAlign="center"
+            variant="h5"
+            sx={{ fontWeight: "bold", mb: 2 }}
+          >
+            Concerns
+          </Typography>
+
           <Box
             sx={{
               display: "flex",
