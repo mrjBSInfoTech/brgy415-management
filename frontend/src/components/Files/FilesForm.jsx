@@ -177,11 +177,11 @@ function FilesForm({
   const handleSubmit = () => {
     // Validate required fields
     if (!formData.file_type) {
-      setError("❌ Please select a conversion format (PDF or Docs)");
+      setError("Please select a conversion format (PDF or Docs)");
       return;
     }
     if (!formData.file) {
-      setError("❌ File is required");
+      setError("File is required");
       return;
     }
     onSubmit(formData);

@@ -44,6 +44,7 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -65,14 +66,26 @@ const Register = () => {
   }, [name, email, password, confirmPassword]);
 
   // Snackbar handlers
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
   };
 
   const handleRegister = async () => {
@@ -86,7 +99,7 @@ const Register = () => {
     const confirmPasswordValid = confirmPassword.trim() !== "";
 
     if (!nameValid || !emailValid || !passwordValid || !confirmPasswordValid) {
-      showSnackbar("❌ Please fill in all fields");
+      showSnackbar("Please fill in all fields", "error");
       console.log("Validation failed - Missing fields:", {
         name: !nameValid,
         email: !emailValid,
@@ -97,12 +110,12 @@ const Register = () => {
     }
 
     if (password !== confirmPassword) {
-      showSnackbar("❌ Passwords do not match");
+      showSnackbar("Passwords do not match", "error");
       return;
     }
 
     if (password.length < 6) {
-      showSnackbar("❌ Password must be at least 6 characters");
+      showSnackbar("Password must be at least 6 characters", "error");
       return;
     }
 
@@ -113,7 +126,7 @@ const Register = () => {
         password: password.trim(),
       });
 
-      showSnackbar("✅ Registration Successful!");
+      showSnackbar("Registration Successful!", "success");
 
       // Clear form
       setName("");
@@ -131,7 +144,7 @@ const Register = () => {
       const errorMessage =
         error.response?.data?.message || error.message || "Registration failed";
 
-      showSnackbar(`❌ ${errorMessage}`);
+      showSnackbar(`${errorMessage}`, "error");
     }
   };
 
@@ -503,6 +516,8 @@ const Register = () => {
       </Paper>
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -510,8 +525,15 @@ const Register = () => {
       >
         <Alert
           onClose={closeSnackbar}
-          severity={snackbarMessage.includes("❌") ? "error" : "success"}
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

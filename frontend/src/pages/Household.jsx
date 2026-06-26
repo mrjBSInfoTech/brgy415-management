@@ -44,26 +44,30 @@ export default function Household() {
   const [selectedHousehold, setSelectedHousehold] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [householdErrorMessage, setHouseholdErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch households on component mount
-  useEffect(() => {
-    loadHouseholds();
-  }, []);
-
+  // Fetch all households from API
   const loadHouseholds = async () => {
     setLoading(true);
     try {
       const data = await fetchHouseholds();
       setHouseholds(data);
     } catch (error) {
-      setHouseholdErrorMessage("Failed to load households: " + error.message);
+      setHouseholdErrorMessage(
+        "Failed to load households: " + error.message,
+        "error",
+      );
     } finally {
       setLoading(false);
     }
   };
+  // Load households
+  useEffect(() => {
+    loadHouseholds();
+  }, []);
 
   // Add household
   const handleOpenHouseholdAdd = () => {
@@ -88,14 +92,14 @@ export default function Household() {
     try {
       if (selectedHousehold) {
         await updateHousehold(selectedHousehold.household_id, formData);
-        showSnackbar("✅ Household updated successfully");
+        showSnackbar("Household updated successfully", "success");
       } else {
         await createHousehold(formData);
-        showSnackbar("✅ Household added successfully");
+        showSnackbar("Household added successfully", "success");
       }
       loadHouseholds();
     } catch (error) {
-      showSnackbar("❌ Error: " + error.message);
+      showSnackbar("Error: " + error.message, "error");
     }
   };
 
@@ -103,10 +107,10 @@ export default function Household() {
   const handleDeleteHousehold = async () => {
     try {
       await deleteHousehold(selectedHousehold.household_id);
-      showSnackbar("✅ Household deleted successfully");
+      showSnackbar("✅ Household deleted successfully", "success");
       loadHouseholds();
     } catch (error) {
-      showSnackbar("❌ Error: " + error.message);
+      showSnackbar("Error: " + error.message, "error");
     }
   };
 
@@ -120,15 +124,27 @@ export default function Household() {
   const canDelete =
     (isAdmin || isStaff) && localStorage.getItem("can_delete") === "1";
 
-  // Snackbar
-  const showSnackbar = (message) => {
+  // Snackbar handlers
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
   };
 
   // Filter households by search query
@@ -314,6 +330,8 @@ export default function Household() {
       {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -321,8 +339,15 @@ export default function Household() {
       >
         <Alert
           onClose={closeSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

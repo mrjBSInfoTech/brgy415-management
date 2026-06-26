@@ -39,6 +39,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -69,8 +70,9 @@ const Login = () => {
   }, [username, password]);
 
   // Snackbar handlers
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
@@ -79,9 +81,20 @@ const Login = () => {
     setSnackbarOpen(false);
   };
 
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
+  };
+
   const handleLogin = async () => {
     if (!username || !password) {
-      showSnackbar("❌ Please fill in all fields");
+      showSnackbar("Please fill in all fields", "error");
       return;
     }
 
@@ -101,11 +114,11 @@ const Login = () => {
       localStorage.setItem("position", data.position);
       localStorage.setItem("image", data.image);
 
-      showSnackbar("✅ Login successful!");
+      showSnackbar("Login successful!", "success");
 
       navigate("/dashboard");
     } catch (error) {
-      showSnackbar(`❌ Login failed: ${error.message}`);
+      showSnackbar(`Login failed: ${error.message}`, "error");
     }
   };
 
@@ -329,6 +342,8 @@ const Login = () => {
       </Paper>
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -336,8 +351,15 @@ const Login = () => {
       >
         <Alert
           onClose={closeSnackbar}
-          severity={snackbarMessage.includes("❌") ? "error" : "success"}
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

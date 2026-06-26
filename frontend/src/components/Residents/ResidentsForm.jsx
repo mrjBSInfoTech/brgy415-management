@@ -246,31 +246,31 @@ function ResidentsForm({
   const handleSubmit = () => {
     // Validate required fields
     if (!formData.first_name.trim()) {
-      setError("❌ First name is required");
+      setError("First name is required");
       return;
     }
     if (!formData.last_name.trim()) {
-      setError("❌ Last name is required");
+      setError("Last name is required");
       return;
     }
     if (!formData.gender.trim()) {
-      setError("❌ Gender is required");
+      setError("Gender is required");
       return;
     }
     if (!formData.dob.trim()) {
-      setError("❌ Date of birth is required");
+      setError("Date of birth is required");
       return;
     }
     if (!formData.address.trim()) {
-      setError("❌ Address is required");
+      setError("Address is required");
       return;
     }
     if (!formData.phone_number.trim()) {
-      setError("❌ Phone number is required");
+      setError("Phone number is required");
       return;
     }
     if (!formData.email.trim()) {
-      setError("❌ Email is required");
+      setError("Email is required");
       return;
     }
     onSubmit(formData);

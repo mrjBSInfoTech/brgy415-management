@@ -292,31 +292,31 @@ function OfficialForm({
   const handleSubmit = () => {
     // Validate required fields
     if (!formData.first_name.trim()) {
-      setError("❌ First name is required");
+      setError("First name is required");
       return;
     }
     if (!formData.last_name.trim()) {
-      setError("❌ Last name is required");
+      setError("Last name is required");
       return;
     }
     if (!formData.position.trim()) {
-      setError("❌ Position is required");
+      setError("Position is required");
       return;
     }
     if (!formData.dob) {
-      setError("❌ Date of birth is required");
+      setError("Date of birth is required");
       return;
     }
     if (!formData.email.trim()) {
-      setError("❌ Email is required");
+      setError("Email is required");
       return;
     }
     if (!formData.phone_number.trim()) {
-      setError("❌ Phone number is required");
+      setError("Phone number is required");
       return;
     }
     if (!formData.address.trim()) {
-      setError("❌ Address is required");
+      setError("Address is required");
       return;
     }
     if (!formData.file && !selectedOfficial) {

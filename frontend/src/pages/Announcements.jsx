@@ -29,7 +29,6 @@ import {
   deleteAnnouncement,
 } from "../api/announcementAPI";
 
-
 // Slide Transition for Snackbar
 function SlideTransition(props) {
   return <Slide {...props} direction="up" />;
@@ -45,6 +44,7 @@ export default function Announcements() {
   const [searchQuery, setSearchQuery] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [sortOption, setSortOption] = useState("newest");
 
   // Load all announcements
@@ -150,17 +150,30 @@ export default function Announcements() {
   const accountType = localStorage.getItem("account_type");
   const isAdmin = accountType === "Admin";
   const isStaff = accountType === "Staff";
-  const canAdd = (isAdmin || isStaff) && localStorage.getItem("can_add") === "1";
+  const canAdd =
+    (isAdmin || isStaff) && localStorage.getItem("can_add") === "1";
 
   // Snackbar handlers
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
   };
   return (
     <Box p={3}>
@@ -307,6 +320,8 @@ export default function Announcements() {
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -314,8 +329,15 @@ export default function Announcements() {
       >
         <Alert
           onClose={closeSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

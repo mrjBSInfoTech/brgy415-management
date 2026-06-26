@@ -51,6 +51,7 @@ export default function Officials() {
   const [searchQuery, setSearchQuery] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [sortOption, setSortOption] = useState("verified");
   const [loading, setLoading] = useState(false);
   const [part, setPart] = useState(1);
@@ -178,7 +179,7 @@ export default function Officials() {
           selectedOfficial.official_account_id,
           updatePayload,
         );
-        showSnackbar("✅ Account updated successfully!");
+        showSnackbar("Account updated successfully!", "success");
       } else {
         // Create new account
         console.log("Creating account with data:", formData);
@@ -198,15 +199,18 @@ export default function Officials() {
           formData.can_delete ? 1 : 0,
           position, // Include position
         );
-        showSnackbar("✅ Account created successfully!");
+        showSnackbar("Account created successfully!", "success");
       }
 
       await loadOfficials();
       setOpenAccessForm(false);
       setSelectedOfficial(null); // Clear selection after closing
     } catch (err) {
-      console.error("Error processing account:", err);
-      setOfficialErrorMessage(err.message || "Error processing account");
+      console.error("Error processing account:", err, "error");
+      setOfficialErrorMessage(
+        err.message || "Error processing account",
+        "error",
+      );
       throw err;
     }
   };
@@ -225,14 +229,26 @@ export default function Officials() {
   }, [officials, searchQuery]);
 
   // Snackbar handlers
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
   };
 
   // Toggle handlers
@@ -507,6 +523,8 @@ export default function Officials() {
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -514,8 +532,15 @@ export default function Officials() {
       >
         <Alert
           onClose={closeSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

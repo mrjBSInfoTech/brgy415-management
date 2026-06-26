@@ -99,19 +99,19 @@ function ChangePassword({
 
   const validateForm = () => {
     if (!formData.password.trim()) {
-      setError("❌ Current password is required");
+      setError("Current password is required");
       return false;
     }
     if (!newPassword.trim()) {
-      setError("❌ New password is required");
+      setError("New password is required");
       return false;
     }
     if (newPassword.length < 6) {
-      setError("❌ Password must be at least 6 characters");
+      setError("New password must be at least 6 characters");
       return false;
     }
     if (newPassword !== confirmPassword) {
-      setError("❌ Passwords do not match");
+      setError("Passwords do not match");
       return false;
     }
 

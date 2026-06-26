@@ -52,6 +52,7 @@ export default function Concern() {
   const [sortOption, setSortOption] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [part, setPart] = useState(1);
   const [loading, setLoading] = useState(false);
 
@@ -64,8 +65,9 @@ export default function Concern() {
       setConcerns(data || []);
     } catch (err) {
       console.error("Error loading concerns:", err);
-      const message = setConcernErrorMessage(
+      setConcernErrorMessage(
         "Failed to load concerns: " + err.message,
+        "error",
       );
     } finally {
       setLoading(false);
@@ -82,27 +84,26 @@ export default function Concern() {
     setOpenConcernDelete(true);
   };
 
-
   // ========== CONCERN HANDLERS ==========
   // Submit Concern
   const handleSubmitConcern = async (formData) => {
     try {
       await updateConcern(selectedConcern.message_id, formData);
-      showSnackbar("Concern updated successfully");
+      showSnackbar("Concern updated successfully", "success");
       await loadConcerns();
     } catch (err) {
-      console.error("Error saving concern:", err);
-      setConcernErrorMessage(err.message || "Error saving concern");
+      console.error("Error saving concern:", err, "error");
+      setConcernErrorMessage(err.message || "Error saving concern", "error");
     }
   };
   // Handle marking concern as solved
   const handleSolveConcern = async (concern) => {
     try {
       await updateConcern(concern.message_id, { status: "solved" });
-      showSnackbar("Concern marked as solved");
+      showSnackbar("Concern marked as solved", "success");
       await loadConcerns();
     } catch (err) {
-      console.error("Error updating concern:", err);
+      console.error("Error updating concern:", err, "error");
       setConcernErrorMessage(err.message);
     }
   };
@@ -113,10 +114,10 @@ export default function Concern() {
       // You'll need to add a deleteConcern API function
       await deleteConcern(concern.message_id);
       setOpenConcernDelete(false);
-      showSnackbar("Concern deleted");
+      showSnackbar("Concern deleted", "success");
       await loadConcerns();
     } catch (err) {
-      console.error("Error deleting concern:", err);
+      console.error("Error deleting concern:", err, "error");
       setConcernErrorMessage(err.message);
     }
   };
@@ -183,14 +184,26 @@ export default function Concern() {
   const goToPartOne = () => setPart(1);
 
   // Snackbar handlers
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
   };
 
   return (
@@ -488,6 +501,8 @@ export default function Concern() {
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -495,8 +510,15 @@ export default function Concern() {
       >
         <Alert
           onClose={closeSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

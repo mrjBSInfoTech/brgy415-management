@@ -48,11 +48,11 @@ export default function Citizens() {
   const [date, setDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("pending");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loading, setLoading] = useState(false);
   const [citizensErrorMessage, setCitizensErrorMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [part, setPart] = useState(2);
 
   // Fetch all residents from API
@@ -108,7 +108,7 @@ export default function Citizens() {
         status: "verified",
       };
       await updateCitizen(citizen.user_id, updateData);
-      showSnackbar("Citizen verified successfully");
+      showSnackbar("Citizen verified successfully", "success");
 
       await loadCitizens();
     } catch (err) {
@@ -117,35 +117,35 @@ export default function Citizens() {
     }
   };
   // Handle marking concern as verified
-    const handleVerifyCitizen = async (citizen) => {
-      try {
-        await updateCitizen(citizen.user_id, { status: "verified" });
-        showSnackbar("Citizen verified successfully");
-        await loadCitizens();
-      } catch (err) {
-        console.error(`Error updating citizen: ${err.message}`, "error");
-        setCitizensErrorMessage(err.message);
-      }
-    };
-  
+  const handleVerifyCitizen = async (citizen) => {
+    try {
+      await updateCitizen(citizen.user_id, { status: "verified" });
+      showSnackbar("Citizen verified successfully", "success");
+      await loadCitizens();
+    } catch (err) {
+      console.error(`Error updating citizen: ${err.message}`, "error");
+      showSnackbar(err.message || "Error updating citizen", "error");
+    }
+  };
 
   // Delete Citizen - Delete user account
   const handleDeleteCitizen = async (citizen) => {
     try {
       await deleteCitizen(citizen.user_id);
-      showSnackbar("User account deleted successfully");
+      showSnackbar("User account deleted successfully", "success");
       await loadCitizens();
     } catch (err) {
       console.error("Error deleting citizen:", err);
-      setCitizensErrorMessage(err.message || "Error deleting citizen");
+      setCitizensErrorMessage(err.message || "Error deleting citizen", "error");
     }
   };
 
   // Filter citizens based on search query and status
   const filteredPendingCitizens = citizens.filter((citizen) => {
-    const fullName = `${citizen.first_name || ""} ${citizen.last_name || ""}`.toLowerCase();
+    const fullName =
+      `${citizen.first_name || ""} ${citizen.last_name || ""}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase());
-    
+
     const isPending = citizen.status === "pending" || !citizen.status;
 
     if (!date) {
@@ -153,15 +153,16 @@ export default function Citizens() {
     }
 
     const citizenDate = new Date(citizen.date_created).toDateString();
-    const selectedDate = date.toDate().toDateString(); 
+    const selectedDate = date.toDate().toDateString();
 
     return matchesSearch && isPending && citizenDate === selectedDate;
   });
 
   const filteredVerifiedCitizens = citizens.filter((citizen) => {
-    const fullName = `${citizen.first_name || ""} ${citizen.last_name || ""}`.toLowerCase();
+    const fullName =
+      `${citizen.first_name || ""} ${citizen.last_name || ""}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase());
-    
+
     const isVerified = citizen.status === "verified";
 
     if (!date) {
@@ -310,8 +311,8 @@ export default function Citizens() {
             </Typography>
           ) : (
             <CitizenCard
-              citizens={filteredVerifiedCitizens}              
-              residents={residents}              
+              citizens={filteredVerifiedCitizens}
+              residents={residents}
               onEdit={handleSubmitCitizen}
               onDelete={handleDeleteCitizen}
             />
@@ -338,8 +339,8 @@ export default function Citizens() {
             </Typography>
           ) : (
             <CitizenCard
-              citizens={filteredPendingCitizens}              
-              residents={residents}              
+              citizens={filteredPendingCitizens}
+              residents={residents}
               onEdit={handleSubmitCitizen}
               onDelete={handleDeleteCitizen}
             />
@@ -350,20 +351,28 @@ export default function Citizens() {
       {/* Snackbar for notifications */}
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={4000}
+        severity={snackbarSeverity}
+        variant="filled"
+        autoHideDuration={3000}
         onClose={closeSnackbar}
-        TransitionComponent={SlideTransition}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        TransitionComponent={SlideTransition}
       >
         <Alert
           onClose={closeSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>
       </Snackbar>
-
     </Box>
   );
 }

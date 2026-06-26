@@ -331,18 +331,6 @@ export default function DashboardLayout({ children }) {
             sidebarFooter: SidebarFooter,
           }}
           sx={{
-            "& .MuiDrawer-paper .MuiBox-root": {
-              display: "flex",
-              flexDirection: "column",
-              height: "100%",
-            },
-
-            "& .MuiDrawer-paper": {
-              backgroundColor: theme.palette.background.sidebar,
-              color: theme.palette.text.sidebar,
-              borderRight: "none",
-            },
-
             "& .MuiDrawer-paper": {
               backgroundColor: theme.palette.background.sidebar,
               color: theme.palette.text.sidebar,
@@ -351,11 +339,9 @@ export default function DashboardLayout({ children }) {
             "& .MuiAppBar-root .MuiIconButton-root": {
               color: "#ffffff",
             },
-
             "& .MuiAppBar-root .MuiSvgIcon-root": {
               color: "#ffffff",
             },
-
             "& .MuiDrawer-paper .MuiPaper-root": {
               backgroundColor: theme.palette.background.sidebar,
             },
@@ -363,44 +349,29 @@ export default function DashboardLayout({ children }) {
             "& .MuiDrawer-paper .Mui-selected .MuiListItemText-primary": {
               color: "#2563eb",
             },
-
             // Selected icon
             "& .MuiDrawer-paper .Mui-selected .MuiSvgIcon-root": {
               color: "#2563eb",
             },
-
             // Sidebar icons color
             "& .MuiDrawer-paper .MuiSvgIcon-root": {
               color: "#ffffff",
             },
-
-            // Sidebar text
-            "& .MuiListItemButton-root": {
-              color: "#ffffff",
-              borderRadius: "8px",
-              margin: "4px 2px",
-            },
-
-            // Sidebar icons
-            "& .MuiListItemIcon-root": {
-              color: "#ffffff",
-              minWidth: 36,
-            },
-
-            // Hover effect
             "& .MuiListItemButton-root:hover": {
               backgroundColor: "rgba(255,255,255,0.15)",
             },
-
-            // Active item
             "& .Mui-selected": {
               backgroundColor: "rgba(255,255,255,0.25) !important",
             },
-
             // Header
             "& .MuiAppBar-root": {
               backgroundColor: theme.palette.background.header,
               boxShadow: "none",
+            },
+
+            "& .MuiListItemButton-root": {
+              marginTop: "5px",
+              marginBottom: "5px",
             },
           }}
         >

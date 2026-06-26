@@ -168,23 +168,23 @@ function HouseholdForm({
   const handleSubmit = () => {
     // Validate required fields
     if (!formData.house_number.trim()) {
-      setError("❌ House number is required");
+      setError("House number is required");
       return;
     }
     if (!formData.street_number.trim()) {
-      setError("❌ Street number is required");
+      setError("Street number is required");
       return;
     }
     if (!formData.barangay.trim()) {
-      setError("❌ Barangay is required");
+      setError("Barangay is required");
       return;
     }
     if (!formData.household_members.trim()) {
-      setError("❌ Household members is required");
+      setError("Household members is required");
       return;
     }
     if (!formData.head_family.trim()) {
-      setError("❌ Head of family is required");
+      setError("Head of family is required");
       return;
     }
     onSubmit(formData);

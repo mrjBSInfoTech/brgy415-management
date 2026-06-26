@@ -45,6 +45,7 @@ export default function Resident() {
   const [genderFilter, setGenderFilter] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loading, setLoading] = useState(false);
 
   // Fetch all households from API
@@ -68,15 +69,16 @@ export default function Resident() {
       setResidents(data || []);
     } catch (err) {
       console.error("Error loading residents:", err);
-      const message = setResidentErrorMessage(
+      setResidentErrorMessage(
         "Failed to load residents: " + err.message,
+        "error",
       );
     } finally {
       setLoading(false);
     }
   };
 
-  // Load residents and households  
+  // Load residents and households
   useEffect(() => {
     loadResidents();
     loadHouseholds();
@@ -106,16 +108,16 @@ export default function Resident() {
     try {
       if (selectedResident) {
         await updateResident(selectedResident.resident_id, formData);
-        showSnackbar("Resident updated successfully");
+        showSnackbar("Resident updated successfully", "success");
       } else {
         await addResident(formData);
-        showSnackbar("Resident added successfully");
+        showSnackbar("Resident added successfully", "success");
       }
       await loadResidents();
       setOpenResidentForm(false);
     } catch (err) {
       console.error("Error saving resident:", err);
-      setResidentErrorMessage(err.message || "Error saving resident");
+      setResidentErrorMessage(err.message || "Error saving resident", "error");
     }
   };
 
@@ -125,10 +127,13 @@ export default function Resident() {
       await deleteResident(id);
       await loadResidents();
       setOpenResidentDelete(false);
-      showSnackbar("Resident deleted successfully");
+      showSnackbar("Resident deleted successfully", "success");
     } catch (err) {
-      console.error("Error deleting resident:", err);
-      setResidentErrorMessage(err.message || "Error deleting resident");
+      console.error("Error deleting resident:", err, "error");
+      setResidentErrorMessage(
+        err.message || "Error deleting resident",
+        "error",
+      );
     }
   };
 
@@ -151,14 +156,26 @@ export default function Resident() {
     (isAdmin || isStaff) && localStorage.getItem("can_add") === "1";
 
   // Snackbar handlers
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
   };
 
   return (
@@ -307,6 +324,8 @@ export default function Resident() {
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -314,8 +333,15 @@ export default function Resident() {
       >
         <Alert
           onClose={closeSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

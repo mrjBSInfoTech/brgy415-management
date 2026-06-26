@@ -51,6 +51,7 @@ export default function Files() {
   const [searchQuery, setSearchQuery] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [sortOption, setSortOption] = useState("all");
 
   // ========== FILES HANDLERS ==========
@@ -80,12 +81,12 @@ export default function Files() {
         setFiles(response);
       } else {
         setFiles([]);
-        setFilesErrorMessage("⚠️ No data received from server.");
+        setFilesErrorMessage("No data received from server.", "error");
       }
     } catch (err) {
       console.error("Failed to fetch files:", err);
       setFiles([]);
-      setFilesErrorMessage("Failed to load files: " + err.message);
+      setFilesErrorMessage("Failed to load files: " + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -101,15 +102,16 @@ export default function Files() {
     try {
       if (selectedFiles) {
         await updateFile(selectedFiles.file_id, formData);
-        showSnackbar("✓ File Editing Complete");
+        showSnackbar("✓ File Editing Complete", "success");
       } else {
         await addFile(formData);
-        showSnackbar("✓ File Adding Complete");
+        showSnackbar("✓ File Adding Complete", "success");
       }
       await loadFiles();
       setOpenFilesForm(false);
     } catch (err) {
-      console.error("Error saving file:", err);
+      console.error("Error saving file:", err, "error");
+      showSnackbar("Failed to save file: " + err.message, "error");
     }
   };
 
@@ -118,12 +120,12 @@ export default function Files() {
     try {
       console.log("Deleting file with ID:", id);
       await deleteFile(id);
-      showSnackbar("✓ File Deletion Complete");
+      showSnackbar("✓ File Deletion Complete", "success");
       await loadFiles();
       setOpenFilesDelete(false);
     } catch (err) {
-      console.error("Error deleting file:", err);
-      showSnackbar("❌ Failed to delete file: " + err.message);
+      console.error("Error deleting file:", err, "error");
+      showSnackbar(" Failed to delete file: " + err.message, "error");
     }
   };
 
@@ -162,14 +164,26 @@ export default function Files() {
     (isAdmin || isStaff) && localStorage.getItem("can_delete") === "1";
 
   // Snackbar handlers
-  const showSnackbar = (message) => {
+  const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") return;
     setSnackbarOpen(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case "success":
+        return "success.light"; // Green
+      case "error":
+        return "error.light"; // Red
+      default:
+        return "primary.light";
+    }
   };
   return (
     <Box p={3}>
@@ -389,6 +403,8 @@ export default function Files() {
       {/* Snackbar Notification */}
       <Snackbar
         open={snackbarOpen}
+        severity={snackbarSeverity}
+        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -396,8 +412,15 @@ export default function Files() {
       >
         <Alert
           onClose={closeSnackbar}
-          severity="success"
-          sx={{ width: "100%" }}
+          severity={snackbarSeverity}
+          sx={{
+            width: "100%",
+            backgroundColor: getSeverityColor(snackbarSeverity),
+            color: "#fff",
+            "& .MuiAlert-icon": {
+              color: "#fff",
+            },
+          }}
         >
           {snackbarMessage}
         </Alert>

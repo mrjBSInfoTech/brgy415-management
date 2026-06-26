@@ -127,13 +127,13 @@ function AccessForm({
   const handleSubmit = async () => {
     // For edit mode - validate official_account_id
     if (isEditMode && !selectedOfficial?.official_account_id) {
-      setError("❌ Account not found");
+      setError("Account not found");
       return;
     }
 
     // For create mode - validate official selection
     if (!isEditMode && !formData.official_id) {
-      setError("❌ Please select an official");
+      setError("Please select an official");
       return;
     }
 
@@ -141,15 +141,15 @@ function AccessForm({
     if (!isEditMode) {
       // Create mode requires password
       if (!formData.password || !formData.password.trim()) {
-        setError("❌ Password is required");
+        setError("Password is required");
         return;
       }
       if (formData.password.length < 6) {
-        setError("❌ Password must be at least 6 characters long");
+        setError("Password must be at least 6 characters long");
         return;
       }
       if (formData.password !== formData.confirmPassword) {
-        setError("❌ Passwords do not match");
+        setError("Passwords do not match");
         return;
       }
     } else {
@@ -157,16 +157,16 @@ function AccessForm({
       if (formData.password || formData.confirmPassword) {
         if (!formData.password || !formData.confirmPassword) {
           setError(
-            "❌ Please provide both password fields or leave both empty",
+            "Please provide both password fields or leave both empty",
           );
           return;
         }
         if (formData.password.length < 6) {
-          setError("❌ Password must be at least 6 characters long");
+          setError("Password must be at least 6 characters long");
           return;
         }
         if (formData.password !== formData.confirmPassword) {
-          setError("❌ Passwords do not match");
+          setError("Passwords do not match");
           return;
         }
       }
@@ -191,7 +191,7 @@ function AccessForm({
       await onSubmit(submitData);
       handleClose();
     } catch (err) {
-      setError(err.message || "❌ Error processing account");
+      setError(err.message || "Error processing account");
     } finally {
       setLoading(false);
     }
