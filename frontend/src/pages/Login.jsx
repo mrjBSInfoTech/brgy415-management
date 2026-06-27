@@ -25,7 +25,6 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { loginUser } from "../api/authenticationAPI";
-import SaleSyncLogo from "../assets/SaleSync_Logo_Design.png";
 import BarangayIcon from "../assets/BarangayIcon.png";
 
 // Slide Transition for Snackbar

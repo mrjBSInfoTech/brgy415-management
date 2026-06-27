@@ -11,7 +11,6 @@ import Announcements from "./pages/Announcements";
 import Concern from "./pages/Concern";
 import Officials from "./pages/Officials";
 import Citizens from "./pages/Citizens";
-import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import theme from './theme/fontTheme';

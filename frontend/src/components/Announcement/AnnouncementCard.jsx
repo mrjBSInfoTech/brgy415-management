@@ -95,7 +95,10 @@ export default function AnnouncementCard({ announcements, onEdit, onDelete }) {
               <Box>
                 <Typography
                   variant="h6"
-                  sx={{ fontWeight: "bold", lineHeight: 1.2 }}
+                  sx={{ fontWeight: "bold", 
+                        lineHeight: 1.2,
+                        fontSize: { xs: 15, sm: 18, md: 20 }, 
+                  }}
                 >
                   {announcement.title}
                 </Typography>
@@ -121,6 +124,7 @@ export default function AnnouncementCard({ announcements, onEdit, onDelete }) {
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
                 color: "text.primary",
+                fontSize: { xs: 13, sm: 15, md: 16 }, 
               }}
             >
               {announcement.description}

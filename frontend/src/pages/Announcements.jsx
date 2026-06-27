@@ -184,12 +184,18 @@ export default function Announcements() {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
           mb: 2,
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold" }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ fontWeight: "bold", 
+                fontSize: { xs: 24, sm: 32 },
+          }}
+        >
           Announcements
         </Typography>
         {canAdd && (
@@ -198,14 +204,14 @@ export default function Announcements() {
             color="primary"
             onClick={handleOpenAnnouncementAdd}
             sx={{
-              width: { xs: 150, sm: 150 },
-              height: { xs: 45, sm: 45 },
+              width: { xs: "100%", sm: 150 },
+              height: { xs: 35, sm: 45 },
               minWidth: { xs: 45, sm: 50 },
               fontSize: { xs: 12, sm: 14 },
               padding: 0,
             }}
           >
-            Add Announcement
+            Add Announcements
           </Button>
         )}
       </Box>

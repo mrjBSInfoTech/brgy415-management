@@ -272,11 +272,15 @@ export default function Officials() {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
           mb: 2,
         }}
       >
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold" }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ fontWeight: "bold", fontSize: { xs: 24, sm: 32 } }}
+        >
           {part === 1 ? "Officials" : "Officials - Access Control"}
         </Typography>
         {part === 1 && (
@@ -285,8 +289,8 @@ export default function Officials() {
             color="primary"
             onClick={handleOpenOfficialAdd}
             sx={{
-              width: { xs: 150, sm: 150 },
-              height: { xs: 45, sm: 45 },
+              width: { xs: "100%", sm: 150 },
+              height: { xs: 35, sm: 45 },
               minWidth: { xs: 45, sm: 50 },
               fontSize: { xs: 12, sm: 16 },
               padding: 0,

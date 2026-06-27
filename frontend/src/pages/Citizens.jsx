@@ -275,6 +275,7 @@ export default function Citizens() {
               size="small"
               sx={{
                 width: { xs: "100%", sm: 180 },
+                minWidth: { xs: "100%", md: 250 },
               }}
             >
               <InputLabel>Sort</InputLabel>

@@ -28,7 +28,6 @@ import {
   Badge as BadgeIcon,
 } from "@mui/icons-material";
 import { registerUser } from "../api/authenticationAPI";
-import SaleSyncLogo from "../assets/SaleSync_Logo_Design.png";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
@@ -196,8 +195,8 @@ const Register = () => {
         >
           <Box
             component="img"
-            src={SaleSyncLogo}
-            alt="SaleSync Logo"
+            src={BarangayIcon}
+            alt="Barangay Logo"
             sx={{
               height: 50,
               width: "auto",

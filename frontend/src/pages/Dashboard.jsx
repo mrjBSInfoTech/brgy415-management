@@ -213,7 +213,11 @@ export default function Dashboard() {
         <title>Dashboard</title>
       </Helmet>
       <Box>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold" }}>
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ fontWeight: "bold", fontSize: { xs: 24, sm: 32 } }}
+        >
           Dashboard
         </Typography>
       </Box>
@@ -340,7 +344,7 @@ export default function Dashboard() {
             variant="h5"
             sx={{ fontWeight: "bold", mb: 2 }}
           >
-            Population 
+            Population
           </Typography>
           <Box
             sx={{

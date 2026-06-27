@@ -138,7 +138,7 @@ export default function Settings() {
         <title>Settings</title>
       </Helmet>
       <Box>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold" }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold", fontSize: { xs: 24, sm: 32 } }}>
           Settings
         </Typography>
       </Box>
@@ -162,12 +162,12 @@ export default function Settings() {
             color="primary"
             onClick={handleOpenPasswordEdit}
             sx={{
-              width: { xs: 130, sm: 150 },
+              width: { xs: 110, sm: 150 },
               height: { xs: 35, sm: 45 },
               minWidth: { xs: 45, sm: 50 },
               fontSize: { xs: 12, sm: 16 },
               padding: 0,
-            }}
+            }}  
           >
             Update
           </Button>
@@ -183,7 +183,7 @@ export default function Settings() {
             mb: 2,
           }}
         >
-          <Typography variant="body1" gutterBottom>
+          <Typography variant="body1" gutterBottom sx={{ fontSize: { xs: 16, sm: 16 }}}>
             Port Number : {port?.port_number || "Loading..."}
           </Typography>
           <Button

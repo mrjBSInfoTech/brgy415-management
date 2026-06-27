@@ -186,8 +186,8 @@ export default function Resident() {
       <Box
         sx={{
           display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
           justifyContent: "space-between",
-          alignItems: "center",
           mb: 2,
         }}
       >
@@ -204,7 +204,7 @@ export default function Resident() {
             color="primary"
             onClick={handleOpenResidentAdd}
             sx={{
-              width: { xs: 130, sm: 150 },
+              width: { xs: "100%", sm: 150 },
               height: { xs: 35, sm: 45 },
               minWidth: { xs: 45, sm: 50 },
               fontSize: { xs: 12, sm: 16 },

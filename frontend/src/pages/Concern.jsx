@@ -215,7 +215,7 @@ export default function Concern() {
         sx={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          flexDirection: { xs: "column", sm: "row" },
           mb: 2,
         }}
       >
@@ -232,9 +232,11 @@ export default function Concern() {
           color="primary"
           onClick={part === 1 ? goToPartTwo : goToPartOne}
           sx={{
-            width: { xs: 130, sm: 150 },
+            width: { xs: "100%", sm: 150 },
             height: { xs: 35, sm: 45 },
+            minWidth: { xs: 45, sm: 50 },
             fontSize: { xs: 12, sm: 16 },
+            padding: 0,
           }}
         >
           {part === 1 ? "Solved" : "Back"}
@@ -250,9 +252,9 @@ export default function Concern() {
             <Box
               sx={{
                 display: "flex",
-                flexDirection: { xs: "column", md: "row" },
+                flexDirection: { xs: "column", lg: "row" },
                 justifyContent: "space-between",
-                alignItems: { xs: "stretch", md: "center" },
+                alignItems: { xs: "stretch", lg: "center" },
                 gap: 2,
                 mb: 2,
                 mt: 2,
@@ -263,7 +265,7 @@ export default function Concern() {
                 placeholder="Search concerns..."
                 size="small"
                 sx={{
-                  width: { xs: "100%", sm: 300 },
+                  width: { xs: "100%", lg: 300 },
                 }}
                 InputProps={{
                   startAdornment: (
@@ -278,9 +280,9 @@ export default function Concern() {
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
+                  flexDirection: { xs: "column", lg: "row" },
                   gap: 2,
-                  width: { xs: "100%", md: "auto" },
+                  width: { xs: "100%", lg: "auto" },
                 }}
               >
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -297,13 +299,13 @@ export default function Concern() {
                       },
                     }}
                     sx={{
-                      width: { xs: "100%", sm: 200 },
+                      width: { xs: "100%", lg: 200 },
                     }}
                   />
                 </LocalizationProvider>
                 <FormControl
                   size="small"
-                  sx={{ width: { xs: "100%", sm: 180 } }}
+                  sx={{ width: { xs: "100%", lg: 180 } }}
                 >
                   <InputLabel>Urgency</InputLabel>
                   <Select
@@ -320,7 +322,7 @@ export default function Concern() {
                 </FormControl>
                 <FormControl
                   size="small"
-                  sx={{ width: { xs: "100%", sm: 180 } }}
+                  sx={{ width: { xs: "100%", lg: 180 } }}
                 >
                   <InputLabel>Type</InputLabel>
                   <Select
@@ -376,9 +378,9 @@ export default function Concern() {
             <Box
               sx={{
                 display: "flex",
-                flexDirection: { xs: "column", md: "row" },
+                flexDirection: { xs: "column", lg: "row" },
                 justifyContent: "space-between",
-                alignItems: { xs: "stretch", md: "center" },
+                alignItems: { xs: "stretch", lg: "center" },
                 gap: 2,
                 mb: 2,
                 mt: 2,
@@ -389,7 +391,7 @@ export default function Concern() {
                 placeholder="Search concerns..."
                 size="small"
                 sx={{
-                  width: { xs: "100%", sm: 300 },
+                  width: { xs: "100%", lg: 300 },
                 }}
                 InputProps={{
                   startAdornment: (
@@ -404,9 +406,9 @@ export default function Concern() {
               <Box
                 sx={{
                   display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
+                  flexDirection: { xs: "column", lg: "row" },
                   gap: 2,
-                  width: { xs: "100%", md: "auto" },
+                  width: { xs: "100%", lg: "auto" },
                 }}
               >
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -423,13 +425,13 @@ export default function Concern() {
                       },
                     }}
                     sx={{
-                      width: { xs: "100%", sm: 200 },
+                      width: { xs: "100%", lg: 200 },
                     }}
                   />
                 </LocalizationProvider>
                 <FormControl
                   size="small"
-                  sx={{ width: { xs: "100%", sm: 180 } }}
+                  sx={{ width: { xs: "100%", lg: 180 } }}
                 >
                   <InputLabel>Urgency</InputLabel>
                   <Select
@@ -446,7 +448,7 @@ export default function Concern() {
                 </FormControl>
                 <FormControl
                   size="small"
-                  sx={{ width: { xs: "100%", sm: 180 } }}
+                  sx={{ width: { xs: "100%", lg: 180 } }}
                 >
                   <InputLabel>Type</InputLabel>
                   <Select
