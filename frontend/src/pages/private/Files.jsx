@@ -34,7 +34,7 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilesForm from "../../components/private/Files/FilesForm";
 import FilesDelete from "../../components/private/Files/FilesDelete";
-import { fetchFiles, addFile, deleteFile } from "../../api/private/fileApi";
+import { fetchFiles, addFile, deleteFile } from "../../api/private/fileAPI";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
