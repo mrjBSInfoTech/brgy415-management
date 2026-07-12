@@ -122,10 +122,6 @@ const Login = () => {
     }
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
   return (
     <Container
       maxWidth={false}
@@ -275,24 +271,6 @@ const Login = () => {
                   <InputAdornment position="start">
                     <LockIcon sx={{ color: "#466ABE", fontSize: "1.25rem" }} />{" "}
                     {/* Smaller icon */}
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      edge="end"
-                      sx={{ color: "#666", padding: "6px" }} // Smaller padding
-                      size="small"
-                    >
-                      {showPassword ? (
-                        <VisibilityOff fontSize="small" />
-                      ) : (
-                        <Visibility fontSize="small" />
-                      )}{" "}
-                      {/* Smaller icons */}
-                    </IconButton>
                   </InputAdornment>
                 ),
                 sx: {

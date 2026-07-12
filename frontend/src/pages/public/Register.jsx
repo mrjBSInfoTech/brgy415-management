@@ -127,14 +127,6 @@ const Register = () => {
     }
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleClickShowConfirmPassword = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
   return (
     <Box
       sx={{
@@ -178,17 +170,6 @@ const Register = () => {
             }}
           >
             Create Account
-          </Typography>
-
-          <Typography
-            variant="body2"
-            sx={{
-              textAlign: "center",
-              color: "#666",
-              mb: 4,
-            }}
-          >
-            Join the barangay management community
           </Typography>
           <Box
             sx={{
@@ -318,18 +299,6 @@ const Register = () => {
                     <LockIcon sx={{ color: "#466ABE" }} />
                   </InputAdornment>
                 ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      edge="end"
-                      disabled={isLoading}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
               }}
               sx={{
                 "& .MuiOutlinedInput-root": {
@@ -355,18 +324,6 @@ const Register = () => {
                 startAdornment: (
                   <InputAdornment position="start">
                     <LockIcon sx={{ color: "#466ABE" }} />
-                  </InputAdornment>
-                ),
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={handleClickShowConfirmPassword}
-                      edge="end"
-                      disabled={isLoading}
-                    >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
                   </InputAdornment>
                 ),
               }}

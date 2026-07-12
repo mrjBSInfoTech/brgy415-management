@@ -111,10 +111,6 @@ const Login = () => {
     }
   };
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
   return (
     <Box
       sx={{
@@ -256,18 +252,6 @@ const Login = () => {
               startAdornment: (
                 <InputAdornment position="start">
                   <LockIcon sx={{ color: "#466ABE" }} />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    edge="end"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
                 </InputAdornment>
               ),
             }}

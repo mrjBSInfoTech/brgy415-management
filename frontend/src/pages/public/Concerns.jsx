@@ -162,9 +162,10 @@ export default function Concerns() {
         </Typography>
 
         <Grid container spacing={4} justifyContent="center">
-          <Grid sx={{ width: 600 }}>
-            <Card sx={{ mb: 4, p: 2 }}>
-              <CardContent>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Card sx={{ width: "100%", maxWidth: 600, mb: 4, p: 2 }}>
+                <CardContent>
                 <Typography
                   variant="h4"
                   gutterBottom
@@ -294,14 +295,16 @@ export default function Concerns() {
                   </Box>
                 </Box>
               </CardContent>
-            </Card>
+              </Card>
+            </Box>
           </Grid>
 
-          <Grid size={{ xs: 12, md: 6 }} sx={{ width: 600 }}>
-            <Paper sx={{ p: 4 }}>
-              <Typography variant="h4" sx={{ fontWeight: "bold" }} gutterBottom>
-                Send a Message
-              </Typography>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Paper sx={{ width: "100%", maxWidth: 600, p: 4 }}>
+                <Typography variant="h4" sx={{ fontWeight: "bold" }} gutterBottom>
+                  Send a Message
+                </Typography>
               <FormControl
                 fullWidth
                 label="Message Type"
@@ -336,21 +339,22 @@ export default function Concerns() {
                 rows={7}
               />
 
-              <Button
-                variant="contained"
-                sx={{ mt: 2, fontWeight: "bold" }}
-                fullWidth
-                onClick={() => {
-                  if (loggedIn) {
-                    handleSubmitConcern();
-                  } else {
-                    showSnackbar("Please log in to send a message", "error");
-                  }
-                }}
-              >
-                Send Message
-              </Button>
-            </Paper>
+                <Button
+                  variant="contained"
+                  sx={{ mt: 2, fontWeight: "bold" }}
+                  fullWidth
+                  onClick={() => {
+                    if (loggedIn) {
+                      handleSubmitConcern();
+                    } else {
+                      showSnackbar("Please log in to send a message", "error");
+                    }
+                  }}
+                >
+                  Send Message
+                </Button>
+              </Paper>
+            </Box>
           </Grid>
         </Grid>
       </Box>
