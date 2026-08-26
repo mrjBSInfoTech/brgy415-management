@@ -26,7 +26,7 @@ import {
 } from "@mui/icons-material";
 import { loginUser } from "../../api/private/authenticationAPI";
 import BarangayIcon from "../../assets/BarangayIcon.png";
-import { setToken } from "../../utils/auth";
+import { hasValidToken, setToken } from "../../utils/auth";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
@@ -44,11 +44,10 @@ const Login = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Check if user is already logged in
+  // Check if user is already logged in with a valid token
   useEffect(() => {
     const privateToken = localStorage.getItem("private_token");
-    if (privateToken) {
-      // User is already logged in, redirect to dashboard
+    if (privateToken && hasValidToken(privateToken)) {
       navigate("/private/dashboard", { replace: true });
     }
   }, [navigate]);

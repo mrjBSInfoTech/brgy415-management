@@ -48,16 +48,16 @@ const Footer = () => {
             <h3>Quick Links</h3>
             <ul>
               <li>
-                <a href="/">Home</a>
+                <a href="/public/">Home</a>
               </li>
               <li>
-                <a href="/about">About Us</a>
+                <a href="/public/about">About Us</a>
               </li>
               <li>
-                <a href="/announcements">Announcements</a>
+                <a href="/public/announcements">Announcements</a>
               </li>
               <li>
-                <a href="/concerns">Concerns</a>
+                <a href="/public/concerns">Concerns</a>
               </li>
             </ul>
           </div>

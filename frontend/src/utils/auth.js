@@ -5,15 +5,12 @@ const COMMON_AUTH_KEYS = ["auth_section"];
 const PUBLIC_AUTH_KEYS = [
   "public_token",
   "public_email",
-  "public_account_type",
   "public_first_name",
   "public_last_name",
   "public_contact",
-  "email",
-  "account_type",
-  "first_name",
-  "last_name",
-  "contact",
+  "public_status",
+  "public_type",
+  "public_date_created",
 ];
 
 // For Private Panel

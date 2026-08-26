@@ -32,7 +32,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { fetchCitizens, updateCitizen, deleteCitizen } from "../../api/private/citizenAPI";
+import {
+  fetchCitizens,
+  updateCitizen,
+  deleteCitizen,
+  bulkVerifyCitizens,
+  bulkDeleteCitizens,
+} from "../../api/private/citizenAPI";
 import { fetchResidents } from "../../api/private/residentAPI";
 import CitizenCard from "../../components/private/Citizen/CitizenCard";
 
@@ -48,6 +54,7 @@ export default function Citizens() {
   const [date, setDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("pending");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [citizensErrorMessage, setCitizensErrorMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -102,12 +109,8 @@ export default function Citizens() {
         showSnackbar("No citizen selected", "error");
         return;
       }
-      // Include status as "verified" when updating
-      const updateData = {
-        ...formData,
-        status: "verified",
-      };
-      await updateCitizen(citizen.user_id, updateData);
+
+      await updateCitizen(citizen.user_id, formData);
       showSnackbar("Citizen verified successfully", "success");
 
       await loadCitizens();
@@ -136,7 +139,29 @@ export default function Citizens() {
       await loadCitizens();
     } catch (err) {
       console.error("Error deleting citizen:", err);
-      setCitizensErrorMessage(err.message || "Error deleting citizen", "error");
+      setCitizensErrorMessage(err.message || "Error deleting citizen");
+    }
+  };
+
+  const handleBulkVerifyCitizens = async (ids) => {
+    try {
+      await bulkVerifyCitizens(ids);
+      showSnackbar(`${ids.length} citizen(s) verified successfully`, "success");
+      await loadCitizens();
+    } catch (err) {
+      console.error("Error bulk verifying citizens:", err);
+      showSnackbar(err.message || "Failed to verify selected citizens", "error");
+    }
+  };
+
+  const handleBulkDeleteCitizens = async (ids) => {
+    try {
+      await bulkDeleteCitizens(ids);
+      showSnackbar(`${ids.length} citizen(s) deleted successfully`, "success");
+      await loadCitizens();
+    } catch (err) {
+      console.error("Error bulk deleting citizens:", err);
+      showSnackbar(err.message || "Failed to delete selected citizens", "error");
     }
   };
 
@@ -145,34 +170,42 @@ export default function Citizens() {
     const fullName =
       `${citizen.first_name || ""} ${citizen.last_name || ""}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase());
+    const matchesType =
+      typeFilter === "all" ||
+      String(citizen.type || "").toLowerCase() === typeFilter;
 
     const isPending = citizen.status === "pending" || !citizen.status;
 
     if (!date) {
-      return matchesSearch && isPending;
+      return matchesSearch && matchesType && isPending;
     }
 
     const citizenDate = new Date(citizen.date_created).toDateString();
     const selectedDate = date.toDate().toDateString();
 
-    return matchesSearch && isPending && citizenDate === selectedDate;
+    return (
+      matchesSearch && matchesType && isPending && citizenDate === selectedDate
+    );
   });
 
   const filteredVerifiedCitizens = citizens.filter((citizen) => {
     const fullName =
       `${citizen.first_name || ""} ${citizen.last_name || ""}`.toLowerCase();
     const matchesSearch = fullName.includes(searchQuery.toLowerCase());
+    const matchesType =
+      typeFilter === "all" ||
+      String(citizen.type || "").toLowerCase() === typeFilter;
 
     const isVerified = citizen.status === "verified";
 
     if (!date) {
-      return matchesSearch && isVerified;
+      return matchesSearch && matchesType && isVerified;
     }
 
     const citizenDate = new Date(citizen.date_posted).toDateString();
     const selectedDate = date.toDate().toDateString();
 
-    return matchesSearch && isVerified && citizenDate === selectedDate;
+    return matchesSearch && matchesType && isVerified && citizenDate === selectedDate;
   });
 
   // Snackbar handlers
@@ -271,13 +304,7 @@ export default function Citizens() {
               width: { xs: "100%", md: "auto" },
             }}
           >
-            <FormControl
-              size="small"
-              sx={{
-                width: { xs: "100%", sm: 180 },
-                minWidth: { xs: "100%", md: 250 },
-              }}
-            >
+            <FormControl size="small" sx={{ width: { xs: "100%", lg: 180 } }}>
               <InputLabel>Sort</InputLabel>
               <Select
                 value={sortOption}
@@ -286,6 +313,18 @@ export default function Citizens() {
               >
                 <MenuItem value="verified">Verified</MenuItem>
                 <MenuItem value="pending">Pending</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ width: { xs: "100%", lg: 180 } }}>
+              <InputLabel>Type</InputLabel>
+              <Select
+                value={typeFilter}
+                label="Type"
+                onChange={(e) => setTypeFilter(e.target.value)}
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="resident">Resident</MenuItem>
+                <MenuItem value="visitor">Visitor</MenuItem>
               </Select>
             </FormControl>
           </Box>
@@ -316,6 +355,8 @@ export default function Citizens() {
               residents={residents}
               onEdit={handleSubmitCitizen}
               onDelete={handleDeleteCitizen}
+              onBulkVerify={handleBulkVerifyCitizens}
+              onBulkDelete={handleBulkDeleteCitizens}
             />
           )}
         </Paper>
@@ -344,6 +385,8 @@ export default function Citizens() {
               residents={residents}
               onEdit={handleSubmitCitizen}
               onDelete={handleDeleteCitizen}
+              onBulkVerify={handleBulkVerifyCitizens}
+              onBulkDelete={handleBulkDeleteCitizens}
             />
           )}
         </Paper>

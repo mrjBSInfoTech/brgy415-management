@@ -170,16 +170,13 @@ router.delete("/:id", authenticateToken, (req, res) => {
       return res.status(500).json({ error: "Failed to retrieve file info" });
     }
 
-    // Delete file from filesystem if it exists
-    if (results && results[0]?.file_name) {
-      const filePath = path.join(uploadDir, results[0].file_name);
-      console.log("Deleting file from path:", filePath);
-      
+    const storedFileName = results?.[0]?.file_name;
+
+    // Delete related files from filesystem if they exist
+    if (storedFileName) {
       try {
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          console.log("✅ File deleted from filesystem:", results[0].file_name);
-        }
+        deleteRelatedFiles(storedFileName);
+        console.log("Related files deleted from filesystem for:", storedFileName);
       } catch (fsErr) {
         console.error("Error deleting file from filesystem:", fsErr);
         // Continue with database deletion even if filesystem delete fails
@@ -192,12 +189,42 @@ router.delete("/:id", authenticateToken, (req, res) => {
         console.error("DB Error deleting file:", err);
         return res.status(500).json({ error: err.message });
       }
-      res.json({ message: "✅ File deleted successfully" });
+      res.json({ message: "File deleted successfully" });
     });
   });
 });
 
 // Helper Functions
+function deleteRelatedFiles(fileName) {
+  if (!fileName) return;
+
+  const targetPath = path.join(uploadDir, fileName);
+  const parsedTarget = path.parse(fileName);
+  const baseName = parsedTarget.name;
+
+  if (fs.existsSync(targetPath)) {
+    fs.unlinkSync(targetPath);
+    console.log("Deleted stored file:", fileName);
+  }
+
+  if (!fs.existsSync(uploadDir)) return;
+
+  const entries = fs.readdirSync(uploadDir);
+  entries.forEach((entry) => {
+    const entryPath = path.join(uploadDir, entry);
+    if (!fs.statSync(entryPath).isFile()) return;
+
+    const parsedEntry = path.parse(entry);
+    if (parsedEntry.name !== baseName) return;
+    if (entry === fileName) return;
+
+    if (fs.existsSync(entryPath)) {
+      fs.unlinkSync(entryPath);
+      console.log("Deleted related artifact:", entry);
+    }
+  });
+}
+
 function insertRecord(fileName, fileType, res) {
   const sql = "INSERT INTO file (file_name, file_type) VALUES (?, ?)";
   

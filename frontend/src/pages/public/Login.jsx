@@ -96,16 +96,24 @@ const Login = () => {
       setToken("public", data.token);
 
       localStorage.setItem("public_email", data.email);
-      localStorage.setItem("public_account_type", data.account_type);
+      localStorage.setItem("public_type", data.type);
       localStorage.setItem("public_first_name", data.first_name);
       localStorage.setItem("public_last_name", data.last_name);
+      localStorage.setItem("public_status", data.status);
       localStorage.setItem("public_contact", data.contact);
+      localStorage.setItem("public_date_created", data.date_created || "");
 
       showSnackbar("Login successful!", "success");
-
-      navigate("/public/main", { replace: true });
+      setTimeout(() => {
+        navigate("/public/main", { replace: true });
+      }, 1000); 
     } catch (error) {
-      showSnackbar(`Login failed: ${error.message}`, "error");
+      const message =
+        error.message?.includes("verified")
+          ? error.message
+          : `Login failed: ${error.message}`;
+
+      showSnackbar(message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -197,7 +205,7 @@ const Login = () => {
               color: "#333",
             }}
           >
-            Sign In
+            Login
           </Typography>
 
           <Typography

@@ -30,8 +30,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { fetchConcerns, updateConcern, deleteConcern } from "../../api/private/concernAPI";
+import { fetchConcerns, updateConcern, deleteConcern, bulkUpdateConcerns, bulkDeleteConcerns } from "../../api/private/concernAPI";
+import ConcernBulkSolved from "../../components/private/Concern/ConcernBulkSolved";
 import ConcernDelete from "../../components/private/Concern/ConcernDelete";
+import ConcernBulkDelete from "../../components/private/Concern/ConcernBulkDelete";
 import ConcernCard from "../../components/private/Concern/ConcernCard";
 import ConcernTable from "../../components/private/Concern/ConcernTable";
 
@@ -43,7 +45,10 @@ function SlideTransition(props) {
 export default function Concern() {
   const [concerns, setConcerns] = useState([]);
   const [selectedConcern, setSelectedConcern] = useState(null);
+  const [selectedConcernIds, setSelectedConcernIds] = useState([]);
+  const [openConcernBulkSolve, setOpenConcernBulkSolve] = useState(false);
   const [openConcernDelete, setOpenConcernDelete] = useState(false);
+  const [openConcernBulkDelete, setOpenConcernBulkDelete] = useState(false);
   const [concernErrorMessage, setConcernErrorMessage] = useState("");
   const [date, setDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -78,10 +83,20 @@ export default function Concern() {
     loadConcerns();
   }, []);
 
+  // Open Bulk Solve Concern Modal
+  const handleOpenConcernBulkSolve = (ids) => {
+    setSelectedConcernIds(ids);
+    setOpenConcernBulkSolve(true);
+  };
   // Open Delete Concern Modal
   const handleOpenConcernDelete = (concern) => {
     setSelectedConcern(concern);
     setOpenConcernDelete(true);
+  };
+  // Open Bulk Delete Concern Modal
+  const handleOpenConcernBulkDelete = (ids) => {
+    setSelectedConcernIds(ids);
+    setOpenConcernBulkDelete(true);
   };
 
   // ========== CONCERN HANDLERS ==========
@@ -107,6 +122,17 @@ export default function Concern() {
       setConcernErrorMessage(err.message);
     }
   };
+  // Bulk solve action handler
+  const handleBulkSolveConcerns = async (ids) => {
+    try {
+      await bulkUpdateConcerns(ids, "solved");
+      showSnackbar(`${ids.length} concern(s) marked as solved`, "success");
+      await loadConcerns();
+    } catch (err) {
+      console.error("Error bulk solving concerns:", err);
+      setConcernErrorMessage(err.message || "Failed to bulk solve concerns");
+    }
+  };
 
   // Delete concern
   const handleDeleteConcern = async (concern) => {
@@ -119,6 +145,18 @@ export default function Concern() {
     } catch (err) {
       console.error("Error deleting concern:", err, "error");
       setConcernErrorMessage(err.message);
+    }
+  };
+
+  // Bulk delete concerns
+  const handleBulkDeleteConcerns = async (ids) => {
+    try {
+      await bulkDeleteConcerns(ids);
+      showSnackbar(`${ids.length} concern(s) deleted successfully`, "success");
+      await loadConcerns();
+    } catch (err) {
+      console.error("Error bulk deleting concerns:", err);
+      setConcernErrorMessage(err.message || "Failed to bulk delete concerns");
     }
   };
 
@@ -357,6 +395,8 @@ export default function Concern() {
                 concerns={filteredPendingConcerns}
                 onEdit={handleSolveConcern}
                 onDelete={handleOpenConcernDelete}
+                onBulkSolve={handleOpenConcernBulkSolve}
+                onBulkDelete={handleOpenConcernBulkDelete}
               />
             ) : (
               <Typography
@@ -481,6 +521,8 @@ export default function Concern() {
                 concerns={filteredSolvedConcerns}
                 onEdit={handleSolveConcern}
                 onDelete={handleOpenConcernDelete}
+                onBulkSolve={handleOpenConcernBulkSolve}
+                onBulkDelete={handleOpenConcernBulkDelete}
               />
             ) : (
               <Typography
@@ -494,11 +536,23 @@ export default function Concern() {
         </>
       )}
       {/* Concern Modals */}
+        <ConcernBulkSolved
+          open={openConcernBulkSolve}
+          handleClose={() => setOpenConcernBulkSolve(false)}
+          onSubmit={handleBulkSolveConcerns}
+          selectedConcerns={selectedConcernIds}
+        />
       <ConcernDelete
         open={openConcernDelete}
         handleClose={() => setOpenConcernDelete(false)}
         onSubmit={handleDeleteConcern}
         selectedConcern={selectedConcern}
+      />
+      <ConcernBulkDelete
+        open={openConcernBulkDelete}
+        handleClose={() => setOpenConcernBulkDelete(false)}
+        onSubmit={handleBulkDeleteConcerns}
+        selectedConcerns={selectedConcernIds}
       />
       {/* Snackbar Notification */}
       <Snackbar

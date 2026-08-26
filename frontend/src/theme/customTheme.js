@@ -25,6 +25,7 @@ export const lightTheme = createTheme({
       sidebar: "#466ABE",
       header : "#466ABE",
       footer : "#466ABE",
+      table : "#ffffff",
     },
     text: {
       primary: "#0f172a",
@@ -96,6 +97,7 @@ export const darkTheme = createTheme({
       sidebar: "#1e293b",
       header : "#1e293b",
       footer : "#1e293b",
+      table : "#0f172a",
     },
     text: {
       primary: "#f8fafc",

@@ -166,7 +166,7 @@ function CitizenForm({
       }}
     >
       <>
-        <DialogTitle sx={{fontWeight: "bold"}}>Edit Citizen</DialogTitle>
+        <DialogTitle sx={{fontWeight: "bold"}}>Edit Account</DialogTitle>
         <DialogContent>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>

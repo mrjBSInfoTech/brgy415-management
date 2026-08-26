@@ -52,9 +52,7 @@ export default function Announcements() {
     try {
       setLoading(true);
       setAnnouncementErrorMessage("");
-      console.log("Loading all announcements...");
       const response = await fetchAnnouncements();
-      console.log("Announcements response:", response);
       if (response && Array.isArray(response)) {
         setAnnouncements(response);
       } else if (response && response.data && Array.isArray(response.data)) {
@@ -64,7 +62,6 @@ export default function Announcements() {
         setAnnouncementErrorMessage("No data received from server.");
       }
     } catch (err) {
-      console.error("Failed to fetch announcements:", err);
       setAnnouncements([]);
       setAnnouncementErrorMessage(
         "Failed to load announcements: " + err.message,
@@ -104,16 +101,16 @@ export default function Announcements() {
           selectedAnnouncement.announcement_id,
           formData,
         );
-        showSnackbar("Announcement updated successfully");
+        showSnackbar("Announcement updated successfully", "success");
       } else {
         await addAnnouncement(formData);
-        showSnackbar("Announcement added successfully");
+        showSnackbar("Announcement added successfully", "success");
       }
       await loadAnnouncements();
       setOpenAnnouncementForm(false);
     } catch (err) {
       console.error("Error saving announcement:", err);
-      setAnnouncementErrorMessage(err.message || "Error saving announcement");
+      setAnnouncementErrorMessage(err.message || "Error saving announcement", "error");
     }
   };
 
@@ -123,10 +120,10 @@ export default function Announcements() {
       await deleteAnnouncement(id);
       await loadAnnouncements();
       setOpenAnnouncementDelete(false);
-      showSnackbar("Announcement deleted successfully");
+      showSnackbar("Announcement deleted successfully", "success");
     } catch (err) {
       console.error("Error deleting announcement:", err);
-      setAnnouncementErrorMessage(err.message || "Error deleting announcement");
+      setAnnouncementErrorMessage(err.message || "Error deleting announcement", "error");
     }
   };
 
@@ -151,7 +148,7 @@ export default function Announcements() {
   const isAdmin = accountType === "Admin";
   const isStaff = accountType === "Staff";
   const canAdd =
-    (isAdmin || isStaff) && localStorage.getItem("private_can_add") === "1";
+      (isAdmin || isStaff) && localStorage.getItem("private_can_add") === "1";
 
   // Snackbar handlers
   const showSnackbar = (message, severity = "success") => {

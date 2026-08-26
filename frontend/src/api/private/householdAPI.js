@@ -42,9 +42,7 @@ const handleError = (error) => {
 // Fetch all households
 export const fetchHouseholds = async () => {
   try {
-    console.log("Fetching all households");
     const res = await api.get("/households");
-    console.log("Households fetched:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);
@@ -54,9 +52,7 @@ export const fetchHouseholds = async () => {
 // Fetch single household by ID
 export const fetchHouseholdById = async (id) => {
   try {
-    console.log("Fetching household by ID:", id);
     const res = await api.get(`/households/${id}`);
-    console.log("Household fetched:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);
@@ -66,9 +62,7 @@ export const fetchHouseholdById = async (id) => {
 // Add new household
 export const createHousehold = async (householdData) => {
   try {
-    console.log("Adding household:", householdData);
     const res = await api.post("/households", householdData);
-    console.log("Household added successfully:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);
@@ -83,9 +77,7 @@ export const addHousehold = async (householdData) => {
 // Update household
 export const updateHousehold = async (id, householdData) => {
   try {
-    console.log("Updating household:", id, householdData);
     const res = await api.put(`/households/${id}`, householdData);
-    console.log("Household updated successfully:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);
@@ -95,9 +87,7 @@ export const updateHousehold = async (id, householdData) => {
 // Delete household
 export const deleteHousehold = async (id) => {
   try {
-    console.log("Deleting household:", id);
     const res = await api.delete(`/households/${id}`);
-    console.log("Household deleted successfully:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);

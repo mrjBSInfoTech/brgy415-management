@@ -87,6 +87,11 @@ function PublicRoute({ children }) {
   const buttonRefs = useRef([]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [contact, setContact] = useState("");
+  const [type, setType] = useState("");
+  const [status, setStatus] = useState("");
+  const [dateCreated, setDateCreated] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -99,9 +104,19 @@ function PublicRoute({ children }) {
   useEffect(() => {
     const storedFirstName = localStorage.getItem("public_first_name");
     const storedLastName = localStorage.getItem("public_last_name");
+    const storedEmail = localStorage.getItem("public_email");
+    const storedContact = localStorage.getItem("public_contact");
+    const storedType = localStorage.getItem("public_type");
+    const storedStatus = localStorage.getItem("public_status");
+    const storedDateCreated = localStorage.getItem("public_date_created");
 
     setFirstName(storedFirstName || "");
     setLastName(storedLastName || "");
+    setEmail(storedEmail || "");
+    setContact(storedContact || "");
+    setType(storedType || "");
+    setStatus(storedStatus || "");
+    setDateCreated(storedDateCreated || "");
     setLoggedIn(isPublicAuthenticated());
   }, []);
 
@@ -325,7 +340,7 @@ function PublicRoute({ children }) {
                 transformOrigin={{ horizontal: "right", vertical: "top" }}
                 anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
               >
-                <MenuItem>
+                <MenuItem onClick={() => navigate("/public/profile")}>
                   <ListItemIcon>
                     <AccountCircleIcon fontSize="small" />
                   </ListItemIcon>
@@ -478,6 +493,17 @@ function PublicRoute({ children }) {
                 </Typography>
 
                 <ListItem disablePadding>
+                  <ListItemButton
+                    onClick={() => {
+                      navigate("/public/profile");
+                    }}
+                    sx={{ borderRadius: 2, color: "white" }} 
+                  >
+                    <ListItemIcon sx={{ color: "white", minWidth: 40 }}>
+                      <AccountCircleIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Profile" />
+                  </ListItemButton>
                   <ListItemButton
                     onClick={() => {
                       handleOpenDialog();

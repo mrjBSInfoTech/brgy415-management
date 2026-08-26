@@ -1,36 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import {
-  Alert,
-  Box,
-  Button,
-  FormControl,
-  InputLabel,
-  InputAdornment,
-  MenuItem,
-  Paper,
-  Select,
-  Snackbar,
-  TextField,
-  Typography,
-  Slide,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
+import { Box, Typography, Container, CircularProgress } from "@mui/material";
 import AnnouncementCard from "../../components/public/Announcement/AnnouncementCard";
 import { fetchAnnouncements } from "../../api/public/announcementAPI";
-import BarangayIcon from "../../assets/BarangayIcon.png";
 
 export default function Announcements() {
   const [announcements, setAnnouncements] = useState([]);
   const [announcementErrorMessage, setAnnouncementErrorMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // Load all announcements
   const loadAnnouncements = async () => {
     try {
       setAnnouncementErrorMessage("");
-      console.log("Loading all announcements...");
+      setLoading(true);
       const response = await fetchAnnouncements();
-      console.log("Announcements response:", response);
       if (response && Array.isArray(response)) {
         setAnnouncements(response);
       } else if (response && response.data && Array.isArray(response.data)) {
@@ -45,6 +29,8 @@ export default function Announcements() {
       setAnnouncementErrorMessage(
         `${err.message || "Failed to fetch announcements. Please try again later."}`,
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -53,27 +39,54 @@ export default function Announcements() {
   }, []);
 
   return (
-    <Box sx={{ backgroundColor: "#f5f5f5", minHeight: "100vh", py: 5 }}>
+    <Box sx={{ backgroundColor: "#f8fafc", minHeight: "100vh", pb: 10 }}>
       <Helmet titleTemplate="%s - Barangay 415 Zone 42">
         <title>Announcements</title>
       </Helmet>
-      {/* Announcements List */}
-      <Box sx={{ p: 3, mt: 3, borderRadius: 2 }} key="announcement.announcement_id">
-        {announcementErrorMessage ? (
-          <Typography align="center" color="textSecondary" sx={{ py: 3 }}>
-            {announcementErrorMessage}
+
+      {/* Hero Header */}
+      <Box
+        sx={{
+          background: "linear-gradient(135deg, #1e1f87 0%, #3a3cb3 100%)",
+          color: "white",
+          pt: { xs: 5, sm: 7, md: 9 },
+          pb: { xs: 6, sm: 8, md: 10 },
+          px: { xs: 2, sm: 3 },
+          textAlign: "center",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        }}
+      >
+        <Container maxWidth="md">
+          <Typography variant="h3" fontWeight="800" sx={{ fontSize: { xs: "2rem", sm: "2.75rem" }, mb: 1 }}>
+            Community Announcements
           </Typography>
-        ):
-        announcements.length === 0 ? (
-          <Typography align="center" color="textSecondary" sx={{ py: 3 }}>
-            No announcements found.
+          <Typography variant="body1" sx={{ opacity: 0.88, fontWeight: 400 }}>
+            Stay updated with the latest news, events, and advisories from Barangay 415.
           </Typography>
-        ) : (
-          <AnnouncementCard
-            announcements={announcements}
-          />
-        )}
+        </Container>
       </Box>
+
+      {/* Main Content Container */}
+      <Container maxWidth="lg" sx={{ py: { xs: 4, sm: 6, md: 8 }, px: { xs: 2, sm: 3 } }}>
+        <Box sx={{ width: "100%" }}>
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+              <CircularProgress sx={{ color: "#1e1f87" }} />
+            </Box>
+          ) : announcementErrorMessage ? (
+            <Typography align="center" color="text.secondary" sx={{ py: 6, px: 2, bgcolor: "white", borderRadius: 2, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+              {announcementErrorMessage}
+            </Typography>
+          ) : announcements.length === 0 ? (
+            <Typography align="center" color="text.secondary" sx={{ py: 6, px: 2, bgcolor: "white", borderRadius: 2, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+              No announcements found.
+            </Typography>
+          ) : (
+            /* Keeping the original AnnouncementCard intact */
+            <AnnouncementCard announcements={announcements} />
+          )}
+        </Box>
+      </Container>
     </Box>
   );
 }

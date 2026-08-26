@@ -3,43 +3,20 @@ import { Helmet } from "react-helmet-async";
 import {
   Box,
   Button,
-  FormControl,
   Grid,
-  InputLabel,
-  InputAdornment,
   MenuItem,
   Paper,
-  Select,
   Snackbar,
   Slide,
   Alert,
   TextField,
   Typography,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  TableContainer,
   Card,
   CardContent,
+  Container,
+  IconButton,
   Divider,
-  LinearProgress,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { addConcern } from "../../api/public/concernsAPI";
-import { getToken as authGetToken } from "../../utils/auth";
-import Footer from "../../components/public/Footer";
-
-// Slide Transition for Snackbar
-function SlideTransition(props) {
-  return <Slide {...props} direction="up" />;
-}
-
-//Logo
 import PlaceIcon from "@mui/icons-material/Place";
 import CallIcon from "@mui/icons-material/Call";
 import EmailIcon from "@mui/icons-material/Email";
@@ -47,15 +24,19 @@ import WatchLaterIcon from "@mui/icons-material/WatchLater";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import XIcon from "@mui/icons-material/X";
+import SendIcon from "@mui/icons-material/Send";
+import { addConcern } from "../../api/public/concernsAPI";
+import { getToken as authGetToken } from "../../utils/auth";
+import Footer from "../../components/public/Footer";
+
+function SlideTransition(props) {
+  return <Slide {...props} direction="up" />;
+}
 
 export default function Concerns() {
-  const [date, setDate] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortOption, setSortOption] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); 
-  const [concernErrorMessage, setConcernErrorMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loggedIn, setLoggedIn] = useState(false);
   const [formData, setFormData] = useState({
     message_type: "",
@@ -64,13 +45,10 @@ export default function Concerns() {
 
   useEffect(() => {
     const storedLoggedIn = authGetToken("public");
-
     setLoggedIn(!!storedLoggedIn);
   }, []);
 
-  // Submit (Add) Concern
-  const handleSubmitConcern = async (name) => {
-    // Validate all required fields
+  const handleSubmitConcern = async () => {
     if (!formData.message_type) {
       showSnackbar("Please select a message type", "error");
       return;
@@ -83,301 +61,297 @@ export default function Concerns() {
     try {
       await addConcern(formData);
       showSnackbar("Concern successfully submitted", "success");
-      setFormData({
-        message_type: "",
-        message: "",
-      });
-      setConcernErrorMessage("");
+      setFormData({ message_type: "", message: "" });
     } catch (err) {
-      console.error("Error saving concern:", err);
-      showSnackbar(`${err.message || "Error saving concern"}`, "error");
-      setConcernErrorMessage(err.message || "Error saving concern", "error");
+      showSnackbar(err.message || "Error saving concern", "error");
     }
   };
 
-  // Handle Enter key for submit
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "Enter" && open) {
-        event.preventDefault();
-        handleSubmitConcern();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open, formData]);
-
-  // Handle Escape key
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        handleClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open]);
-
-  // Snackbar handlers
   const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
-    setSnackbarSeverity(severity); // Set it to "success" or "error"
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
-  const closeSnackbar = (event, reason) => {
-    if (reason === "clickaway") return;
-    setSnackbarOpen(false);
-  };
-
-  const getSeverityColor = (severity) => {
-    switch(severity) {
-      case "success": return "success.main"; // Green
-      case "error": return "error.main";   // Red
-      default: return "success.main"; // Green
-    }
-  };
-
   return (
-    <Box>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", display: "flex", flexDirection: "column" }}>
       <Helmet titleTemplate="%s - Barangay 415 Zone 42">
         <title>Concerns</title>
       </Helmet>
-      {/* CONCERNS */}
+
       <Box
-        sx={{ py: 10, px: 3, mb: -10, backgroundColor: "#f5f5f5" }}
-        id="concerns"
+        sx={{
+          background: "linear-gradient(135deg, #1e1f87 0%, #3a3cb3 100%)",
+          color: "white",
+          pt: { xs: 5, sm: 7, md: 9 },
+          pb: { xs: 6, sm: 8, md: 10 },
+          px: { xs: 2, sm: 3 },
+          textAlign: "center",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        }}
       >
-        <Typography variant="h4" textAlign="center" fontWeight="bold" mb={6}>
-          Contact Us
-        </Typography>
+        <Container maxWidth="sm">
+          <Typography
+            variant="h3"
+            fontWeight="800"
+            sx={{ fontSize: { xs: "2rem", sm: "2.75rem" }, mb: 1 }}
+          >
+            Get in Touch
+          </Typography>
+          <Typography variant="body1" sx={{ opacity: 0.88, fontWeight: 400 }}>
+            Have a complaint, concern, or feedback? Send us a message and we'll assist you immediately.
+          </Typography>
+        </Container>
+      </Box>
 
-        <Grid container spacing={4} justifyContent="center">
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <Card sx={{ width: "100%", maxWidth: 600, mb: 4, p: 2 }}>
-                <CardContent>
-                <Typography
-                  variant="h4"
-                  gutterBottom
-                  sx={{ fontWeight: "bold" }}
-                  color="primary"
-                >
-                  Get In Touch
-                </Typography>
+      <Container maxWidth="lg" sx={{ py: { xs: 4, sm: 6, md: 8 }, px: { xs: 2, sm: 3 }, flex: 1 }}>
+        <Grid container spacing={{ xs: 3, md: 5 }} alignItems="stretch">
+          <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 2 } }}>
+            <Paper
+              elevation={0}
+              sx={{
+                height: "100%",
+                width: "100%",
+                borderRadius: 2,
+                p: { xs: 2.5, sm: 4 },
+                boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                border: "1px solid rgba(0, 0, 0, 0.05)",
+              }}
+            >
+              <Typography variant="h5" fontWeight="bold" color="text.primary" mb={1}>
+                Send Us a Message
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={3}>
+                Please fill out the form below. Logged-in residents receive direct updates on submitted concerns.
+              </Typography>
 
-                {/* Location */}
-                <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
-                  <PlaceIcon sx={{ color: "primary.main", mt: 0.5 }} />
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                      Location
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Barangay 415, Zone 42, Sampaloc, Manila, Philippines
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Contact Numbers */}
-                <Box id="contact-info" sx={{ mb: 3, display: "flex", gap: 2 }}>
-                  <CallIcon sx={{ color: "primary.main", mt: 0.5 }} />
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                      Contact Numbers
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Main: (02) 1234-5678
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Mobile: 0917-123-4567
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Email */}
-                <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
-                  <EmailIcon sx={{ color: "primary.main", mt: 0.5 }} />
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                      Email
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      info@barangay415.gov.ph
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Office Hours */}
-                <Box sx={{ mb: 3, display: "flex", gap: 2 }}>
-                  <WatchLaterIcon sx={{ color: "primary.main", mt: 0.5 }} />
-                  <Box>
-                    <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                      Office Hours
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Monday to Sunday: 8:00 AM - 12:00 AM
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                {/* Follow Us */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-                    Follow Us
-                  </Typography>
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <a
-                      href= "https://youtu.be/dQw4w9WgXcQ?si=lMr__bgF9rhooSLt"//"https://www.facebook.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <FacebookIcon
-                        sx={{
-                          color: "primary.main",
-                          cursor: "pointer",
-                          fontSize: 24,
-                        }}
-                      />
-                    </a>
-                    <a
-                      href= "https://youtu.be/dQw4w9WgXcQ?si=lMr__bgF9rhooSLt"//"https://www.instagram.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <InstagramIcon
-                        sx={{
-                          color: "primary.main",
-                          cursor: "pointer",
-                          fontSize: 24,
-                        }}
-                      />
-                    </a>
-                    <a
-                      href= "https://youtu.be/dQw4w9WgXcQ?si=lMr__bgF9rhooSLt"//"https://www.x.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <XIcon
-                        sx={{
-                          color: "primary.main",
-                          cursor: "pointer",
-                          fontSize: 24,
-                        }}
-                      />
-                    </a>
-                  </Box>
-                </Box>
-              </CardContent>
-              </Card>
-            </Box>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <Paper sx={{ width: "100%", maxWidth: 600, p: 4 }}>
-                <Typography variant="h4" sx={{ fontWeight: "bold" }} gutterBottom>
-                  Send a Message
-                </Typography>
-              <FormControl
-                fullWidth
-                label="Message Type"
-                sx={{
-                  width: { xs: "100%", sm: "100%" },
-                  mb: 3,
-                }}
-              >
-                <InputLabel>Message Type</InputLabel>
-                <Select
-                  value={formData.message_type}
-                  label="Message Type"
-                  onChange={(e) =>
-                    setFormData({ ...formData, message_type: e.target.value })
+              <Box
+                component="form"
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (loggedIn) {
+                    handleSubmitConcern();
+                  } else {
+                    showSnackbar("Please log in to send a message", "error");
                   }
-                  name="message_type"
+                }}
+                sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, sm: 3 } }}
+              >
+                <TextField
+                  select
+                  fullWidth
+                  label="Message Type"
+                  value={formData.message_type}
+                  onChange={(e) => setFormData({ ...formData, message_type: e.target.value })}
+                  variant="outlined"
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
                 >
                   <MenuItem value="complaint">Complaint</MenuItem>
                   <MenuItem value="concerns">Concerns</MenuItem>
                   <MenuItem value="feedback">Feedback</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                fullWidth
-                label="Message"
-                name="message"
-                value={formData.message}
-                onChange={(e) =>
-                  setFormData({ ...formData, message: e.target.value })
-                }
-                multiline
-                rows={7}
-              />
+                </TextField>
+
+                <TextField
+                  fullWidth
+                  label="Message Details"
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  multiline
+                  minRows={5}
+                  placeholder="Describe your issue or feedback in detail..."
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
+                />
 
                 <Button
+                  type="submit"
                   variant="contained"
-                  sx={{ mt: 2, fontWeight: "bold" }}
-                  fullWidth
-                  onClick={() => {
-                    if (loggedIn) {
-                      handleSubmitConcern();
-                    } else {
-                      showSnackbar("Please log in to send a message", "error");
-                    }
+                  size="large"
+                  endIcon={<SendIcon />}
+                  sx={{
+                    mt: 1,
+                    py: 1.5,
+                    borderRadius: 1.5,
+                    fontWeight: "bold",
+                    bgcolor: "#1e1f87",
+                    fontSize: "1rem",
+                    textTransform: "none",
+                    boxShadow: "0 4px 14px rgba(30, 31, 135, 0.35)",
+                    "&:hover": { bgcolor: "#17186b" },
                   }}
                 >
-                  Send Message
+                  Submit Concern
                 </Button>
-              </Paper>
-            </Box>
+              </Box>
+            </Paper>
+          </Grid>
+
+          <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 2, md: 1 } }}>
+            <Card
+              elevation={0}
+              sx={{
+                height: "100%",
+                width: "100%",
+                borderRadius: 2,
+                p: { xs: 1, sm: 2 },
+                boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                border: "1px solid rgba(0, 0, 0, 0.05)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+              }}
+            >
+              <CardContent id="contact-info" sx={{ p: { xs: 1.5, sm: 2 } }}>
+                <Typography variant="h5" fontWeight="bold" color="#1e1f87" mb={3}>
+                  Contact Information
+                </Typography>
+
+                <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: 2.5, sm: 3 } }}>
+                  
+                  {/* Location */}
+                  <Box sx={{ display: "flex", gap: { xs: 1.5, sm: 2.5 }, alignItems: "flex-start", minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1.5,
+                        flexShrink: 0,
+                        bgcolor: "rgba(30, 31, 135, 0.08)",
+                        color: "#1e1f87",
+                      }}
+                    >
+                      <PlaceIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight="700" color="text.primary">
+                        Location
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Barangay 415, Zone 42, Sampaloc, Manila, Philippines
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Contact Numbers */}
+                  <Box sx={{ display: "flex", gap: { xs: 1.5, sm: 2.5 }, alignItems: "flex-start", minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1.5,
+                        flexShrink: 0,
+                        bgcolor: "rgba(30, 31, 135, 0.08)",
+                        color: "#1e1f87",
+                      }}
+                    >
+                      <CallIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight="700" color="text.primary">
+                        Contact Numbers
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Main: (02) 1234-5678
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Mobile: 0917-123-4567
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Email */}
+                  <Box sx={{ display: "flex", gap: { xs: 1.5, sm: 2.5 }, alignItems: "flex-start", minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1.5,
+                        flexShrink: 0,
+                        bgcolor: "rgba(30, 31, 135, 0.08)",
+                        color: "#1e1f87",
+                      }}
+                    >
+                      <EmailIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight="700" color="text.primary">
+                        Email Address
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        info@barangay415.gov.ph
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* Office Hours */}
+                  <Box sx={{ display: "flex", gap: { xs: 1.5, sm: 2.5 }, alignItems: "flex-start", minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        p: { xs: 1, sm: 1.5 },
+                        borderRadius: 1.5,
+                        flexShrink: 0,
+                        bgcolor: "rgba(30, 31, 135, 0.08)",
+                        color: "#1e1f87",
+                      }}
+                    >
+                      <WatchLaterIcon />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight="700" color="text.primary">
+                        Office Hours
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Monday to Sunday: 8:00 AM - 12:00 AM
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </CardContent>
+
+              <Box sx={{ p: { xs: 1.5, sm: 2 }, pt: 0 }}>
+                <Divider sx={{ mb: 2 }} />
+                <Typography variant="subtitle2" fontWeight="700" color="text.primary" mb={1.5}>
+                  Follow Our Socials
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  {[
+                    { icon: <FacebookIcon />, href: "https://facebook.com" },
+                    { icon: <InstagramIcon />, href: "https://instagram.com" },
+                    { icon: <XIcon />, href: "https://x.com" },
+                  ].map((social, index) => (
+                    <IconButton
+                      key={index}
+                      component="a"
+                      href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        bgcolor: "#f1f5f9",
+                        color: "#1e1f87",
+                        "&:hover": { bgcolor: "#1e1f87", color: "white" },
+                        transition: "all 0.2s ease-in-out",
+                      }}
+                    >
+                      {social.icon}
+                    </IconButton>
+                  ))}
+                </Box>
+              </Box>
+            </Card>
           </Grid>
         </Grid>
-      </Box>
+      </Container>
+
       <Footer />
-      {/* Snackbar */}
+
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
-        onClose={closeSnackbar}
+        onClose={() => setSnackbarOpen(false)}
         TransitionComponent={SlideTransition}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
-          onClose={closeSnackbar}
+          onClose={() => setSnackbarOpen(false)}
           severity={snackbarSeverity}
-          sx={{
-            width: "100%",
-            backgroundColor: getSeverityColor(snackbarSeverity),
-            color: "#fff",
-            "& .MuiAlert-icon": {
-              color: "#fff",
-            }
-          }}
+          sx={{ width: "100%", borderRadius: 2 }}
         >
           {snackbarMessage}
         </Alert>

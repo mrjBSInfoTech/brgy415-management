@@ -184,6 +184,7 @@ export default function Dashboard() {
   const totalResidents = residents.length;
   const totalHouseholds = households.length;
   const totalUserAccounts = userAccounts.length;
+  const totalConcerns = concerns.length;
 
   const maleCount = residents.filter(
     (resident) => resident.gender === "Male",
@@ -210,8 +211,84 @@ export default function Dashboard() {
       (concern.status || "").toLowerCase() === "solved",
   ).length;
 
+  const normalizeMessageTypeLabel = (value) => {
+    const raw = (value || "Other").toString().trim();
+    const normalized = raw.toLowerCase();
+
+    if (normalized.includes("complaint")) return "Complaints";
+    if (normalized.includes("concern")) return "Concerns";
+    if (normalized.includes("feedback")) return "Feedback";
+    if (normalized.includes("request")) return "Requests";
+
+    return raw || "Other";
+  };
+
+  const detectTopicLabel = (text) => {
+    const normalized = (text || "").toLowerCase();
+
+    if (/\b(?:murder|kill|dead|stab|shoot|shooting|attack|assault|holdap|gun)\b/.test(normalized)) {
+      return "Murder / Violence";
+    }
+    if (/\b(?:accident|accidents|nasagasaan|nabundol|disgrasya)\b/.test(normalized)) {
+      return "Accidents";
+    }
+    if (/\b(?:fire|sunog|burn|burning|on fire)\b/.test(normalized)) {
+      return "Fire / Emergencies";
+    }
+    if (/\b(?:thief|thieves|magnanakaw|nanakaw|stolen|robbery|holdap)\b/.test(normalized)) {
+      return "Theft / Robbery";
+    }
+    if (/\b(?:dispute|disputes|away|fight|bardagulan|argument|brawl)\b/.test(normalized)) {
+      return "Disputes";
+    }
+    if (/\b(?:debt|utang|bayad|payment|pay|loan|pautang)\b/.test(normalized)) {
+      return "Debts / Payments";
+    }
+    if (/\b(?:basura|trash|garbage|dirty|drainage|canal|sanitation)\b/.test(normalized)) {
+      return "Garbage / Sanitation";
+    }
+    if (/\b(?:streetlight|light|ilaw|poste)\b/.test(normalized)) {
+      return "Streetlight / Lighting";
+    }
+    if (/\b(?:noise|ingay|videoke|karaoke|loud)\b/.test(normalized)) {
+      return "Noise / Disturbance";
+    }
+    if (/\b(?:hospital|doctor|medical|sakit|health)\b/.test(normalized)) {
+      return "Medical / Health";
+    }
+    if (/\b(?:dog|aso|cat|pusa|animal)\b/.test(normalized)) {
+      return "Animals";
+    }
+
+    return "General";
+  };
+
+  const groupedTopics = Object.entries(
+    concerns.reduce((acc, concern) => {
+      const typeLabel = normalizeMessageTypeLabel(concern.message_type);
+      if (!acc[typeLabel]) {
+        acc[typeLabel] = [];
+      }
+      acc[typeLabel].push(concern);
+      return acc;
+    }, {}),
+  ).map(([typeLabel, items]) => {
+    const topicCounts = items.reduce((acc, concern) => {
+      const topic = detectTopicLabel(concern.message || "");
+      acc[topic] = (acc[topic] || 0) + 1;
+      return acc;
+    }, {});
+
+    const topics = Object.entries(topicCounts)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, 3)
+      .map(([label, count]) => ({ label, count }));
+
+    return { type: typeLabel, topics };
+  });
+
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
       <Helmet titleTemplate="%s - Barangay Management System">
         <title>Dashboard</title>
       </Helmet>
@@ -219,7 +296,7 @@ export default function Dashboard() {
         <Typography
           variant="h4"
           gutterBottom
-          sx={{ fontWeight: "bold", fontSize: { xs: 24, sm: 32 } }}
+          sx={{ fontWeight: "bold", fontSize: { xs: 24, sm: 28, md: 32 } }}
         >
           Dashboard
         </Typography>
@@ -227,35 +304,36 @@ export default function Dashboard() {
       <Box
         sx={{
           mt: 3,
-          display: "flex",
-          gap: 3,
-          flexWrap: "wrap",
-          justifyContent: "center",
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(3, minmax(0, 1fr))",
+          },
+          gap: { xs: 2, sm: 3 },
         }}
       >
         <Card
           variant="outlined"
           sx={{
-            flex: "1 1 350px",
-            maxWidth: 500,
-            height: 150,
-            padding: 2,
+            width: "100%",
+            height: { xs: 135, sm: 150 },
+            p: { xs: 1.5, sm: 2 },
             borderRadius: 2,
             bgcolor: "#C1FFA9",
           }}
         >
-          <CardContent>
+          <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
             <Typography
               gutterBottom
               variant="h5"
-              sx={{ fontWeight: "bold", color: "#2C8508" }}
+              sx={{ fontWeight: "bold", color: "#2C8508", fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" }, lineHeight: 1.15 }}
             >
               Residents
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
-              <PersonIcon color="success" sx={{ fontSize: 30 }} />
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, mt: { xs: 1, sm: 2 } }}>
+              <PersonIcon color="success" sx={{ fontSize: { xs: 22, sm: 26, md: 30 } }} />
               <Typography
-                sx={{ fontWeight: "bold", color: "#2C8508", fontSize: 30 }}
+                sx={{ fontWeight: "bold", color: "#2C8508", fontSize: { xs: 24, sm: 28, md: 30 } }}
               >
                 {totalResidents}
               </Typography>
@@ -266,27 +344,26 @@ export default function Dashboard() {
         <Card
           variant="outlined"
           sx={{
-            flex: "1 1 350px",
-            maxWidth: 500,
-            height: 150,
-            padding: 2,
+            width: "100%",
+            height: { xs: 135, sm: 150 },
+            p: { xs: 1.5, sm: 2 },
             borderRadius: 2,
             bgcolor: "#FDCB80",
           }}
         >
-          <CardContent>
+          <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
             <Typography
               gutterBottom
               variant="h5"
-              sx={{ fontWeight: "bold", color: "#9B5F03" }}
+              sx={{ fontWeight: "bold", color: "#9B5F03", fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" }, lineHeight: 1.15 }}
             >
               Households
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
-              <HomeIcon color="warning" sx={{ fontSize: 30 }} />
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, mt: { xs: 1, sm: 2 } }}>
+              <HomeIcon color="warning" sx={{ fontSize: { xs: 22, sm: 26, md: 30 } }} />
               <Typography
                 variant="h4"
-                sx={{ fontWeight: "bold", color: "#9B5F03" }}
+                sx={{ fontWeight: "bold", color: "#9B5F03", fontSize: { xs: 24, sm: 28, md: 30 } }}
               >
                 {totalHouseholds}
               </Typography>
@@ -297,27 +374,26 @@ export default function Dashboard() {
         <Card
           variant="outlined"
           sx={{
-            flex: "1 1 350px",
-            maxWidth: 500,
-            height: 150,
-            padding: 2,
+            width: "100%",
+            height: { xs: 135, sm: 150 },
+            p: { xs: 1.5, sm: 2 },
             borderRadius: 2,
             bgcolor: "#FC9495",
           }}
         >
-          <CardContent>
+          <CardContent sx={{ p: { xs: 1.5, sm: 2 }, "&:last-child": { pb: { xs: 1.5, sm: 2 } } }}>
             <Typography
               gutterBottom
               variant="h5"
-              sx={{ fontWeight: "bold", color: "#880506" }}
+              sx={{ fontWeight: "bold", color: "#880506", fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" }, lineHeight: 1.15 }}
             >
               Official Accounts
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
-              <AccountCircleIcon color="error" sx={{ fontSize: 30 }} />
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, mt: { xs: 1, sm: 2 } }}>
+              <AccountCircleIcon color="error" sx={{ fontSize: { xs: 22, sm: 26, md: 30 } }} />
               <Typography
                 variant="h4"
-                sx={{ fontWeight: "bold", color: "#880506" }}
+                sx={{ fontWeight: "bold", color: "#880506", fontSize: { xs: 24, sm: 28, md: 30 } }}
               >
                 {totalUserAccounts}
               </Typography>
@@ -329,7 +405,7 @@ export default function Dashboard() {
         sx={{
           display: "flex",
           gap: 2,
-          flexDirection: { xs: "column", md: "row" }, // Column on mobile, row on desktop
+          flexDirection: { xs: "column", md: "row" },
           mt: 3,
         }}
       >
@@ -345,7 +421,7 @@ export default function Dashboard() {
           <Typography
             textAlign="center"
             variant="h5"
-            sx={{ fontWeight: "bold", mb: 2 }}
+            sx={{ fontWeight: "bold", mb: 2, fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}
           >
             Population
           </Typography>
@@ -387,7 +463,7 @@ export default function Dashboard() {
 
         <Paper
           sx={{
-            p: 3,
+            p: { xs: 1.5, sm: 2, md: 3 },
             mt: 3,
             borderRadius: 2,
             width: { xs: "100%", md: "50%" },
@@ -397,7 +473,7 @@ export default function Dashboard() {
           <Typography
             textAlign="center"
             variant="h5"
-            sx={{ fontWeight: "bold", mb: 2 }}
+            sx={{ fontWeight: "bold", mb: 2, fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.5rem" } }}
           >
             Concerns
           </Typography>
@@ -437,6 +513,107 @@ export default function Dashboard() {
           </Box>
         </Paper>
       </Box>
+      <Paper
+        sx={{
+          p: { xs: 2, md: 3 },
+          mt: 3,
+          borderRadius: 3,
+          background: "background.paper",
+          border: "1px solid",
+          borderColor: "divider",
+          boxShadow: "0 12px 30px rgba(15, 23, 42, 0.08)",
+        }}
+        variant="outlined"
+      >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 2,
+            flexWrap: "wrap",
+            mb: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Message Type Insights
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Most frequent concern categories based on submitted message types
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              px: 1.5,
+              py: 0.8,
+              borderRadius: 999,
+              bgcolor: "primary.main",
+              color: "white",
+              fontWeight: 700,
+            }}
+          >
+            {totalConcerns} total
+          </Box>
+        </Box>
+
+        {groupedTopics.length > 0 ? (
+          <Box sx={{ display: "grid", gap: 2 }}>
+            {groupedTopics.map((group, index) => (
+              <Box
+                key={group.type}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: "background.paper",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  boxShadow: "0 6px 18px rgba(15, 23, 42, 0.06)",
+                }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                  {index + 1}. {group.type}
+                </Typography>
+                {group.topics.length > 0 ? (
+                  <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                    {group.topics.map((topic) => (
+                      <Box component="li" key={topic.label} sx={{ mb: 0.75 }}>
+                        <Typography variant="body2">
+                          <Box component="span" sx={{ fontWeight: 700 }}>
+                            {topic.label}
+                          </Box>
+                          <Box component="span" color="text.secondary">
+                            {" "}({topic.count} {topic.count === 1 ? "message" : "messages"})
+                          </Box>
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No topics detected yet.
+                  </Typography>
+                )}
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              bgcolor: "background.paper",
+              border: "1px dashed",
+              borderColor: "divider",
+              textAlign: "center",
+            }}
+          >
+            <Typography color="text.secondary">
+              No concern data has been submitted yet.
+            </Typography>
+          </Box>
+        )}
+      </Paper>
       {passwordChanged && (
         <Dialog
           open={openPasswordWarning}
@@ -466,7 +643,7 @@ export default function Dashboard() {
               onClick={() => {
                 setOpenPasswordWarning(false);
                 setTimeout(() => {
-                  navigate("/settings");
+                  navigate("/private/settings");
                 }, 300);
               }}
             >

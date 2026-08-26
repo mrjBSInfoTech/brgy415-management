@@ -45,9 +45,7 @@ const handleError = (error) => {
 // Fetch all officials
 export const fetchOfficials = async () => {
   try {
-    console.log("Fetching all officials");
     const res = await api.get("/officials");
-    console.log("Officials fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchOfficials:", error);
@@ -58,9 +56,7 @@ export const fetchOfficials = async () => {
 // Fetch single official by ID
 export const fetchOfficialById = async (id) => {
   try {
-    console.log("Fetching official by ID:", id);
     const res = await api.get(`/officials/${id}`);
-    console.log("Official fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchOfficialById:", error);

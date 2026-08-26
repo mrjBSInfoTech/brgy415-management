@@ -16,8 +16,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
 import OfficialInfo from "./OfficialInfo";
 
-// Memoized individual card component to prevent unnecessary re-renders
-const OfficialCardItem = memo(function OfficialCardItem({ official, onEdit, onDelete }) {
+const OfficialCardItem = memo(function OfficialCardItem({
+  official,
+  onEdit,
+  onDelete,
+  onViewInfo,
+}) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [openInfoDialog, setOpenInfoDialog] = useState(false);
   const open = Boolean(anchorEl);
@@ -28,7 +32,7 @@ const OfficialCardItem = memo(function OfficialCardItem({ official, onEdit, onDe
   };
   const handleMenuClose = () => {
     setAnchorEl(null);
-  };  
+  };
 
   // Open Official Info dialog
   const handleInfoOpen = () => {
@@ -119,7 +123,7 @@ const OfficialCardItem = memo(function OfficialCardItem({ official, onEdit, onDe
             size="small"
             fullWidth
             startIcon={<InfoIcon />}
-            onClick={handleInfoOpen}
+            onClick={() => onViewInfo(official)}
             sx={{ mb: 2 }}
           >
             View Info
@@ -178,27 +182,40 @@ const OfficialCardItem = memo(function OfficialCardItem({ official, onEdit, onDe
 });
 
 export default function OfficialCard({ officials, onEdit, onDelete }) {
+  const [selectedOfficialInfo, setSelectedOfficialInfo] = useState(null);
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          xs: "1fr",
-          sm: "repeat(2, 1fr)",
-          md: "repeat(3, 1fr)",
-          lg: "repeat(4, 1fr)",
-        },
-        gap: 2,
-      }}
-    >
-      {officials.map((official) => (
-        <OfficialCardItem
-          key={official.official_id}
-          official={official}
-          onEdit={onEdit}
-          onDelete={onDelete}
+    <>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(4, 1fr)",
+          },
+          gap: 2,
+        }}
+      >
+        {officials.map((official) => (
+          <OfficialCardItem
+            key={official.official_id}
+            official={official}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onViewInfo={(official) => {
+              setSelectedOfficialInfo(official);
+            }}
+          />
+        ))}
+      </Box>
+      {selectedOfficialInfo && (
+        <OfficialInfo
+          open={Boolean(selectedOfficialInfo)}
+          handleClose={() => setSelectedOfficialInfo(null)}
+          selectedOfficial={selectedOfficialInfo}
         />
-      ))}
-    </Box>
+      )}
+    </>
   );
 }

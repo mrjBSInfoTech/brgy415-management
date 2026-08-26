@@ -42,9 +42,7 @@ const handleError = (error) => {
 // Fetch all ports
 export const fetchPorts = async () => {
   try {
-    console.log("Fetching all ports");
     const res = await api.get("/ports");
-    console.log("Ports fetched:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);
@@ -54,9 +52,7 @@ export const fetchPorts = async () => {
 // Fetch single port by ID
 export const fetchPortById = async (id) => {
   try {
-    console.log("Fetching port by ID:", id);
     const res = await api.get(`/ports/${id}`);
-    console.log("Port fetched:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);
@@ -66,9 +62,7 @@ export const fetchPortById = async (id) => {
 // Update port
 export const updatePort = async (id, portData) => {
   try {
-    console.log("Updating port:", id, portData);
     const res = await api.put(`/ports/${id}`, portData);
-    console.log("Port updated successfully:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);

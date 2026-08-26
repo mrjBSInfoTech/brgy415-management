@@ -2,25 +2,31 @@ import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import {
   Alert,
+  Avatar,
   Box,
   Button,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  InputAdornment,
-  LinearProgress,
-  MenuItem,
+  Chip,
+  Container,
+  Divider,
+  Grid,
   Paper,
-  Select,
-  TextField,
+  Stack,
   Typography,
   Snackbar,
   Slide,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+
 // Icons
-import HomeIcon from "@mui/icons-material/Home";
-import PersonIcon from "@mui/icons-material/Person";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import LockResetIcon from "@mui/icons-material/LockReset";
+import RouterIcon from "@mui/icons-material/Router";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import BadgeIcon from "@mui/icons-material/Badge";
+import PhoneIcon from "@mui/icons-material/Phone";
+import SecurityIcon from "@mui/icons-material/Security";
+import EditIcon from "@mui/icons-material/Edit";
+
 import { fetchPorts, updatePort } from "../../api/private/portAPI";
 import { changePassword } from "../../api/private/authenticationAPI";
 import ChangePassword from "../../components/private/Settings/ChangePassword";
@@ -33,65 +39,54 @@ function SlideTransition(props) {
 
 export default function Settings() {
   const [port, setPort] = useState(null);
-  const [password, setPassword] = useState(null);
   const [loading, setLoading] = useState(false);
   const [portErrorMessage, setPortErrorMessage] = useState("");
   const [openPortForm, setOpenPortForm] = useState(false);
-  const [selectedPort, setSelectedPort] = useState(null);
   const [openPasswordForm, setOpenPasswordForm] = useState(false);
-  const [selectedPassword, setSelectedPassword] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [profile, setProfile] = useState({});
 
   // Fetch all ports from API
   const loadPort = async () => {
     try {
       setLoading(true);
       const data = await fetchPorts();
-      console.log("Ports loaded:", data);
       setPort(data?.[0] || {});
     } catch (err) {
       console.error("Error loading ports:", err);
-      const message = setPortErrorMessage(
-        "Failed to load ports: " + err.message,
-      );
+      setPortErrorMessage("Failed to load ports: " + err.message);
     } finally {
       setLoading(false);
     }
   };
+
   // ========== PASSWORD HANDLERS ==========
-  // ✏️ Open Change Password Modal
   const handleOpenPasswordEdit = () => {
     setOpenPasswordForm(true);
   };
 
-  // 💾 Submit Changed Password
   const handleSubmitPassword = async (formData) => {
     try {
       const { currentPassword, newPassword } = formData;
-
-      // Update password if provided
       if (currentPassword && newPassword) {
         await changePassword(currentPassword, newPassword);
       }
-
       showSnackbar("Password updated successfully", "success");
       setOpenPasswordForm(false);
     } catch (err) {
-      console.error("Error updating password:", err , "error");
+      console.error("Error updating password:", err);
       showSnackbar("Failed to update password: " + err.message, "error");
     }
   };
 
   // ========== PORT HANDLERS ==========
-  // ✏️ Open Edit Port Modal
-  const handleOpenPortEdit = (port) => {
-    setPort(port);
+  const handleOpenPortEdit = (selectedPort) => {
+    setPort(selectedPort);
     setOpenPortForm(true);
   };
 
-  // Submit Port
   const handleSubmitPort = async (formData) => {
     try {
       await updatePort(port.port_id, formData);
@@ -107,7 +102,7 @@ export default function Settings() {
   // Snackbar handlers
   const showSnackbar = (message, severity = "success") => {
     setSnackbarMessage(message);
-    setSnackbarSeverity(severity); // Set it to "success" or "error"
+    setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
 
@@ -116,96 +111,367 @@ export default function Settings() {
     setSnackbarOpen(false);
   };
 
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case "success":
-        return "success.light"; // Green
-      case "error":
-        return "error.light"; // Red
-      default:
-        return "primary.light"; //
-    }
+  const getStoredValue = (key) => {
+    const value = localStorage.getItem(key);
+    return value && value !== "undefined" && value !== "null" ? value : "";
   };
 
-  // Load port on component mount
   useEffect(() => {
     loadPort();
+    setProfile({
+      firstName: getStoredValue("private_first_name"),
+      lastName: getStoredValue("private_last_name"),
+      username: getStoredValue("private_username"),
+      accountType: getStoredValue("private_account_type") || "Administrator",
+      position: getStoredValue("private_position"),
+      contact: getStoredValue("private_contact"),
+      image: getStoredValue("private_image"),
+    });
   }, []);
+
+  const profileName =
+    [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
+    profile.username ||
+    "Current user";
+
+  const profileInitials = profileName
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0))
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
-    <Box sx={{ p: 3 }}>
+    <Box p={3}>
       <Helmet titleTemplate="%s - Barangay Management System">
         <title>Settings</title>
       </Helmet>
-      <Box>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: "bold", fontSize: { xs: 24, sm: 32 } }}>
+
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        <Typography
+          variant="h4"
+          gutterBottom
+          sx={{ fontWeight: "bold", fontSize: { xs: 24, sm: 32 } }}
+        >
           Settings
         </Typography>
       </Box>
-      <Paper sx={{ p: 3, mt: 3, borderRadius: 2 }} variant="outlined">
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-          User Settings
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <Typography variant="body1" gutterBottom>
-            Change Password
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleOpenPasswordEdit}
+
+      <Grid container spacing={{ xs: 2, md: 3 }}>
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Paper
+            elevation={0}
             sx={{
-              width: { xs: 110, sm: 150 },
-              height: { xs: 35, sm: 45 },
-              minWidth: { xs: 45, sm: 50 },
-              fontSize: { xs: 12, sm: 16 },
-              padding: 0,
-            }}  
-          >
-            Update
-          </Button>
-        </Box>
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
-          Port Number
-        </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <Typography variant="body1" gutterBottom sx={{ fontSize: { xs: 16, sm: 16 }}}>
-            Port Number : {port?.port_number || "Loading..."}
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleOpenPortEdit(port)}
-            sx={{
-              width: { xs: 130, sm: 150 },
-              height: { xs: 35, sm: 45 },
-              minWidth: { xs: 45, sm: 50 },
-              fontSize: { xs: 12, sm: 16 },
-              padding: 0,
+              p: { xs: 2, sm: 3 },
+              borderRadius: 2,
+              bgcolor: "background.paper",
+              border: "1px solid rgba(0, 0, 0, 0.06)",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+              height: "100%",
             }}
           >
-            Update
-          </Button>
-        </Box>
-      </Paper>
+            <Typography
+              variant="h6"
+              fontWeight="700"
+              color="text.primary"
+              mb={3}
+            >
+              Profile Overview
+            </Typography>
+
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                mb: 3,
+              }}
+            >
+              <Avatar
+                src={
+                  profile.image
+                    ? `http://localhost:5000/uploads/uploadOfficial/${encodeURIComponent(profile.image)}`
+                    : undefined
+                }
+                imgProps={{
+                  onError: (event) => {
+                    event.currentTarget.style.display = "none";
+                  },
+                }}
+                sx={{
+                  width: 100,
+                  height: 100,
+                  bgcolor: "#1e1f87",
+                  fontSize: "2rem",
+                  fontWeight: 700,
+                  boxShadow: "0 0 0 6px rgba(30, 31, 135, 0.1)",
+                  mb: 2,
+                }}
+              >
+                {profileInitials}
+              </Avatar>
+
+              <Typography variant="h6" fontWeight="700" color="#1e1f87">
+                {profileName}
+              </Typography>
+
+              <Stack
+                direction="row"
+                spacing={1}
+                mt={1}
+                justifyContent="center"
+                flexWrap="wrap"
+              >
+                <Chip
+                  label={profile.accountType}
+                  size="small"
+                  sx={{
+                    bgcolor: "#1e1f87",
+                    color: "white",
+                    fontWeight: 700,
+                  }}
+                />
+                {profile.position && (
+                  <Chip
+                    label={profile.position}
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontWeight: 600 }}
+                  />
+                )}
+              </Stack>
+            </Box>
+
+            <Divider sx={{ my: 2.5 }} />
+
+            <Stack spacing={2}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box
+                  sx={{
+                    p: 1,
+                    borderRadius: 2,
+                    bgcolor: "background.default",
+                    color: "#1e1f87",
+                    width: 40,
+                    height: 40,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <PersonOutlineIcon fontSize="small" />
+                </Box>
+                <Box>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
+                    Username
+                  </Typography>
+                  <Typography variant="body2" fontWeight="600">
+                    {profile.username || "Not specified"}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {profile.contact && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1,
+                      borderRadius: 2,
+                      bgcolor: "background.default",
+                      color: "#1e1f87",
+                    }}
+                  >
+                    <PhoneIcon fontSize="small" />
+                  </Box>
+                  <Box>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                    >
+                      Contact Number
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {profile.contact}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 7 }}>
+          <Stack spacing={3}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                borderRadius: 2,
+                bgcolor: "background.paper",
+                border: "1px solid rgba(0, 0, 0, 0.06)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+              }}
+            >
+              <Typography
+                variant="h6"
+                fontWeight="700"
+                color="text.primary"
+                mb={2}
+              >
+                Security Settings
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "stretch", sm: "center" },
+                  gap: 2,
+                  justifyContent: "space-between",
+                  p: { xs: 1.5, sm: 2 },
+                  borderRadius: 2,
+                  bgcolor: "background.default",
+                  border: "1px solid rgba(0, 0, 0, 0.04)",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2.5,
+                      bgcolor: "rgba(30, 31, 135, 0.08)",
+                      color: "#1e1f87",
+                    }}
+                  >
+                    <LockResetIcon />
+                  </Box>
+                  <Box>
+                    <Typography variant="body1" fontWeight="700">
+                      Account Password
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Change your password regularly to secure your account.
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Button
+                  variant="contained"
+                  onClick={handleOpenPasswordEdit}
+                  sx={{
+                    bgcolor: "#1e1f87",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    borderRadius: 2,
+                    px: 2.5,
+                    alignSelf: { xs: "stretch", sm: "auto" },
+                    boxShadow: "none",
+                    "&:hover": { bgcolor: "#151663" },
+                  }}
+                >
+                  Update
+                </Button>
+              </Box>
+            </Paper>
+
+            {/* Server / Port Configuration Card */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 2, sm: 3 },
+                borderRadius: 2,
+                bgcolor: "background.paper",
+                border: "1px solid rgba(0, 0, 0, 0.06)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+              }}
+            >
+              <Typography
+                variant="h6"
+                fontWeight="700"
+                color="text.primary"
+                mb={2}
+              >
+                System Configuration
+              </Typography>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "stretch", sm: "center" },
+                  gap: 2,
+                  justifyContent: "space-between",
+                  p: { xs: 1.5, sm: 2 },
+                  borderRadius: 2,
+                  bgcolor: "background.default",
+                  border: "1px solid rgba(0, 0, 0, 0.04)",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <Box
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2.5,
+                      bgcolor: "rgba(30, 31, 135, 0.08)",
+                      color: "#1e1f87",
+                    }}
+                  >
+                    <RouterIcon />
+                  </Box>
+                  <Box>
+                    <Typography variant="body1" fontWeight="700">
+                      Port Configuration
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Current Port:{" "}
+                      <strong>{port?.port_number || "Loading..."}</strong>
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Button
+                  variant="outlined"
+                  onClick={() => handleOpenPortEdit(port)}
+                  sx={{
+                    borderColor: "#1e1f87",
+                    color: "#1e1f87",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    borderRadius: 2,
+                    px: 2.5,
+                    alignSelf: { xs: "stretch", sm: "auto" },
+                    "&:hover": {
+                      bgcolor: "rgba(30, 31, 135, 0.05)",
+                      borderColor: "#1e1f87",
+                    },
+                  }}
+                >
+                  Configure
+                </Button>
+              </Box>
+            </Paper>
+          </Stack>
+        </Grid>
+      </Grid>
+      {/* MODALS */}
       <ChangePassword
         open={openPasswordForm}
         handleClose={() => setOpenPasswordForm(false)}
         onSubmit={handleSubmitPassword}
-        selectedPassword={selectedPassword}
       />
       <PortForm
         open={openPortForm}
@@ -213,11 +479,10 @@ export default function Settings() {
         onSubmit={handleSubmitPort}
         selectedPort={port}
       />
-      {/* Snackbar Notification */}
+
+      {/* SNACKBAR NOTIFICATION */}
       <Snackbar
         open={snackbarOpen}
-        severity={snackbarSeverity}
-        variant="filled"
         autoHideDuration={3000}
         onClose={closeSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
@@ -226,14 +491,8 @@ export default function Settings() {
         <Alert
           onClose={closeSnackbar}
           severity={snackbarSeverity}
-          sx={{
-            width: "100%",
-            backgroundColor: getSeverityColor(snackbarSeverity),
-            color: "#fff",
-            "& .MuiAlert-icon": {
-              color: "#fff",
-            },
-          }}
+          variant="filled"
+          sx={{ width: "100%", borderRadius: 2, fontWeight: 600 }}
         >
           {snackbarMessage}
         </Alert>

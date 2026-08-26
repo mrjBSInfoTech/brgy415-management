@@ -30,6 +30,7 @@ import PublicMain from "../pages/public/Main";
 import PublicConcerns from "../pages/public/Concerns";
 import PublicAnnouncements from "../pages/public/Announcements";
 import PublicAbout from "../pages/public/About";
+import PublicProfile from "../pages/public/Profile";
 import PublicLogin from "../pages/public/Login";
 import PublicRegister from "../pages/public/Register";
 import PublicSuccessPending from "../pages/public/SuccessPending";
@@ -50,13 +51,14 @@ export default function AppRoutes() {
               <Route path="register" element={<PublicRegister />} />
               <Route path="success" element={<PublicSuccessPending />} />
             </Route>
-      
+
             <Route element={<PublicLayout />}>
               <Route index element={<Navigate to="main" replace />} />
               <Route path="main" element={<PublicMain />} />
               <Route path="concerns" element={<PublicConcerns />} />
               <Route path="announcements" element={<PublicAnnouncements />} />
               <Route path="about" element={<PublicAbout />} />
+              <Route path="profile" element={<PublicProfile />} />
             </Route>
           </Route>
 

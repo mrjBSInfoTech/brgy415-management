@@ -66,10 +66,30 @@ export const updateConcern = async (id, concernData) => {
   }
 };
 
+// ✏️ Bulk update concern status
+export const bulkUpdateConcerns = async (ids, status) => {
+  try {
+    const res = await api.put("/concerns/bulk/status", { ids, status });
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // ❌ Delete concern
 export const deleteConcern = async (id) => {
   try {
     const res = await api.delete(`/concerns/${id}`);
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// ❌ Bulk delete concerns
+export const bulkDeleteConcerns = async (ids) => {
+  try {
+    const res = await api.post("/concerns/bulk/delete", { ids });
     return res.data;
   } catch (error) {
     handleError(error);

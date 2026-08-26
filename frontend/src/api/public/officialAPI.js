@@ -9,9 +9,7 @@ const api = axios.create({
 // Fetch all officials
 export const fetchOfficials = async () => {
   try {
-    console.log("Fetching all officials");
     const res = await api.get("/about");
-    console.log("Officials fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchOfficials:", error);

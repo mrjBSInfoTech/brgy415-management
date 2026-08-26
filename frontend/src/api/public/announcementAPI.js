@@ -33,9 +33,7 @@ const handleError = (error) => {
 // Fetch all announcements
 export const fetchAnnouncements = async () => {
   try {
-    console.log("Fetching all announcements");
     const res = await api.get("/post");
-    console.log("Announcements fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchAnnouncements:", error);

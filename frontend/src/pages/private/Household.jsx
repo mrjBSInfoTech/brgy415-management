@@ -274,7 +274,7 @@ export default function Household() {
         ) : (
           <TableContainer>
             <Table>
-              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableHead sx={{ backgroundColor: "background.table" }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>House #</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>Street #</TableCell>
@@ -292,7 +292,7 @@ export default function Household() {
                 {filteredHouseholds.map((household) => (
                   <TableRow
                     key={household.household_id}
-                    sx={{ "&:hover": { backgroundColor: "#f9f9f9" } }}
+                    sx={{ "&:hover": { backgroundColor: "background.table" } }}
                   >
                     <TableCell>{household.house_number}</TableCell>
                     <TableCell>{household.street_number}</TableCell>

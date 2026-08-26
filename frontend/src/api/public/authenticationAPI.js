@@ -9,6 +9,14 @@ const api = axios.create({
   timeout: 5000,
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("public_token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Centralized error handler
 const handleError = (error) => {
   if (error.response) {
@@ -35,7 +43,6 @@ export const registerUser = async ({ first_name, last_name, email, contact, pass
       contact,
       password,
     });
-    console.log("Register API response:", res.data);
     return res.data;
   } catch (error) {
     console.error("Register API error:", error.message);
@@ -50,7 +57,6 @@ export const loginUser = async ({ email, password }) => {
       email,
       password,
     });
-    console.log("Login API response:", res.data);
     return res.data;
   } catch (error) {
     console.error("Login API error:", error.message);
@@ -58,11 +64,30 @@ export const loginUser = async ({ email, password }) => {
   }
 };
 
+// CHANGE PASSWORD
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    const res = await api.put("/login/changePassword", {
+      currentPassword,
+      newPassword,
+    });
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // LOGOUT (frontend only)
 export const logoutUser = () => {
   localStorage.removeItem("public_token");
-  localStorage.removeItem("token");
-  localStorage.removeItem("email");
+  localStorage.removeItem("public_email");
+  localStorage.removeItem("public_first_name");
+  localStorage.removeItem("public_last_name");
+  localStorage.removeItem("public_contact");
+  localStorage.removeItem("public_status");
+  localStorage.removeItem("public_type");
+  localStorage.removeItem("public_date_created");
+  localStorage.removeItem("public_auth_section");
 };
 
 // CHECK IF USER IS AUTHENTICATED

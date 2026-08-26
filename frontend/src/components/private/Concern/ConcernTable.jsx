@@ -20,7 +20,13 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export default function ConcernTable({ concerns, onEdit, onDelete }) {
+export default function ConcernTable({
+  concerns,
+  onEdit,
+  onDelete,
+  onBulkSolve,
+  onBulkDelete,
+}) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedConcern, setSelectedConcern] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -54,7 +60,8 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
   };
 
   const getStatusStyle = (status) => {
-    switch (status) {
+    const normalizedStatus = status ? status.toLowerCase() : "pending";
+    switch (normalizedStatus) {
       case "solved":
         return {
           label: "Solved",
@@ -83,6 +90,7 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
   };
 
   const truncateText = (text, maxLength = 50) => {
+    if (!text) return "";
     return text.length > maxLength
       ? text.substring(0, maxLength) + "..."
       : text;
@@ -107,29 +115,36 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
     }
   };
 
-  const handleBulkSolve = () => {
-    selectedRows.forEach((messageId) => {
-      const concern = concerns.find((c) => c.message_id === messageId);
-      if (concern && concern.status === "pending") {
-        onEdit(concern);
-      }
-    });
+  // 🔹 Execute Bulk Solve
+  const handleBulkSolveClick = () => {
+    const ids = Array.from(selectedRows);
+    if (onBulkSolve) {
+      onBulkSolve(ids);
+    }
     setSelectedRows(new Set());
   };
 
-  const handleBulkDelete = () => {
-    selectedRows.forEach((messageId) => {
-      onDelete(messageId);
-    });
+  // 🔹 Execute Bulk Delete
+  const handleBulkDeleteClick = () => {
+    const ids = Array.from(selectedRows);
+    if (onBulkDelete) {
+      onBulkDelete(ids);
+    }
     setSelectedRows(new Set());
   };
 
   const hasPendingSelected = () => {
     return Array.from(selectedRows).some((messageId) => {
       const concern = concerns.find((c) => c.message_id === messageId);
-      return concern && concern.status === "pending";
+      return concern && (concern.status?.toLowerCase() === "pending" || !concern.status);
     });
   };
+
+  const isResident = (concern) => {
+    if(concern.type === "resident") {
+      return true;
+    } 
+  }
 
   return (
     <Box>
@@ -145,7 +160,7 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
             alignItems: "center",
           }}
         >
-          <Typography variant="body2" sx={{ fontWeight: "500" }}>
+          <Typography variant="body2" sx={{ fontWeight: "600" }}>
             {selectedRows.size} item{selectedRows.size !== 1 ? "s" : ""}{" "}
             selected
           </Typography>
@@ -155,11 +170,9 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
                 size="small"
                 variant="contained"
                 color="success"
-                sx={{
-                  color: "white",
-                }}
+                sx={{ color: "white" }}
                 startIcon={<CheckIcon />}
-                onClick={handleBulkSolve}
+                onClick={handleBulkSolveClick}
               >
                 Solve
               </Button>
@@ -169,7 +182,7 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
               variant="contained"
               color="error"
               startIcon={<DeleteIcon />}
-              onClick={handleBulkDelete}
+              onClick={handleBulkDeleteClick}
             >
               Delete
             </Button>
@@ -195,6 +208,7 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
                 />
               </TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Sender</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Resident</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Type</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Message</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Date Posted</TableCell>
@@ -230,17 +244,24 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" sx={{ fontWeight: "500" }}>
-                    {concern.first_name} {concern.last_name}
+                    {concern.first_name || concern.last_name
+                      ? `${concern.first_name || ""} ${concern.last_name || ""}`
+                      : "Anonymous"}
                   </Typography>
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                    {concern.type.toUpperCase().charAt(0) +
-                      concern.type.slice(1)}
+                    {isResident(concern) ? "Yes" : "No"}
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" sx={{ maxWidth: 250 }}>
+                  <Typography variant="body2">
+                    {concern.message_type.toUpperCase().charAt(0) +
+                      concern.message_type.slice(1) || "N/A"}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Typography variant="body2" sx={{ maxWidth: 200 }}>
                     {truncateText(concern.message, 150)}
                   </Typography>
                 </TableCell>
@@ -257,11 +278,9 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
                       width: 105,
                       px: 2,
                       py: 2,
-                      backgroundColor: getUrgentStyle(concern.message_urgency)
-                        .bg,
+                      backgroundColor: getUrgentStyle(concern.message_urgency).bg,
                       borderRadius: 1,
                       fontSize: "0.85rem",
-                      fontWeight: "bold",
                       color: getUrgentStyle(concern.message_urgency).text,
                       border: getUrgentStyle(concern.message_urgency).border,
                       fontWeight: 600,
@@ -279,7 +298,6 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
                       backgroundColor: getStatusStyle(concern.status).bg,
                       borderRadius: 1,
                       fontSize: "0.85rem",
-                      fontWeight: "bold",
                       color: getStatusStyle(concern.status).text,
                       border: getStatusStyle(concern.status).border,
                       fontWeight: 600,
@@ -308,15 +326,14 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
                       horizontal: "right",
                     }}
                   >
-                    {concern.status === "pending" && (
+                    {(selectedConcern?.status?.toLowerCase() === "pending" ||
+                      !selectedConcern?.status) && (
                       <MenuItem
                         onClick={() => {
                           onEdit(selectedConcern);
                           handleMenuClose();
                         }}
-                        sx={{
-                          color: "success.main",
-                        }}
+                        sx={{ color: "success.main" }}
                       >
                         <CheckIcon sx={{ mr: 1, fontSize: "20px" }} />
                         Solved
@@ -324,12 +341,10 @@ export default function ConcernTable({ concerns, onEdit, onDelete }) {
                     )}
                     <MenuItem
                       onClick={() => {
-                        onDelete(selectedConcern.message_id);
+                        onDelete(selectedConcern);
                         handleMenuClose();
                       }}
-                      sx={{
-                        color: "error.main",
-                      }}
+                      sx={{ color: "error.main" }}
                     >
                       <DeleteIcon sx={{ mr: 1, fontSize: "20px" }} />
                       Delete

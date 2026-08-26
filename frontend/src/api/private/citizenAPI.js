@@ -75,3 +75,23 @@ export const deleteCitizen = async (id) => {
     handleError(error);
   }
 };
+
+// ✅ Bulk verify citizens
+export const bulkVerifyCitizens = async (ids) => {
+  try {
+    const res = await api.put(`/citizens/bulk/verify`, { ids });
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// ❌ Bulk delete citizens
+export const bulkDeleteCitizens = async (ids) => {
+  try {
+    const res = await api.post(`/citizens/bulk/delete`, { ids });
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};

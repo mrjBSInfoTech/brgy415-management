@@ -312,7 +312,7 @@ export default function Files() {
         ) : (
           <TableContainer>
             <Table>
-              <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
+              <TableHead sx={{ backgroundColor: "background.table" }}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: "bold" }}>File Name</TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>File Type</TableCell>
@@ -325,7 +325,7 @@ export default function Files() {
                 {filteredFiles.map((file) => (
                   <TableRow
                     key={file.file_id}
-                    sx={{ "&:hover": { backgroundColor: "#f9f9f9" } }}
+                    sx={{ "&:hover": { backgroundColor: "background.table" } }}
                   >
                     <TableCell>{file.file_name}</TableCell>
                     <TableCell>

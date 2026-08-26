@@ -11,17 +11,19 @@ const router = express.Router();
 router.get("/", authenticateToken, (req, res) => {
   const sql = `
     SELECT 
-      user_id, 
-      first_name,
-      last_name,
-      email,
-      contact,
-      type,
-      resident_id,
-      status,
-      date_created
-    FROM user_account
-  ORDER BY user_id ASC`;
+      u.user_id, 
+      u.first_name,
+      u.last_name,
+      u.email,
+      u.contact,
+      u.type,
+      u.resident_id,
+      u.status,
+      u.date_created,
+      CONCAT_WS(' ', r.first_name, r.last_name) AS resident_name
+    FROM user_account u
+    LEFT JOIN resident r ON u.resident_id = r.resident_id
+    ORDER BY u.user_id ASC`;
 
   db.query(sql, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -34,9 +36,11 @@ router.get("/:id", authenticateToken, (req, res) => {
   const { id } = req.params;
   const sql = `
     SELECT 
-      *
-    FROM user_account 
-    WHERE user_id = ?
+      u.*,
+      CONCAT_WS(' ', r.first_name, r.last_name) AS resident_name
+    FROM user_account u
+    LEFT JOIN resident r ON u.resident_id = r.resident_id
+    WHERE u.user_id = ?
   `;
   db.query(sql, [id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -86,9 +90,100 @@ router.put("/:id", authenticateToken, (req, res) => {
       console.error("Database Error:", err);
       return res.status(500).json({ error: err.message });
     }
-    res.json({ message: "Citizen record updated successfully" });
+
+    if (status === "verified") {
+      const residentSql = `
+        UPDATE resident r
+        JOIN user_account u ON r.resident_id = u.resident_id
+        SET r.user_id = u.user_id,
+            r.first_name = u.first_name,
+            r.last_name = u.last_name,
+            r.email = u.email,
+            r.phone_number = u.contact
+        WHERE u.user_id = ? AND u.resident_id IS NOT NULL
+      `;
+      db.query(residentSql, [id], (residentErr) => {
+        if (residentErr) {
+          console.error("Resident sync error:", residentErr);
+        }
+        return res.json({ message: "Citizen record updated successfully" });
+      });
+    } else {
+      res.json({ message: "Citizen record updated successfully" });
+    }
   });
 });
 
+// ✅ Bulk verify citizen accounts and sync resident mappings
+router.put("/bulk/verify", authenticateToken, (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "An array of citizen user IDs is required." });
+  }
+
+  const verifySql = `UPDATE user_account SET status = 'verified' WHERE user_id IN (?)`;
+  db.query(verifySql, [ids], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    const syncSql = `
+      UPDATE resident r
+      JOIN user_account u ON r.resident_id = u.resident_id
+      SET r.user_id = u.user_id,
+          r.first_name = u.first_name,
+          r.last_name = u.last_name,
+          r.email = u.email,
+          r.phone_number = u.contact
+      WHERE u.user_id IN (?) AND u.resident_id IS NOT NULL
+    `;
+
+    db.query(syncSql, [ids], (syncErr) => {
+      if (syncErr) {
+        console.error("Resident sync error:", syncErr);
+      }
+      res.json({ message: `${result.affectedRows} citizen(s) verified successfully.` });
+    });
+  });
+});
+
+// ❌ Bulk delete citizen accounts and remove resident links
+router.post("/bulk/delete", authenticateToken, (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ message: "An array of citizen user IDs is required." });
+  }
+
+  const unlinkSql = `UPDATE resident SET user_id = NULL WHERE user_id IN (?)`;
+  db.query(unlinkSql, [ids], (unlinkErr) => {
+    if (unlinkErr) {
+      console.error("Resident unlink error:", unlinkErr);
+      return res.status(500).json({ error: unlinkErr.message });
+    }
+
+    const deleteSql = `DELETE FROM user_account WHERE user_id IN (?)`;
+    db.query(deleteSql, [ids], (deleteErr, result) => {
+      if (deleteErr) return res.status(500).json({ error: deleteErr.message });
+      res.json({ message: `${result.affectedRows} citizen(s) deleted successfully.` });
+    });
+  });
+});
+
+// ❌ Delete citizen user account
+router.delete("/:id", authenticateToken, (req, res) => {
+  const { id } = req.params;
+  const unlinkSql = `UPDATE resident SET user_id = NULL WHERE user_id = ?`;
+
+  db.query(unlinkSql, [id], (unlinkErr) => {
+    if (unlinkErr) {
+      console.error("Resident unlink error:", unlinkErr);
+      return res.status(500).json({ error: unlinkErr.message });
+    }
+
+    const sql = "DELETE FROM user_account WHERE user_id = ?";
+    db.query(sql, [id], (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "Citizen deleted successfully" });
+    });
+  });
+});
 
 export default router;

@@ -15,25 +15,15 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ShieldIcon from "@mui/icons-material/Shield";
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import OfficialInfo from "./OfficialInfo";
 
-// Memoized individual access card component
 const AccessCardItem = memo(function AccessCardItem({
   official,
   onCreateAccount,
   onEditAccount,
+  onViewInfo,
 }) {
-  const [openInfoDialog, setOpenInfoDialog] = useState(false);
-
-  const handleInfoOpen = () => {
-    setOpenInfoDialog(true);
-  };
-
-  const handleInfoClose = () => {
-    setOpenInfoDialog(false);
-  };
-
   const handleCreateAccount = () => {
     if (onCreateAccount) {
       onCreateAccount(official);
@@ -126,7 +116,9 @@ const AccessCardItem = memo(function AccessCardItem({
           <Box sx={{ mb: 1.5 }}>
             <Typography variant="h6" sx={{ fontWeight: "bold", mb: 0.5 }}>
               {official.first_name}{" "}
-              {official.middle_name ? official.middle_name.charAt(0) + ". " : ""}
+              {official.middle_name
+                ? official.middle_name.charAt(0) + ". "
+                : ""}
               {official.last_name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
@@ -139,7 +131,10 @@ const AccessCardItem = memo(function AccessCardItem({
           {/* Account Information */}
           {official.official_account_id ? (
             <Box sx={{ my: 1.5 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: "bold", mb: 1 }}
+              >
                 Account Details:
               </Typography>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8 }}>
@@ -157,11 +152,9 @@ const AccessCardItem = memo(function AccessCardItem({
                     label={official.account_type}
                     size="small"
                     color={
-                      official.account_type === "Admin"
-                        ? "success"
-                        : "warning"
+                      official.account_type === "Admin" ? "success" : "warning"
                     }
-                    sx={{color:"white"}}
+                    sx={{ color: "white" }}
                   />
                 </Box>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -229,20 +222,13 @@ const AccessCardItem = memo(function AccessCardItem({
             size="small"
             fullWidth
             startIcon={<InfoIcon />}
-            onClick={handleInfoOpen}
+            onClick={() => onViewInfo(official)}
             sx={{ mt: 1 }}
           >
             View Info
           </Button>
         </CardContent>
       </Card>
-
-      {/* Official Info Dialog */}
-      <OfficialInfo
-        open={openInfoDialog}
-        handleClose={handleInfoClose}
-        selectedOfficial={official}
-      />
     </>
   );
 });
@@ -252,27 +238,38 @@ export default function AccessCard({
   onCreateAccount,
   onEditAccount,
 }) {
+  const [selectedOfficialInfo, setSelectedOfficialInfo] = useState(null);
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          xs: "1fr",
-          sm: "repeat(2, 1fr)",
-          md: "repeat(3, 1fr)",
-          lg: "repeat(4, 1fr)",
-        },
-        gap: 2,
-      }}
-    >
-      {officials.map((official) => (
-        <AccessCardItem
-          key={official.official_id}
-          official={official}
-          onCreateAccount={onCreateAccount}
-          onEditAccount={onEditAccount}
+    <>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(3, 1fr)",
+            lg: "repeat(4, 1fr)",
+          },
+          gap: 2,
+        }}
+      >
+        {officials.map((official) => (
+          <AccessCardItem
+            key={official.official_id}
+            official={official}
+            onCreateAccount={onCreateAccount}
+            onEditAccount={onEditAccount}
+          />
+        ))}
+      </Box>
+
+      {selectedOfficialInfo && (
+        <OfficialInfo
+          open={Boolean(selectedOfficialInfo)}
+          handleClose={() => setSelectedOfficialInfo(null)}
+          selectedOfficial={selectedOfficialInfo}
         />
-      ))}
-    </Box>
+      )}
+    </>
   );
 }

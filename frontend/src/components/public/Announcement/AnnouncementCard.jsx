@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Avatar,
   Box,
@@ -6,18 +5,10 @@ import {
   CardMedia,
   CardContent,
   Typography,
-  IconButton,
-  Menu,
-  MenuItem,
 } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import BarangayIcon from "../../../assets/BarangayIcon.png";
 
-export default function AnnouncementCard({ announcements,}) {
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-
+export default function AnnouncementCard({ announcements }) {
   const formatDate = (dateString) => {
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
@@ -29,8 +20,8 @@ export default function AnnouncementCard({ announcements,}) {
         display: "flex",
         flexDirection: "column", // Stack cards vertically like a feed
         alignItems: "center",     // Center the cards horizontally
-        gap: 4,                  // Spacing between posts
-        p: 2,
+        gap: { xs: 2.5, sm: 4 },
+        width: "100%",
       }}
     >
       {announcements.map((announcement) => (
@@ -38,29 +29,30 @@ export default function AnnouncementCard({ announcements,}) {
           key={announcement.announcement_id}
           sx={{
             width: "100%",
-            maxWidth: 800,      
+            maxWidth: 860,
             display: "flex",
             flexDirection: "column",
-            borderRadius: 2,     // Slightly rounded corners
+            borderRadius: 2,
+            overflow: "hidden",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1)",
           }}
         >
           {/* Announcement Details (Top) */}
-          <CardContent sx={{ p: 3 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "flex-start",
-                mb: 2,
+                mb: { xs: 1.5, sm: 2 },
               }}
             >
               <Avatar
                 src={BarangayIcon}
                 alt="Barangay Logo"
-                sx={{ width: 50, height: 50, mr: 2, border: "1px solid #eee",position: "relative", bottom: 2 }}
+                sx={{ width: { xs: 42, sm: 50 }, height: { xs: 42, sm: 50 }, mr: { xs: 1.5, sm: 2 }, border: "1px solid #eee", flexShrink: 0 }}
               />
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: "bold", lineHeight: 1.2 }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, lineHeight: 1.25, overflowWrap: "anywhere" }}>
                   {announcement.title}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -85,7 +77,7 @@ export default function AnnouncementCard({ announcements,}) {
           <Box
             sx={{
               width: "100%",
-              maxHeight: 500,
+              aspectRatio: "16 / 9",
               backgroundColor: "#f0f2f5",
               overflow: "hidden",
               borderTop: "1px solid #e0e0e0",
@@ -95,13 +87,13 @@ export default function AnnouncementCard({ announcements,}) {
               component="img"
               sx={{
                 width: "100%",
-                height: "auto",
-                objectFit: "contain", // Shows the full image without cropping
+                height: "100%",
+                objectFit: "cover",
               }}
               image={
                 announcement.image
                   ? `http://localhost:5000/uploads/uploadAnnouncement/${encodeURIComponent(announcement.image)}`
-                  : "https://via.placeholder.com/600x400?text=No+Image"
+                  : BarangayIcon
               }
               alt={announcement.title}
             />

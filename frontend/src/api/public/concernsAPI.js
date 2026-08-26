@@ -58,7 +58,6 @@ export const addConcern = async (concernData) => {
       },
     });
     
-    console.log("Concern response:", res.data);
     return res.data;
   } catch (error) {
     handleError(error);

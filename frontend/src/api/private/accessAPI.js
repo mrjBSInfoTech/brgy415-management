@@ -45,9 +45,7 @@ const handleError = (error) => {
 // Fetch all officials
 export const fetchOfficialAccount = async () => {
   try {
-    console.log("Fetching all accounts...");
     const res = await api.get("/officialAccounts");
-    console.log("Officials fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchOfficials:", error);
@@ -58,9 +56,7 @@ export const fetchOfficialAccount = async () => {
 // Fetch single official by ID
 export const fetchOfficialAccountById = async (id) => {
   try {
-    console.log("Fetching account by ID:", id);
     const res = await api.get(`/officialAccounts/${id}`);
-    console.log("Official fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchOfficialById:", error);
@@ -178,14 +174,6 @@ export const createOfficialAccount = async (
       throw new Error("Position is required");
     }
 
-    console.log("Creating account for official:", {
-      official_id,
-      account_type,
-      can_add,
-      can_edit,
-      can_delete,
-      position,
-    });
     const res = await api.post("/officialAccounts", {
       official_id: parseInt(official_id),
       password: password.trim(),
@@ -195,7 +183,6 @@ export const createOfficialAccount = async (
       can_delete: can_delete ? 1 : 0,
       position: position.trim(),
     });
-    console.log("Account created successfully:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in createOfficialAccount:", error);
@@ -206,9 +193,7 @@ export const createOfficialAccount = async (
 // Fetch all officials with their account information
 export const fetchOfficialsWithAccounts = async () => {
   try {
-    console.log("Fetching officials with accounts...");
     const res = await api.get("/officialAccounts/withAccounts/all");
-    console.log("Officials with accounts fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchOfficialsWithAccounts:", error);
@@ -222,10 +207,7 @@ export const updateOfficialAccountPermissions = async (account_id, updateData) =
     if (!account_id) {
       throw new Error("Account ID is required");
     }
-
-    console.log("Updating account:", { account_id, updateData });
     const res = await api.put(`/officialAccounts/${account_id}`, updateData);
-    console.log("Account updated successfully:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in updateOfficialAccountPermissions:", error);

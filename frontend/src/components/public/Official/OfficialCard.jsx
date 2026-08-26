@@ -62,6 +62,7 @@ export default function OfficialCard({ officials, columns}) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              borderRadius: 2.5,
             }}
           >
             <CardMedia

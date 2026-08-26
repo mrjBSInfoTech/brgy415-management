@@ -45,9 +45,7 @@ const handleError = (error) => {
 // Fetch all announcements
 export const fetchAnnouncements = async () => {
   try {
-    console.log("Fetching all announcements");
     const res = await api.get("/announcements");
-    console.log("Announcements fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchAnnouncements:", error);
@@ -58,9 +56,7 @@ export const fetchAnnouncements = async () => {
 // Fetch single announcement by ID
 export const fetchAnnouncementById = async (id) => {
   try {
-    console.log("Fetching announcement by ID:", id);
     const res = await api.get(`/announcements/${id}`);
-    console.log("Announcement fetched:", res.data);
     return res.data;
   } catch (error) {
     console.error("Error in fetchAnnouncementById:", error);

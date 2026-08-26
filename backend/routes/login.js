@@ -2,6 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../database/db.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -40,8 +41,10 @@ router.post("/login", (req, res) => {
     last_name,
     email,
     contact,
+    date_created,
     password,
-    type
+    type,
+    status
   FROM user_account 
   WHERE email = ?`;
 
@@ -59,11 +62,20 @@ router.post("/login", (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
+    const accountStatus = (user.status || "").toLowerCase();
+
+    if (accountStatus !== "verified") {
+      return res.status(403).json({
+        message: "Your account has not been verified yet. Please wait for approval.",
+      });
+    }
+
     const token = jwt.sign(
       {
         id: user.user_id,
         email: user.email,
         type: user.type,
+        status: user.status
       },
       process.env.JWT_SECRET,
       { expiresIn: "10d" },
@@ -76,8 +88,58 @@ router.post("/login", (req, res) => {
       email: user.email,
       contact: user.contact,
       type: user.type,
+      status: user.status,
+      date_created: user.date_created,
     });
   });
+});
+
+// Change password for an authenticated public user
+router.put("/changePassword", authenticateToken, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "Current and new passwords are required" });
+  }
+
+  if (newPassword.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters" });
+  }
+
+  if (currentPassword === newPassword) {
+    return res.status(400).json({ message: "New password must be different from the current password" });
+  }
+
+  db.query(
+    "SELECT password FROM user_account WHERE user_id = ?",
+    [req.user.id],
+    async (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+
+      if (result.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isMatch = bcrypt.compareSync(currentPassword, result[0].password);
+      if (!isMatch) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      try {
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        db.query(
+          "UPDATE user_account SET password = ? WHERE user_id = ?",
+          [hashedPassword, req.user.id],
+          (updateError) => {
+            if (updateError) return res.status(500).json({ message: "Database error" });
+            return res.json({ message: "Password updated successfully" });
+          },
+        );
+      } catch {
+        return res.status(500).json({ message: "Unable to update password" });
+      }
+    },
+  );
 });
 
 export default router;

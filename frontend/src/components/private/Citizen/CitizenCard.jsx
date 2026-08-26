@@ -12,12 +12,15 @@ import {
   FormControl,
   InputLabel,
   Divider,
+  Checkbox,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
 import DeleteIcon from "@mui/icons-material/Delete";
 import InfoIcon from "@mui/icons-material/Info";
 import CitizenForm from "./CitizenForm";
+import CitizenBulkVerify from "./CitizenBulkVerify";
+import CitizenBulkDelete from "./CitizenBulkDelete";
 
 const getStatusStyle = (status) => {
   switch (status) {
@@ -53,6 +56,8 @@ export default function CitizenCard({
   residents = [],
   onEdit,
   onDelete,
+  onBulkVerify,
+  onBulkDelete,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedCitizen, setSelectedCitizen] = useState(null);
@@ -61,6 +66,10 @@ export default function CitizenCard({
     type: "",
     resident_id: "",
   });
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [openBulkVerify, setOpenBulkVerify] = useState(false);
+  const [openBulkDelete, setOpenBulkDelete] = useState(false);
+  const [selectedCitizenIds, setSelectedCitizenIds] = useState([]);
   const open = Boolean(anchorEl);
 
   // Helper function to get resident info
@@ -68,6 +77,45 @@ export default function CitizenCard({
     if (!residentId) return "Not Found";
     const resident = residents.find((r) => r.resident_id === residentId);
     return resident ? `${resident.first_name} ${resident.last_name}` : "Not Found";
+  };
+
+  const normalizeName = (value = "") =>
+    String(value || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+
+  const getMatchingResidents = (citizen) => {
+    if (!citizen) return [];
+
+    const citizenName = normalizeName(
+      `${citizen.first_name || ""} ${citizen.last_name || ""}`,
+    );
+
+    if (!citizenName) return [];
+
+    return residents.filter((resident) => {
+      const residentName = normalizeName(
+        `${resident.first_name || ""} ${resident.last_name || ""}`,
+      );
+
+      if (!residentName) return false;
+
+      return (
+        residentName === citizenName ||
+        residentName.includes(citizenName) ||
+        citizenName.includes(residentName)
+      );
+    });
+  };
+
+  const handleMatchResident = (citizen, resident) => {
+    if (!onEdit || !citizen || !resident) return;
+
+    onEdit(citizen, {
+      type: "resident",
+      resident_id: resident.resident_id,
+    });
   };
 
   useEffect(() => {
@@ -88,7 +136,7 @@ export default function CitizenCard({
   useEffect(() => {
     if (selectedCitizen && citizens.length > 0) {
       const updatedCitizen = citizens.find(
-        (c) => c.citizen_id === selectedCitizen.citizen_id
+        (c) => c.user_id === selectedCitizen.user_id
       );
       if (updatedCitizen) {
         setSelectedCitizen(updatedCitizen);
@@ -110,6 +158,37 @@ export default function CitizenCard({
     setAnchorEl(null);
   };
 
+  const handleSelectRow = (citizenId) => {
+    setSelectedRows((prevSelected) => {
+      if (prevSelected.includes(citizenId)) {
+        return prevSelected.filter((id) => id !== citizenId);
+      }
+      return [...prevSelected, citizenId];
+    });
+  };
+
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedRows(citizens.map((citizen) => citizen.user_id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  const openBulkVerifyModal = () => {
+    setSelectedCitizenIds(selectedRows);
+    setOpenBulkVerify(true);
+  };
+
+  const openBulkDeleteModal = () => {
+    setSelectedCitizenIds(selectedRows);
+    setOpenBulkDelete(true);
+  };
+
+  const clearSelection = () => {
+    setSelectedRows([]);
+  };
+
   // Open Citizen Form dialog
   const handleFormOpen = (citizen) => {
     setSelectedCitizen(citizen);
@@ -118,8 +197,14 @@ export default function CitizenCard({
 
   const handleFormClose = () => {
     setOpenFormDialog(false);
-    setSelectedCitizen(null); // Clear selected citizen when closing
+    setSelectedCitizen(null); 
   };
+
+  const handleAfterBulkAction = () => {
+    clearSelection();
+  };
+
+  const showBulkVerify = citizens.some((citizen) => citizen.status !== "verified");
 
   const residentOptions = residents.map((resident) => ({
     id: resident.resident_id,
@@ -127,29 +212,97 @@ export default function CitizenCard({
   }));
 
   return (
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: {
-          xs: "1fr",
-          sm: "repeat(2, 1fr)",
-          md: "repeat(2, 1fr)",
-          lg: "repeat(3, 1fr)",
-        },
-        gap: 2,
-      }}
-    >
-      {citizens.map((citizen) => (
-        <Card
-          key={citizen.citizen_id}
-          sx={{
-            width: "100%",
-            opacity: citizen.status === "solved" ? 0.75 : 1,
-            borderLeft: getStatusStyle(citizen.status).cardBorder,
-            transition: "box-shadow 0.2s ease",
-            "&:hover": { boxShadow: 4 },
-          }}
-        >
+    <Box>
+      <Box
+        sx={{
+          p: 2,
+          mb: 2,
+          backgroundColor: "background.table",
+          borderRadius: 1,
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Checkbox
+            indeterminate={
+              selectedRows.length > 0 && selectedRows.length < citizens.length
+            }
+            checked={
+              citizens.length > 0 && selectedRows.length === citizens.length
+            }
+            onChange={handleSelectAll}
+          />
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            Select all
+          </Typography>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            ({selectedRows.length} {selectedRows.length === 1 ? "account" : "accounts"} selected)
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+          {showBulkVerify && (
+            <Button
+              size="small"
+              variant="contained"
+              color="success"
+              sx={{ color: "white" }}
+              onClick={openBulkVerifyModal}
+              disabled={selectedRows.length === 0 || !onBulkVerify}
+            >
+              Verify
+            </Button>
+          )}
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            onClick={openBulkDeleteModal}
+            disabled={selectedRows.length === 0 || !onBulkDelete}
+          >
+            Delete
+          </Button>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(2, 1fr)",
+            md: "repeat(2, 1fr)",
+            lg: "repeat(3, 1fr)",
+          },
+          gap: 2,
+        }}
+      >
+      {citizens.map((citizen) => {
+        const matchingResidents = getMatchingResidents(citizen);
+
+        return (
+          <Card
+            key={citizen.user_id}
+            sx={{
+              width: "100%",
+              opacity: citizen.status === "solved" ? 0.75 : 1,
+              borderLeft: getStatusStyle(citizen.status).cardBorder,
+              transition: "box-shadow 0.2s ease",
+              "&:hover": { boxShadow: 4 },
+            }}
+          >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", px: 2, pt: 2 }}>
+            <Checkbox
+              checked={selectedRows.includes(citizen.user_id)}
+              onChange={() => handleSelectRow(citizen.user_id)}
+            />
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {citizen.status === "verified" ? "Verified" : "Pending"}
+            </Typography>
+          </Box>
           {/* Citizen Details */}
           <CardContent sx={{ flex: 1, overflow: "auto" }}>
             <Box
@@ -203,14 +356,59 @@ export default function CitizenCard({
                       <InfoRow label="Resident" value={getResidentInfo(citizen.resident_id)} />
                     </>
                   )}
+                  {citizen.status !== "verified" && (
+                    <Box sx={{ mt: 1.2 }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ fontWeight: 700, color: "text.secondary" }}
+                      >
+                        Possible resident match
+                      </Typography>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 0.5 }}>
+                        {matchingResidents.length > 0 ? (
+                          matchingResidents.slice(0, 3).map((resident) => (
+                            <Button
+                              key={resident.resident_id}
+                              size="small"
+                              variant="contained"
+                              onClick={() => handleMatchResident(citizen, resident)}
+                              sx={{
+                                textTransform: "none",
+                                borderRadius: "999px",
+                                fontSize: "0.75rem",
+                                py: 0.35,
+                                px: 1.1,
+                                backgroundColor: "#a9f735",
+                                color: "#16a34a",
+                                boxShadow: "none",
+                                border: "1px solid #16a34a",
+                                fontWeight: 700,
+                                letterSpacing: "0.25px",
+                                transition: "all 0.2s ease",
+                                "&:hover": {
+                                  backgroundColor: "#15803d",
+                                  boxShadow: "none",
+                                },
+                              }}
+                            >
+                              {resident.first_name} {resident.last_name}
+                            </Button>
+                          ))
+                        ) : (
+                          <Typography variant="caption" color="text.secondary">
+                            No matching resident record found
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  )}
                   <Box
                     sx={{
                       display: "inline-flex",
                       alignItems: "center",
                       px: 1.5,
                       py: 0.4,
-                      mt: 1,
-                      
+                      mt: 1,                      
                       borderRadius: "20px",
                       fontSize: "12px",
                       fontWeight: 700,
@@ -242,7 +440,7 @@ export default function CitizenCard({
             {/* Options Menu */}
             <Menu
               anchorEl={anchorEl}
-              open={open && selectedCitizen?.citizen_id === citizen.citizen_id}
+              open={open && selectedCitizen?.user_id === citizen.user_id}
               onClose={handleMenuClose}
               anchorOrigin={{
                 vertical: "bottom",
@@ -253,9 +451,21 @@ export default function CitizenCard({
                 horizontal: "right",
               }}
             >
+              {citizen.status !== "verified" && (
+                <MenuItem
+                  onClick={() => {
+                    onEdit(citizen, { status: "verified", resident_id: citizen.resident_id || "" });
+                    handleMenuClose();
+                  }}
+                  sx={{ color: "success.main" }}
+                >
+                  <CheckIcon sx={{ mr: 1, fontSize: "20px" }} />
+                  Verify
+                </MenuItem>
+              )}
               <MenuItem
                 onClick={() => {
-                  onDelete(selectedCitizen.citizen_id);
+                  onDelete(selectedCitizen.user_id);
                   handleMenuClose();
                 }}
                 sx={{
@@ -268,7 +478,9 @@ export default function CitizenCard({
             </Menu>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
+      </Box>
       {/* Citizen Form Dialog */}
       <CitizenForm
         open={openFormDialog}
@@ -276,6 +488,30 @@ export default function CitizenCard({
         onSubmit={onEdit}
         selectedCitizen={selectedCitizen}
         residents={residents}
+      />
+      <CitizenBulkVerify
+        open={openBulkVerify}
+        handleClose={() => {
+          setOpenBulkVerify(false);
+          clearSelection();
+        }}
+        onSubmit={(ids) => {
+          onBulkVerify(ids);
+          handleAfterBulkAction();
+        }}
+        selectedCitizens={selectedCitizenIds}
+      />
+      <CitizenBulkDelete
+        open={openBulkDelete}
+        handleClose={() => {
+          setOpenBulkDelete(false);
+          clearSelection();
+        }}
+        onSubmit={(ids) => {
+          onBulkDelete(ids);
+          handleAfterBulkAction();
+        }}
+        selectedCitizens={selectedCitizenIds}
       />
     </Box>
   );
