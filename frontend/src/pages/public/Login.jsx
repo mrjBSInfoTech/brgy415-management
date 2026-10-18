@@ -124,7 +124,7 @@ const Login = () => {
       sx={{
         display: "flex",
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #466ABE 0%, #2d4a8e 100%)",
+        background: "var(--primary-color)",
         overflow: "hidden",
       }}
     >
@@ -231,7 +231,7 @@ const Login = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <PersonIcon sx={{ color: "#466ABE" }} />
+                  <PersonIcon sx={{ color: "var(--primary-color)" }} />
                 </InputAdornment>
               ),
             }}
@@ -240,7 +240,7 @@ const Login = () => {
               "& .MuiOutlinedInput-root": {
                 borderRadius: "12px",
                 "&:hover fieldset": {
-                  borderColor: "#466ABE",
+                  borderColor: "var(--primary-color)",
                 },
               },
             }}
@@ -259,7 +259,7 @@ const Login = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <LockIcon sx={{ color: "#466ABE" }} />
+                  <LockIcon sx={{ color: "var(--primary-color)" }} />
                 </InputAdornment>
               ),
             }}
@@ -268,7 +268,7 @@ const Login = () => {
               "& .MuiOutlinedInput-root": {
                 borderRadius: "12px",
                 "&:hover fieldset": {
-                  borderColor: "#466ABE",
+                  borderColor: "var(--primary-color)",
                 },
               },
             }}
@@ -283,7 +283,7 @@ const Login = () => {
             onClick={handleLogin}
             disabled={isLoading}
             sx={{
-              background: "linear-gradient(135deg, #466ABE 0%, #2d4a8e 100%)",
+              background: "var(--primary-color)",
               color: "white",
               fontWeight: "600",
               padding: "12px 24px",
@@ -294,6 +294,7 @@ const Login = () => {
               textTransform: "none",
               "&:hover": {
                 boxShadow: "0px 10px 25px rgba(70, 106, 190, 0.4)",
+                filter: "brightness(0.85)",
                 transform: "translateY(-2px)",
               },
               "&:disabled": {
@@ -327,7 +328,7 @@ const Login = () => {
               <Link
                 to="/public/register"
                 style={{
-                  color: "#466ABE",
+                  color: "var(--primary-color)",
                   fontWeight: "600",
                   textDecoration: "none",
                   cursor: "pointer",
@@ -367,7 +368,7 @@ const Login = () => {
             <Link
               to="/public/main"
               style={{
-                color: "#466ABE",
+                color: "var(--primary-color)",
                 fontWeight: "600",
                 textDecoration: "none",
                 cursor: "pointer",

@@ -19,7 +19,7 @@ export default function SuccessPending() {
       
       <Box
         sx={{ 
-          backgroundColor: "#466ABE",
+          backgroundColor: "var(--primary-color)",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",

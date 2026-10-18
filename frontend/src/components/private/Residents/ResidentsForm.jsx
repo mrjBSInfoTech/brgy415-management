@@ -99,6 +99,7 @@ function ResidentsForm({
   selectedResident,
   households = [],
   mode = "form",
+  onOpenBulkImport,
 }) {
   const [formData, setFormData] = useState({
     first_name: "",
@@ -134,9 +135,7 @@ function ResidentsForm({
         gender: selectedResident.gender
           ? String(selectedResident.gender).toLowerCase()
           : "",
-        dob: selectedResident.dob
-          ? String(selectedResident.dob)
-          : "",
+        dob: selectedResident.dob ? String(selectedResident.dob) : "",
         address: selectedResident.address
           ? String(selectedResident.address)
           : "",
@@ -484,12 +483,47 @@ function ResidentsForm({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            {selectedResident ? "Update" : "Add"}
-          </Button>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              width: "100%",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box>
+              {!selectedResident && onOpenBulkImport && (
+                <Button
+                  onClick={() => {
+                    handleClose();
+                    onOpenBulkImport();
+                  }}
+                  color="info"
+                  variant="outlined"
+                >
+                  Bulk Import
+                </Button>
+              )}
+            </Box>
+
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+              }}
+            >
+              <Button onClick={handleClose} color="secondary">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                variant="contained"
+                color="primary"
+              >
+                {selectedResident ? "Update" : "Add"}
+              </Button>
+            </Box>
+          </Box>
         </DialogActions>
       </>
     </Dialog>

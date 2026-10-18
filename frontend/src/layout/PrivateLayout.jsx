@@ -19,9 +19,8 @@ import { modalStyles } from "../theme/modalTheme";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { clearAuthData } from "../utils/auth";
 import { Stack, Avatar, Typography, Divider, IconButton } from "@mui/material";
-import { ThemeProvider, CssBaseline, useMediaQuery } from "@mui/material";
-import { lightTheme, darkTheme } from "../theme/customTheme";
-import BarangayIcon from "../assets/BarangayIcon.png";
+import BarangayLogo from "../components/BarangayLogo";
+import { useBarangayTheme } from "../theme/BarangayThemeContext";
 
 //Icons
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
@@ -37,6 +36,7 @@ import LocalPostOfficeIcon from "@mui/icons-material/LocalPostOffice";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import PersonIcon from "@mui/icons-material/Person";
 import PostAddIcon from "@mui/icons-material/PostAdd";
+import ReportIcon from '@mui/icons-material/Report';
 import SettingsIcon from "@mui/icons-material/Settings";
 
 // Animation transition
@@ -59,6 +59,25 @@ export default function DashboardLayout({ children }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [passwordChanged, setPasswordChanged] = useState(() => localStorage.getItem("private_password_changed"));
+  const [passwordWarningDismissed, setPasswordWarningDismissed] = useState(false);
+  const needsPasswordChange = passwordChanged === "0";
+  const openPasswordWarning = needsPasswordChange &&
+    !(location.pathname === "/private/settings" && passwordWarningDismissed);
+
+  useEffect(() => {
+    const refreshPasswordStatus = () => setPasswordChanged(localStorage.getItem("private_password_changed"));
+    window.addEventListener("private-password-changed", refreshPasswordStatus);
+    window.addEventListener("storage", refreshPasswordStatus);
+    return () => {
+      window.removeEventListener("private-password-changed", refreshPasswordStatus);
+      window.removeEventListener("storage", refreshPasswordStatus);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (location.pathname !== "/private/settings") setPasswordWarningDismissed(false);
+  }, [location.pathname]);
   const [user, setUser] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -69,6 +88,7 @@ export default function DashboardLayout({ children }) {
   const handleClose = () => setOpen(false);
   const [openInfoDialog, setOpenInfoDialog] = useState(false);
   const openMenu = Boolean(anchorEl);
+  const { barangayInfo, privateTheme: theme } = useBarangayTheme();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("private_username");
@@ -92,19 +112,20 @@ export default function DashboardLayout({ children }) {
     setAnchorEl(null);
   };
 
-  // Simulated router (for Toolpad)
+  // Toolpad menu paths are relative to the /private route.
   const router = {
-    pathname: location.pathname,
+    pathname: location.pathname.replace(/^\/private(?=\/|$)/, "").replace(/\/+$/, "") || "/",
+    searchParams: new URLSearchParams(location.search),
     navigate: (path) => {
-      const targetPath = path.startsWith("/private") 
-        ? path 
+      const targetPath = path.startsWith("/private")
+        ? path
         : `/private/${path.replace(/^\/+/, "")}`;
       navigate(targetPath);
     },
   };
 
   const handleLogout = () => {
-    clearAuthData();
+    clearAuthData("private");
     navigate("/private/login", { replace: true });
 
     // Clear browser history for extra security
@@ -155,27 +176,33 @@ export default function DashboardLayout({ children }) {
     // Only for Admin Panel
     ...(isAdmin
       ? [
-          {
-            segment: "concern",
-            title: "Concerns",
-            icon: <LocalPostOfficeIcon />,
-            pattern: "/concern",
-          },
+        {
+          segment: "concern",
+          title: "Concerns",
+          icon: <LocalPostOfficeIcon />,
+          pattern: "/concern",
+        },
+        {
+          segment: "reports",
+          title: "Reports",
+          icon: <ReportIcon />,
+          pattern: "/reports",
+        },
 
-          {
-            segment: "officials",
-            title: "Officials",
-            icon: <AdminPanelSettingsIcon />,
-            pattern: "/officials",
-          },
-          {
-            segment: "citizens",
-            title: "Citizens",
-            icon: <AccountBoxIcon />,
-            pattern: "/citizens",
-          },
-        ]
-      : []), 
+        {
+          segment: "officials",
+          title: "Officials",
+          icon: <AdminPanelSettingsIcon />,
+          pattern: "/officials",
+        },
+        {
+          segment: "citizens",
+          title: "Citizens",
+          icon: <AccountBoxIcon />,
+          pattern: "/citizens",
+        },
+      ]
+      : []),
     {
       segment: "settings",
       title: "Settings",
@@ -190,15 +217,17 @@ export default function DashboardLayout({ children }) {
         sx={{
           backgroundColor: "white",
           borderRadius: "50%",
+          height: 50,
+          flexShrink: 0,
           width: 40,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <img
-          src={BarangayIcon}
+        <BarangayLogo
           alt="logo"
+          sx={{ maxWidth: 50 }}
           style={{ width: 50, height: 50, position: "relative", bottom: 2 }}
         />
       </Box>
@@ -206,12 +235,12 @@ export default function DashboardLayout({ children }) {
     title: (
       <Typography
         sx={{
-          color: "#ffffff",
+          color: theme.palette.primary.contrastText,
           fontWeight: "bold",
           fontSize: 22,
         }}
       >
-        Barangay 415 Zone 42
+        {barangayInfo.brgy_name || "Loading..."}
       </Typography>
     ),
     homeUrl: "/dashboard",
@@ -274,106 +303,134 @@ export default function DashboardLayout({ children }) {
     ></Box>
   );
 
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  const theme = prefersDarkMode ? darkTheme : lightTheme;
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AppProvider
-        navigation={navigation}
-        branding={branding}
-        router={router}
-        session={{
-          user: {
-            name: firstName && lastName ? `${firstName} ${lastName}` : user,
-            position: position || "",
-          },
-        }}
-        theme={theme}
-        disableCollapsibleSidebar={true}
-      >
-        <Dialog
-          open={open}
-          onClose={handleClose}
-          TransitionComponent={Transition}
-          keepMounted
-          slots={{ backdrop: Backdrop }}
-          slotProps={{
-            backdrop: {
-              timeout: 500,
-            },
-          }}
-        >
-          <DialogTitle sx={{fontWeight:'bold'}}>Log out</DialogTitle>
+    <AppProvider
+      navigation={navigation}
+      branding={branding}
+      router={router}
+      session={{
+        user: {
+          name: firstName && lastName ? `${firstName} ${lastName}` : user,
+          position: position || "",
+        },
+      }}
+      theme={theme}
+      disableCollapsibleSidebar={true}
+    >
+      {needsPasswordChange && (
+        <Dialog open={openPasswordWarning} TransitionComponent={Transition} keepMounted disableEscapeKeyDown aria-labelledby="password-warning-title">
+          <DialogTitle id="password-warning-title" sx={{ color: "error.main", fontWeight: "bold" }}>
+            Security Action Required
+          </DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Are you sure you want to log out?
+              Hi there, you are currently using a temporary, system-generated
+              initial password. For security reasons, you must change your
+              password immediately before continuing to access system management
+              features.
             </DialogContentText>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose} color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={handleLogout} variant="contained" color="primary">
-              Logout
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button variant="contained" color="error" onClick={() => {
+              setPasswordWarningDismissed(true);
+              navigate("/private/settings", { state: { changePassword: true } });
+            }}>
+              Change Password Now
             </Button>
           </DialogActions>
         </Dialog>
-        <MuiDashboardLayout
-          slots={{
-            toolbarAccount: CustomHeader,
-            sidebarFooter: SidebarFooter,
-          }}
-          sx={{
-            "& .MuiDrawer-paper": {
-              backgroundColor: theme.palette.background.sidebar,
-              color: theme.palette.text.sidebar,
-              borderRight: "none",
-            },
-            "& .MuiAppBar-root .MuiIconButton-root": {
-              color: "#ffffff",
-            },
-            "& .MuiAppBar-root .MuiSvgIcon-root": {
-              color: "#ffffff",
-            },
-            "& .MuiDrawer-paper .MuiPaper-root": {
-              backgroundColor: theme.palette.background.sidebar,
-            },
-            // Selected text
-            "& .MuiDrawer-paper .Mui-selected .MuiListItemText-primary": {
-              color: "#2563eb",
-            },
-            // Selected icon
-            "& .MuiDrawer-paper .Mui-selected .MuiSvgIcon-root": {
-              color: "#2563eb",
-            },
-            // Sidebar icons color
-            "& .MuiDrawer-paper .MuiSvgIcon-root": {
-              color: "#ffffff",
-            },
-            "& .MuiListItemButton-root:hover": {
-              backgroundColor: "rgba(255,255,255,0.15)",
-            },
-            "& .Mui-selected": {
-              backgroundColor: "rgba(255,255,255,0.25) !important",
-            },
-            // Header
-            "& .MuiAppBar-root": {
-              backgroundColor: theme.palette.background.header,
-              boxShadow: "none",
-            },
+      )}
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        TransitionComponent={Transition}
+        keepMounted
+        slots={{ backdrop: Backdrop }}
+        slotProps={{
+          backdrop: {
+            timeout: 500,
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Log out</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to log out?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="secondary">
+            Cancel
+          </Button>
+          <Button onClick={handleLogout} variant="contained" color="primary">
+            Logout
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-            "& .MuiListItemButton-root": {
-              marginTop: "5px",
-              marginBottom: "5px",
+      <MuiDashboardLayout
+        slots={{
+          toolbarAccount: CustomHeader,
+          sidebarFooter: SidebarFooter,
+        }}
+        sx={{
+          "--primary-color": theme.palette.primary.main,
+          "& .MuiDrawer-paper": {
+            backgroundColor: theme.palette.background.sidebar,
+            color: theme.palette.text.sidebar,
+            borderRight: "none",
+          },
+          "& .MuiAppBar-root .MuiTypography-root, & .MuiAppBar-root .MuiButton-root, & .MuiAppBar-root a, & .MuiAppBar-root .MuiIconButton-root": {
+            color: theme.palette.primary.contrastText,
+          },
+          "& .MuiAppBar-root .MuiSvgIcon-root": {
+            color: theme.palette.primary.contrastText,
+          },
+          "& .MuiDrawer-paper .MuiPaper-root": {
+            backgroundColor: theme.palette.background.sidebar,
+          },
+          "& .MuiDrawer-paper .MuiTypography-root, & .MuiDrawer-paper .MuiListItemText-primary, & .MuiDrawer-paper .MuiListItemText-secondary, & .MuiDrawer-paper .MuiListItemButton-root, & .MuiDrawer-paper .MuiButton-root, & .MuiDrawer-paper .MuiIconButton-root": {
+            color: theme.palette.text.sidebar,
+          },
+          // Selected text
+          "& .MuiDrawer-paper .Mui-selected .MuiListItemText-primary": {
+            color: theme.sidebar.selectedText,
+            fontWeight: 700,
+          },
+          // Selected icon
+          "& .MuiDrawer-paper .Mui-selected .MuiSvgIcon-root": {
+            color: theme.sidebar.selectedText,
+          },
+          // Sidebar icons color
+          "& .MuiDrawer-paper .MuiSvgIcon-root": {
+            color: theme.palette.text.sidebar,
+          },
+          "& .MuiDrawer-paper .MuiListItemButton-root:hover": {
+            backgroundColor: theme.sidebar.hover,
+          },
+          "& .MuiDrawer-paper .MuiListItemButton-root.Mui-selected": {
+            backgroundColor: theme.sidebar.selected,
+            color: theme.sidebar.selectedText,
+            "&:hover": {
+              backgroundColor: theme.sidebar.selectedHover,
             },
-          }}
-        >
-          <div style={{ padding: "20px" }}>
-            <Outlet />
-          </div>
-        </MuiDashboardLayout>
-      </AppProvider>
-    </ThemeProvider>
+          },
+          // Header
+          "& .MuiAppBar-root": {
+            backgroundColor: theme.palette.background.header,
+            boxShadow: "none",
+          },
+
+          "& .MuiListItemButton-root": {
+            marginTop: "5px",
+            marginBottom: "5px",
+          },
+        }}
+      >
+        <div style={{ padding: "20px" }}>
+          <Outlet />
+        </div>
+      </MuiDashboardLayout>
+    </AppProvider>
   );
 }

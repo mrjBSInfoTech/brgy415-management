@@ -1,0 +1,63 @@
+import axios from "axios";
+
+// Create an Axios instance
+const api = axios.create({
+  baseURL: "http://localhost:5000/api",
+  timeout: 5000,
+});
+
+// This interceptor will automatically add the Authorization header with the token for every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("private_token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`; 
+  }
+
+  return config;
+});
+
+// Helper function to handle errors globally
+const handleError = (error) => {
+  if (error.response) {
+    console.error(
+      "Server error:",
+      error.response.status,
+      error.response.data
+    );
+    throw new Error(
+      error.response.data.message || "Server responded with an error"
+    );
+  } else if (error.request) {
+    console.error("No response from server:", error.message);
+    throw new Error(
+      "Server not responding. Please check your connection or try again later."
+    );
+  } else {
+    console.error("Request setup error:", error.message);
+    throw new Error("An unexpected error occurred. Please try again.");
+  }
+};
+
+export const fetchBrgyInfo = async () => {
+  try {
+    const res = await api.get("/brgyinfo");
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+export const updateBrgyInfo = async (id, formData) => {
+  try {
+    const res = await api.put(`/brgyinfo/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    window.dispatchEvent(new Event("barangay-info-updated"));
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};

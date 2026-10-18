@@ -37,7 +37,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
 });
 
 const InfoBox = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === "dark" ? "#1e1e1e" : "#f5f5f5",
+  backgroundColor: theme.palette.background.paper,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
   padding: theme.spacing(2),

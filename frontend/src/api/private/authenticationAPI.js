@@ -86,6 +86,8 @@ export const changePassword = async (currentPassword, newPassword) => {
       currentPassword,
       newPassword,
     });
+    localStorage.setItem("private_password_changed", "1");
+    window.dispatchEvent(new Event("private-password-changed"));
     return res.data;
   } catch (error) {
     handleError(error);

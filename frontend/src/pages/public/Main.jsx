@@ -17,15 +17,17 @@ import ContactSupportIcon from "@mui/icons-material/ContactSupport";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import BarangayIcon from "../../assets/BarangayIcon.png";
+import BarangayLogo from "../../components/BarangayLogo";
 import Footer from "../../components/public/Footer";
 import { fetchAnnouncements } from "../../api/public/announcementAPI";
+import { fetchBrgyInfo } from "../../api/private/brgyInfoAPI";
 
 export default function Main() {
   const navigate = useNavigate();
   const location = useLocation();
   const [announcements, setAnnouncements] = useState([]);
   const [announcementErrorMessage, setAnnouncementErrorMessage] = useState("");
+  const [barangayInfo, setBarangayInfo] = useState({});
 
   const loadAnnouncements = async () => {
     try {
@@ -50,6 +52,7 @@ export default function Main() {
 
   useEffect(() => {
     loadAnnouncements();
+    fetchBrgyInfo().then(data => setBarangayInfo(data || {})).catch(err => console.error("Failed to load brgy info:", err));
   }, []);
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function Main() {
       <Box
         id="hero"
         sx={{
-          background: "linear-gradient(135deg, #1e1f87 0%, #0d0e4c 100%)",
+          background: "var(--primary-color)",
           color: "white",
           pt: { xs: 7, sm: 10, md: 14 },
           pb: { xs: 8, sm: 12, md: 16 },
@@ -94,7 +97,7 @@ export default function Main() {
               fontSize: { xs: "2.25rem", sm: "3.25rem", md: "4rem" },
             }}
           >
-            Discover Barangay 415
+            Discover {barangayInfo.brgy_name || "Barangay 415"}
           </Typography>
 
           <Typography
@@ -118,7 +121,7 @@ export default function Main() {
               endIcon={<ArrowForwardIcon />}
               sx={{
                 bgcolor: "white",
-                color: "#1e1f87",
+                color: "var(--primary-color)",
                 fontWeight: "bold",
                 px: 4,
                 py: 1.5,
@@ -191,13 +194,11 @@ export default function Main() {
               flexShrink: 0,
             }}
           >
-            <Box
-              component="img"
-              src={BarangayIcon}
+            <BarangayLogo
               alt="Barangay Logo"
               sx={{
                 height: { xs: "150px", sm: "220px", md: "280px" },
-                width: "auto",
+                width: { xs: "150px", sm: "220px", md: "280px" },
                 objectFit: "contain",
               }}
             />
@@ -205,16 +206,20 @@ export default function Main() {
 
           {/* TEXT CONTENT */}
           <Stack spacing={2} textAlign={{ xs: "center", md: "left" }}>
-            <Typography variant="h4" fontWeight="800" color="#1e1f87">
+            <Typography variant="h4" fontWeight="800" color="var(--primary-color)">
               About Our Barangay
             </Typography>
 
             <Typography color="text.secondary" sx={{ fontSize: "1.05rem", lineHeight: 1.8 }}>
-              Barangay 415 Zone 42 is committed to serving the community through
-              transparent governance, inclusive programs, and sustainable
-              development. We strive to improve the quality of life of our
-              residents by providing efficient public services and fostering unity
-              within the community.
+              {barangayInfo.about || (
+                <>
+                  Barangay 415 Zone 42 is committed to serving the community through
+                  transparent governance, inclusive programs, and sustainable
+                  development. We strive to improve the quality of life of our
+                  residents by providing efficient public services and fostering unity
+                  within the community.
+                </>
+              )}
             </Typography>
           </Stack>
         </Box>
@@ -244,7 +249,7 @@ export default function Main() {
                     height: 60,
                     borderRadius: "50%",
                     bgcolor: "rgba(30, 31, 135, 0.08)",
-                    color: "#1e1f87",
+                    color: "var(--primary-color)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -254,13 +259,17 @@ export default function Main() {
                 >
                   <VisibilityIcon fontSize="large" />
                 </Box>
-                <Typography variant="h5" fontWeight="bold" color="#1e1f87" mb={1.5}>
+                <Typography variant="h5" fontWeight="bold" color="var(--primary-color)" mb={1.5}>
                   Our Vision
                 </Typography>
                 <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                  A progressive and sustainable Barangay 415 where residents enjoy
-                  improved quality of life, equal opportunities, and a strong
-                  sense of unity in a safe and clean environment.
+                  {barangayInfo.vision || (
+                    <>
+                      A progressive and sustainable Barangay 415 where residents enjoy
+                      improved quality of life, equal opportunities, and a strong
+                      sense of unity in a safe and clean environment.
+                    </>
+                  )}
                 </Typography>
               </CardContent>
             </Card>
@@ -287,7 +296,7 @@ export default function Main() {
                     height: 60,
                     borderRadius: "50%",
                     bgcolor: "rgba(30, 31, 135, 0.08)",
-                    color: "#1e1f87",
+                    color: "var(--primary-color)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -297,13 +306,17 @@ export default function Main() {
                 >
                   <TrackChangesIcon fontSize="large" />
                 </Box>
-                <Typography variant="h5" fontWeight="bold" color="#1e1f87" mb={1.5}>
+                <Typography variant="h5" fontWeight="bold" color="var(--primary-color)" mb={1.5}>
                   Our Mission
                 </Typography>
                 <Typography color="text.secondary" sx={{ lineHeight: 1.7 }}>
-                  To provide efficient and accountable public service that
-                  empowers residents and promotes community development through
-                  inclusive governance and collaborative partnerships.
+                  {barangayInfo.mission || (
+                    <>
+                      To provide efficient and accountable public service that
+                      empowers residents and promotes community development through
+                      inclusive governance and collaborative partnerships.
+                    </>
+                  )}
                 </Typography>
               </CardContent>
             </Card>
@@ -315,7 +328,7 @@ export default function Main() {
       <Box id="announcements" sx={{ py: { xs: 6, sm: 8, md: 10 }, bgcolor: "#f1f5f9" }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: "center", mb: 6 }}>
-            <Typography variant="h4" fontWeight="800" color="#1e1f87" mb={1}>
+            <Typography variant="h4" fontWeight="800" color="var(--primary-color)" mb={1}>
               Latest Announcements
             </Typography>
             <Typography color="text.secondary">
@@ -370,7 +383,7 @@ export default function Main() {
                       sx={{
                         alignSelf: "flex-start",
                         fontWeight: "bold",
-                        color: "#1e1f87",
+                        color: "var(--primary-color)",
                         textTransform: "none",
                         p: 0,
                         "&:hover": { bgcolor: "transparent", textDecoration: "underline" },
@@ -393,13 +406,13 @@ export default function Main() {
                 borderRadius: 2.5,
                 px: 4,
                 py: 1,
-                borderColor: "#1e1f87",
-                color: "#1e1f87",
+                borderColor: "var(--primary-color)",
+                color: "var(--primary-color)",
                 fontWeight: "bold",
                 textTransform: "none",
                 "&:hover": {
                   bgcolor: "rgba(30, 31, 135, 0.05)",
-                  borderColor: "#1e1f87",
+                  borderColor: "var(--primary-color)",
                 },
               }}
             >

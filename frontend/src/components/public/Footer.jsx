@@ -13,7 +13,7 @@ const Footer = () => {
         <div className="footer-header">
           <div className="footer-header-content">
             <div className="footer-logo">
-              <HomeIcon className="logo-icon" />
+              <HomeIcon className="logo-icon" color="var(--primary-color)" />
               <h2>Barangay 415 Zone 42</h2>
             </div>
           </div>
@@ -29,16 +29,16 @@ const Footer = () => {
           <div className="footer-column">
             <h3>Contact Info</h3>
             <div className="contact-item">
-              <LocationOnIcon className="contact-icon" />
+              <LocationOnIcon className="contact-icon" color="var(--primary-color)" />
               {/* This matches the sample resident address in your database */}
               <p>Somewhere, Manila, Philippines</p>
             </div>
             <div className="contact-item">
-              <PhoneIcon className="contact-icon" />
+              <PhoneIcon className="contact-icon" color="var(--primary-color)" />
               <p>(02) 1234-5678</p>
             </div>
             <div className="contact-item">
-              <EmailIcon className="contact-icon" />
+              <EmailIcon className="contact-icon" color="var(--primary-color)" />
               <p>info@barangay415.gov.ph</p>
             </div>
           </div>

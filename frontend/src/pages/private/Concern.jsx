@@ -30,12 +30,20 @@ import SearchIcon from "@mui/icons-material/Search";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { fetchConcerns, updateConcern, deleteConcern, bulkUpdateConcerns, bulkDeleteConcerns } from "../../api/private/concernAPI";
+import {
+  fetchConcerns,
+  updateConcern,
+  deleteConcern,
+  bulkUpdateConcerns,
+  bulkDeleteConcerns,
+} from "../../api/private/concernAPI";
 import ConcernBulkSolved from "../../components/private/Concern/ConcernBulkSolved";
 import ConcernDelete from "../../components/private/Concern/ConcernDelete";
 import ConcernBulkDelete from "../../components/private/Concern/ConcernBulkDelete";
 import ConcernCard from "../../components/private/Concern/ConcernCard";
 import ConcernTable from "../../components/private/Concern/ConcernTable";
+import ReportForm from "../../components/private/Report/ReportForm";
+import { addReport } from "../../api/private/reportAPI";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
@@ -49,6 +57,7 @@ export default function Concern() {
   const [openConcernBulkSolve, setOpenConcernBulkSolve] = useState(false);
   const [openConcernDelete, setOpenConcernDelete] = useState(false);
   const [openConcernBulkDelete, setOpenConcernBulkDelete] = useState(false);
+  const [openReportConcern, setOpenReportConcern] = useState(false);
   const [concernErrorMessage, setConcernErrorMessage] = useState("");
   const [date, setDate] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,6 +106,12 @@ export default function Concern() {
   const handleOpenConcernBulkDelete = (ids) => {
     setSelectedConcernIds(ids);
     setOpenConcernBulkDelete(true);
+  };
+
+  // Open Report Modal
+  const handleOpenReportConcern = (concern) => {
+    setSelectedConcern(concern);
+    setOpenReportConcern(true);
   };
 
   // ========== CONCERN HANDLERS ==========
@@ -157,6 +172,18 @@ export default function Concern() {
     } catch (err) {
       console.error("Error bulk deleting concerns:", err);
       setConcernErrorMessage(err.message || "Failed to bulk delete concerns");
+    }
+  };
+
+  // Submit Add Report
+  const handleSubmitReport = async (formData) => {
+    try {
+      await addReport(formData);
+      showSnackbar("Report added successfully", "success");
+      setOpenReportConcern(false);
+    } catch (err) {
+      console.error("Error saving report:", err);
+      showSnackbar(err.message || "Error saving report", "error");
     }
   };
 
@@ -395,6 +422,7 @@ export default function Concern() {
                 concerns={filteredPendingConcerns}
                 onEdit={handleSolveConcern}
                 onDelete={handleOpenConcernDelete}
+                onReport={handleOpenReportConcern}
                 onBulkSolve={handleOpenConcernBulkSolve}
                 onBulkDelete={handleOpenConcernBulkDelete}
               />
@@ -536,16 +564,22 @@ export default function Concern() {
         </>
       )}
       {/* Concern Modals */}
-        <ConcernBulkSolved
-          open={openConcernBulkSolve}
-          handleClose={() => setOpenConcernBulkSolve(false)}
-          onSubmit={handleBulkSolveConcerns}
-          selectedConcerns={selectedConcernIds}
-        />
+      <ConcernBulkSolved
+        open={openConcernBulkSolve}
+        handleClose={() => setOpenConcernBulkSolve(false)}
+        onSubmit={handleBulkSolveConcerns}
+        selectedConcerns={selectedConcernIds}
+      />
       <ConcernDelete
         open={openConcernDelete}
         handleClose={() => setOpenConcernDelete(false)}
         onSubmit={handleDeleteConcern}
+        selectedConcern={selectedConcern}
+      />
+      <ReportForm
+        open={openReportConcern}
+        handleClose={() => setOpenReportConcern(false)}
+        onSubmit={handleSubmitReport}
         selectedConcern={selectedConcern}
       />
       <ConcernBulkDelete

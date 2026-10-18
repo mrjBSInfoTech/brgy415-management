@@ -27,6 +27,7 @@ import {
   MenuItem,
   Popover,
 } from "@mui/material";
+import { useBarangayTheme } from "../theme/BarangayThemeContext";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { clearAuthData, isAuthenticated } from "../utils/auth";
 import { isAuthenticated as isPublicAuthenticated } from "../api/public/authenticationAPI";
@@ -37,7 +38,7 @@ import Logout from "@mui/icons-material/Logout";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
-import BarangayIcon from "../assets/BarangayIcon.png";
+import BarangayLogo from "../components/BarangayLogo";
 
 // Animation transition
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -100,6 +101,7 @@ function PublicRoute({ children }) {
   const [openDialog, setOpenDialog] = React.useState(false);
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
+  const { barangayInfo } = useBarangayTheme();
 
   useEffect(() => {
     const storedFirstName = localStorage.getItem("public_first_name");
@@ -121,7 +123,7 @@ function PublicRoute({ children }) {
   }, []);
 
   const handleLogout = () => {
-    clearAuthData();
+    clearAuthData("public");
     navigate("/public/login", { replace: true });
 
     // Clear browser history for extra security
@@ -181,7 +183,7 @@ function PublicRoute({ children }) {
       <AppBar
         position="sticky"
         sx={{
-          backgroundColor: "#1e1f87",
+          backgroundColor: "var(--primary-color)",
           padding: { xs: "4px 10px", lg: "8px 20px" },
         }}
         elevation={0}
@@ -193,14 +195,15 @@ function PublicRoute({ children }) {
               sx={{
                 backgroundColor: "white",
                 borderRadius: "50%",
+                height: 50,
+                flexShrink: 0,
                 width: 50,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <img
-                src={BarangayIcon}
+              <BarangayLogo
                 alt="logo"
                 style={{
                   width: 50,
@@ -220,7 +223,7 @@ function PublicRoute({ children }) {
                 display: { xs: "none", lg: "block" },
               }}
             >
-              Barangay 415 Zone 42
+              {barangayInfo.brgy_name || "Barangay Name"}
             </Typography>
           </Box>
 
@@ -240,10 +243,11 @@ function PublicRoute({ children }) {
               sx={{
                 position: "absolute",
                 height: "36.5px", // Adjusted for button height
-                backgroundColor: "#4c7be8",
+                backgroundColor: "var(--primary-color)",
                 borderRadius: "6px",
                 left: indicatorStyle.left,
                 width: indicatorStyle.width,
+                visibility: activeIndex === -1 ? "hidden" : "visible",
                 transition: "all 0.3s ease",
                 zIndex: 0,
               }}
@@ -292,7 +296,7 @@ function PublicRoute({ children }) {
 
             <Box>
               <IconButton
-                sx={{ color: "#2563eb", ml: 1 }}
+                sx={{ color: "var(--primary-color)", ml: 1 }}
                 onClick={(e) => {
                   if (loggedIn) {
                     handleClick(e);
@@ -367,7 +371,7 @@ function PublicRoute({ children }) {
                 },
               }}
             >
-              <DialogTitle sx={{fontWeight:'bold'}}>Log out</DialogTitle>
+              <DialogTitle sx={{ fontWeight: 'bold' }}>Log out</DialogTitle>
               <DialogContent>
                 <DialogContentText>
                   Are you sure you want to log out?
@@ -411,7 +415,7 @@ function PublicRoute({ children }) {
           <Box
             sx={{
               p: 2,
-              backgroundColor: "#1e1f87",
+              backgroundColor: "var(--primary-color)",
               borderTop: "1px solid rgba(255,255,255,0.1)",
             }}
           >
@@ -451,7 +455,7 @@ function PublicRoute({ children }) {
         <Box
           sx={{
             width: 270,
-            backgroundColor: "#1e1f87",
+            backgroundColor: "var(--primary-color)",
             height: "100%",
             color: "#fff",
           }}
@@ -471,7 +475,7 @@ function PublicRoute({ children }) {
                   onClick={() => handleNavigation(item.path)}
                   sx={{
                     backgroundColor:
-                      activeIndex === index ? "#4c7be8" : "transparent",
+                      activeIndex === index ? "var(--primary-color)" : "transparent",
                     borderRadius: 2,
                     mb: 1,
                   }}
@@ -497,7 +501,7 @@ function PublicRoute({ children }) {
                     onClick={() => {
                       navigate("/public/profile");
                     }}
-                    sx={{ borderRadius: 2, color: "white" }} 
+                    sx={{ borderRadius: 2, color: "white" }}
                   >
                     <ListItemIcon sx={{ color: "white", minWidth: 40 }}>
                       <AccountCircleIcon fontSize="small" />
@@ -533,6 +537,7 @@ function PublicRoute({ children }) {
           </Box>
         </Box>
       </Drawer>
+
 
       <Box><Outlet /></Box>
     </>

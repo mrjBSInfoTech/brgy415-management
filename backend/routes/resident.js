@@ -110,6 +110,37 @@ router.post("/", authenticateToken, upload.single("image"), (req, res) => {
   );
 });
 
+// ➕ Bulk Add Residents from Excel/CSV
+router.post("/bulk", authenticateToken, (req, res) => {
+  const { residents } = req.body;
+
+  if (!residents || !Array.isArray(residents) || residents.length === 0) {
+    return res.status(400).json({ error: "No resident data provided." });
+  }
+
+  const sql = `
+    INSERT INTO resident 
+    (first_name, middle_name, last_name, gender, dob, address, phone_number, email) 
+    VALUES ?
+  `;
+
+  const values = residents.map((r) => [
+    r.first_name || "",
+    r.middle_name || null,
+    r.last_name || "",
+    r.gender || "",
+    r.dob || null,
+    r.address || "",
+    r.phone_number || "",
+    r.email || ""
+  ]);
+
+  db.query(sql, [values], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: `✅ Successfully imported ${result.affectedRows} residents.` });
+  });
+});
+
 // ✏️ Update resident
 router.put("/:id", authenticateToken, upload.single("image"), (req, res) => {
   const { id } = req.params;

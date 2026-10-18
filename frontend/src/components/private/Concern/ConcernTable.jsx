@@ -15,21 +15,50 @@ import {
   Chip,
   Checkbox,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tooltip,
+  Alert,
 } from "@mui/material";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import CloseIcon from "@mui/icons-material/Close";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import CheckIcon from "@mui/icons-material/Check";
+import ReportIcon from '@mui/icons-material/Report';
 import DeleteIcon from "@mui/icons-material/Delete";
+
+const getAttachmentUrl = (concern) => {
+  const value = [concern.attachment_url, concern.image_url, concern.file_url, concern.attachment, concern.image]
+    .find((value) => typeof value === "string" && value.trim());
+  if (!value) return null;
+  const path = value.trim();
+  // Relative upload URLs come from the same backend as the concerns API.
+  if (!/^https?:\/\//i.test(path) && !path.startsWith("/uploads/")) return null;
+  try {
+    const url = new URL(path, "http://localhost:5000");
+    return ["http:", "https:"].includes(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+};
 
 export default function ConcernTable({
   concerns,
   onEdit,
   onDelete,
+  onReport,
   onBulkSolve,
   onBulkDelete,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedConcern, setSelectedConcern] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [attachmentPreview, setAttachmentPreview] = useState(null);
+  const [previewError, setPreviewError] = useState(false);
+  const closeAttachmentPreview = () => setAttachmentPreview(null);
   const open = Boolean(anchorEl);
 
   const getUrgentStyle = (urgency) => {
@@ -153,7 +182,7 @@ export default function ConcernTable({
           sx={{
             p: 2,
             mb: 2,
-            backgroundColor: "#e3f2fd",
+            backgroundColor: "action.selected",
             borderRadius: 1,
             display: "flex",
             justifyContent: "space-between",
@@ -189,10 +218,10 @@ export default function ConcernTable({
           </Box>
         </Box>
       )}
-      <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 650 }} aria-label="concerns table">
+      <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+        <Table sx={{ minWidth: 950, "& .MuiTableCell-root": { verticalAlign: "middle" } }} aria-label="concerns table">
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
+            <TableRow sx={{ backgroundColor: "action.hover" }}>
               <TableCell
                 sx={{ fontWeight: "bold", width: 50 }}
                 padding="checkbox"
@@ -211,6 +240,7 @@ export default function ConcernTable({
               <TableCell sx={{ fontWeight: "bold" }}>Resident</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Type</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Message</TableCell>
+              <TableCell sx={{ fontWeight: "bold", width: 110 }} align="center">Attachment</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Date Posted</TableCell>
               <TableCell sx={{ fontWeight: "bold" }} align="center">
                 Urgency
@@ -227,12 +257,10 @@ export default function ConcernTable({
             {concerns.map((concern) => (
               <TableRow
                 key={concern.message_id}
+                selected={selectedRows.has(concern.message_id)}
                 sx={{
                   opacity: concern.status === "solved" ? 0.7 : 1,
-                  backgroundColor: selectedRows.has(concern.message_id)
-                    ? "#f0f7ff"
-                    : "inherit",
-                  "&:hover": { backgroundColor: "#fafafa" },
+                  "&:hover": { backgroundColor: "action.hover" },
                   transition: "background-color 0.2s ease",
                 }}
               >
@@ -264,6 +292,33 @@ export default function ConcernTable({
                   <Typography variant="body2" sx={{ maxWidth: 200 }}>
                     {truncateText(concern.message, 150)}
                   </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Tooltip title={getAttachmentUrl(concern) ? "View attachment" : "No attachment"}>
+                    <span>
+                      <IconButton
+                        aria-label={`View attachment for concern ${concern.message_id}`}
+                        disabled={!getAttachmentUrl(concern)}
+                        color="primary"
+                        onClick={() => {
+                          const url = getAttachmentUrl(concern);
+                          if (!url) return;
+                          setPreviewError(false);
+                          setAttachmentPreview({
+                            url,
+                            name: new URL(url).pathname.split("/").pop() || "Attachment",
+                            messageId: concern.message_id,
+                            isImage: /\.(avif|bmp|gif|jpe?g|png|svg|webp)$/i.test(new URL(url).pathname) ||
+                              (concern.attachment_mime_type || "").startsWith("image/") ||
+                              url === concern.image_url || url === concern.image,
+                          });
+                        }}
+                        sx={{ borderRadius: 2, bgcolor: "action.hover", transition: "background-color 0.2s ease", "&:hover": { bgcolor: "action.selected" } }}
+                      >
+                        <PhotoLibraryIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
@@ -341,6 +396,16 @@ export default function ConcernTable({
                     )}
                     <MenuItem
                       onClick={() => {
+                        onReport(selectedConcern);
+                        handleMenuClose();
+                      }}
+                      sx={{ color: "warning.main" }}
+                    >
+                      <ReportIcon sx={{ mr: 1, fontSize: "20px" }} />
+                      Report
+                    </MenuItem>
+                    <MenuItem
+                      onClick={() => {
                         onDelete(selectedConcern);
                         handleMenuClose();
                       }}
@@ -361,6 +426,44 @@ export default function ConcernTable({
           </Box>
         )}
       </TableContainer>
+      <Dialog
+        open={Boolean(attachmentPreview)}
+        onClose={closeAttachmentPreview}
+        fullWidth
+        maxWidth="md"
+        aria-labelledby="concern-attachment-title"
+        transitionDuration={250}
+        slotProps={{ paper: { sx: { borderRadius: 3, overflow: "hidden" } } }}
+      >
+        <DialogTitle id="concern-attachment-title" sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography component="span" variant="h6" fontWeight={700}>Attachment preview</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
+              Concern #{attachmentPreview?.messageId} · {attachmentPreview?.name}
+            </Typography>
+          </Box>
+          <IconButton aria-label="Close attachment preview" onClick={closeAttachmentPreview}><CloseIcon /></IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Box sx={{ mt: 2, p: 2, minHeight: 240, display: "flex", alignItems: "center", justifyContent: "center", bgcolor: "action.hover", borderRadius: 2 }}>
+            {attachmentPreview?.isImage && !previewError ? (
+              <Box component="img" src={attachmentPreview.url} alt={attachmentPreview.name} onError={() => setPreviewError(true)} sx={{ display: "block", maxWidth: "100%", maxHeight: "65vh", objectFit: "contain", borderRadius: 1 }} />
+            ) : previewError ? (
+              <Alert severity="warning">The image could not be loaded. You can try opening the file directly.</Alert>
+            ) : (
+              <Box sx={{ textAlign: "center" }}>
+                <PhotoLibraryIcon sx={{ fontSize: 48, color: "text.secondary", mb: 1 }} />
+                <Typography fontWeight={600}>File attachment</Typography>
+                <Typography variant="body2" color="text.secondary">Open the file to view or download it.</Typography>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, gap: 1 }}>
+          <Button onClick={closeAttachmentPreview} color="inherit">Close</Button>
+          <Button component="a" href={attachmentPreview?.url} target="_blank" rel="noopener noreferrer" variant="contained" startIcon={<OpenInNewIcon />} sx={{ borderRadius: 2 }}>Open file</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

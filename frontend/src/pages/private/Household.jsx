@@ -31,6 +31,7 @@ import {
 } from "../../api/private/householdAPI";
 import { fetchResidents } from "../../api/private/residentAPI";
 import HouseholdForm from "../../components/private/Household/HouseholdForm";
+import HouseholBulkAdd from "../../components/private/Household/HouseholBulkAdd";
 import HouseholdDelete from "../../components/private/Household/HouseholdDelete";
 import Slide from "@mui/material/Slide";
 
@@ -42,6 +43,7 @@ export default function Household() {
   const [households, setHouseholds] = useState([]);
   const [residents, setResidents] = useState([]);
   const [openHouseholdForm, setOpenHouseholdForm] = useState(false);
+  const [openBulkAdd, setOpenBulkAdd] = useState(false);
   const [openHouseholdDelete, setOpenHouseholdDelete] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -122,7 +124,7 @@ export default function Household() {
   const handleDeleteHousehold = async () => {
     try {
       await deleteHousehold(selectedHousehold.household_id);
-      showSnackbar("✅ Household deleted successfully", "success");
+      showSnackbar("Household deleted successfully", "success");
       loadHouseholds();
     } catch (error) {
       showSnackbar("Error: " + error.message, "error");
@@ -339,6 +341,14 @@ export default function Household() {
         onSubmit={handleSubmitHousehold}
         selectedHousehold={selectedHousehold}
         residents={residents}
+        onOpenBulkImport={() => setOpenBulkAdd(true)}
+      />
+
+      <HouseholBulkAdd
+        open={openBulkAdd}
+        handleClose={() => setOpenBulkAdd(false)}
+        onSuccess={loadResidents}
+        showSnackbar={showSnackbar}
       />
       <HouseholdDelete
         open={openHouseholdDelete}

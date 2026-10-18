@@ -100,6 +100,7 @@ function HouseholdForm({
   selectedHousehold,
   residents = [],
   mode = "form",
+  onOpenBulkImport,
 }) {
   const [formData, setFormData] = useState({
     house_number: "",
@@ -115,11 +116,21 @@ function HouseholdForm({
   useEffect(() => {
     if (selectedHousehold) {
       setFormData({
-        house_number: selectedHousehold.house_number ? String(selectedHousehold.house_number) : "",
-        street_number: selectedHousehold.street_number ? String(selectedHousehold.street_number) : "",
-        barangay: selectedHousehold.barangay ? String(selectedHousehold.barangay) : "",
-        household_members: selectedHousehold.household_members ? String(selectedHousehold.household_members) : "",
-        head_family: selectedHousehold.head_family ? String(selectedHousehold.head_family) : "",
+        house_number: selectedHousehold.house_number
+          ? String(selectedHousehold.house_number)
+          : "",
+        street_number: selectedHousehold.street_number
+          ? String(selectedHousehold.street_number)
+          : "",
+        barangay: selectedHousehold.barangay
+          ? String(selectedHousehold.barangay)
+          : "",
+        household_members: selectedHousehold.household_members
+          ? String(selectedHousehold.household_members)
+          : "",
+        head_family: selectedHousehold.head_family
+          ? String(selectedHousehold.head_family)
+          : "",
       });
     } else {
       setFormData({
@@ -213,7 +224,7 @@ function HouseholdForm({
       }}
     >
       <>
-        <DialogTitle sx={{fontWeight: "bold"}}>
+        <DialogTitle sx={{ fontWeight: "bold" }}>
           {selectedHousehold ? "Edit Household" : "Add Household"}
         </DialogTitle>
         <DialogContent>
@@ -285,7 +296,10 @@ function HouseholdForm({
                   <em>Select a resident</em>
                 </MenuItem>
                 {residents.map((resident) => (
-                  <MenuItem key={resident.resident_id} value={getResidentLabel(resident)}>
+                  <MenuItem
+                    key={resident.resident_id}
+                    value={getResidentLabel(resident)}
+                  >
                     {getResidentLabel(resident)}
                   </MenuItem>
                 ))}
@@ -294,12 +308,47 @@ function HouseholdForm({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} variant="contained" color="primary">
-            {selectedHousehold ? "Update" : "Add"}
-          </Button>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              width: "100%",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box>
+              {!selectedHousehold && onOpenBulkImport && (
+                <Button
+                  onClick={() => {
+                    handleClose();
+                    onOpenBulkImport();
+                  }}
+                  color="info"
+                  variant="outlined"
+                >
+                  Bulk Import
+                </Button>
+              )}
+            </Box>
+            
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+              }}
+            >
+              <Button onClick={handleClose} color="secondary">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                variant="contained"
+                color="primary"
+              >
+                {selectedHousehold ? "Update" : "Add"}
+              </Button>
+            </Box>
+          </Box>
         </DialogActions>
       </>
     </Dialog>

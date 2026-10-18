@@ -334,12 +334,13 @@ export default function Files() {
                           display: "inline-block",
                           px: 2,
                           py: 1,
-                          backgroundColor: "#e3f2fd",
+                          backgroundColor: "accent.subtle",
                           borderRadius: 1,
                           fontSize: "0.85rem",
                           fontWeight: "bold",
-                          color: "#1976d2",
-                          border: "1px solid #1976d2",
+                          color: "secondary.main",
+                          border: "1px solid",
+                          borderColor: "secondary.main",
                         }}
                       >
                         {file.file_type?.toUpperCase()}

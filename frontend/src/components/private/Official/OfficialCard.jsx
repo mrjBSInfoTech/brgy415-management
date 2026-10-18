@@ -23,7 +23,6 @@ const OfficialCardItem = memo(function OfficialCardItem({
   onViewInfo,
 }) {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [openInfoDialog, setOpenInfoDialog] = useState(false);
   const open = Boolean(anchorEl);
 
   // Open/Close menu handlers
@@ -34,18 +33,18 @@ const OfficialCardItem = memo(function OfficialCardItem({
     setAnchorEl(null);
   };
 
-  // Open Official Info dialog
-  const handleInfoOpen = () => {
-    setOpenInfoDialog(true);
-  };
-
-  const handleInfoClose = () => {
-    setOpenInfoDialog(false);
-  };
-
   return (
     <>
-      <Card key={official.official_id}>
+      <Card
+        key={official.official_id}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          transform: "translateZ(0)",
+          willChange: "transform",
+        }}
+      >
         <Box
           sx={{
             width: "100%",
@@ -82,7 +81,7 @@ const OfficialCardItem = memo(function OfficialCardItem({
           />
         </Box>
         {/* Official Details */}
-        <CardContent sx={{ flex: 1, overflow: "auto" }}>
+        <CardContent sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Box
             sx={{
               display: "flex",
@@ -124,7 +123,7 @@ const OfficialCardItem = memo(function OfficialCardItem({
             fullWidth
             startIcon={<InfoIcon />}
             onClick={() => onViewInfo(official)}
-            sx={{ mb: 2 }}
+            sx={{ mb: 2, mt: "auto" }}
           >
             View Info
           </Button>
@@ -170,13 +169,6 @@ const OfficialCardItem = memo(function OfficialCardItem({
           </Menu>
         </CardContent>
       </Card>
-
-      {/* Official Info Dialog */}
-      <OfficialInfo
-        open={openInfoDialog}
-        handleClose={handleInfoClose}
-        selectedOfficial={official}
-      />
     </>
   );
 });
@@ -203,9 +195,7 @@ export default function OfficialCard({ officials, onEdit, onDelete }) {
             official={official}
             onEdit={onEdit}
             onDelete={onDelete}
-            onViewInfo={(official) => {
-              setSelectedOfficialInfo(official);
-            }}
+            onViewInfo={setSelectedOfficialInfo}
           />
         ))}
       </Box>

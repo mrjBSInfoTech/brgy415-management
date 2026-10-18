@@ -16,6 +16,8 @@ import {
   Container,
   IconButton,
   Divider,
+  Chip,
+  FormHelperText,
 } from "@mui/material";
 import PlaceIcon from "@mui/icons-material/Place";
 import CallIcon from "@mui/icons-material/Call";
@@ -25,6 +27,9 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import XIcon from "@mui/icons-material/X";
 import SendIcon from "@mui/icons-material/Send";
+import AttachFileIcon from "@mui/icons-material/AttachFile";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { addConcern } from "../../api/public/concernsAPI";
 import { getToken as authGetToken } from "../../utils/auth";
 import Footer from "../../components/public/Footer";
@@ -42,6 +47,19 @@ export default function Concerns() {
     message_type: "",
     message: "",
   });
+  const [attachment, setAttachment] = useState(null);
+  const [attachmentPreview, setAttachmentPreview] = useState("");
+
+  useEffect(() => {
+    if (!attachment || !attachment.type.startsWith("image/")) {
+      setAttachmentPreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(attachment);
+    setAttachmentPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [attachment]);
 
   useEffect(() => {
     const storedLoggedIn = authGetToken("public");
@@ -62,6 +80,7 @@ export default function Concerns() {
       await addConcern(formData);
       showSnackbar("Concern successfully submitted", "success");
       setFormData({ message_type: "", message: "" });
+      setAttachment(null);
     } catch (err) {
       showSnackbar(err.message || "Error saving concern", "error");
     }
@@ -81,7 +100,7 @@ export default function Concerns() {
 
       <Box
         sx={{
-          background: "linear-gradient(135deg, #1e1f87 0%, #3a3cb3 100%)",
+          background: "var(--primary-color)",
           color: "white",
           pt: { xs: 5, sm: 7, md: 9 },
           pb: { xs: 6, sm: 8, md: 10 },
@@ -163,6 +182,52 @@ export default function Concerns() {
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1.5 } }}
                 />
 
+                <Box>
+                  <Button component="label" variant="outlined" fullWidth startIcon={<CloudUploadIcon />} sx={{ textTransform: "none", color:"var(--primary-color)", borderColor:"var(--primary-color)"}}>
+                    Add attachment
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = "";
+                        if (file && file.size <= 5 * 1024 * 1024) {
+                          setAttachment(file);
+                        } else if (file) {
+                          showSnackbar("Please choose a file smaller than 5 MB", "error");
+                        }
+                      }}
+                    />
+                  </Button>
+                  <FormHelperText>Optional. Add an image or supporting file up to 5 MB.</FormHelperText>
+                </Box>
+
+                {attachment && (
+                  <Box sx={{ p: 1.5, bgcolor: "action.hover", borderRadius: 1.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+                      {attachmentPreview && (
+                        <Box
+                          component="img"
+                          src={attachmentPreview}
+                          alt="Selected attachment preview"
+                          sx={{ width: 64, height: 64, objectFit: "cover", borderRadius: 1 }}
+                        />
+                      )}
+                      <Chip icon={<AttachFileIcon />} label={attachment.name} sx={{ maxWidth: "100%" }} />
+                      <Button
+                        size="small"
+                        color="error"
+                        startIcon={<DeleteOutlineIcon />}
+                        onClick={() => setAttachment(null)}
+                        sx={{ textTransform: "none" }}
+                      >
+                        Remove
+                      </Button>
+                    </Box>
+                  </Box>
+                )}
+
                 <Button
                   type="submit"
                   variant="contained"
@@ -173,11 +238,11 @@ export default function Concerns() {
                     py: 1.5,
                     borderRadius: 1.5,
                     fontWeight: "bold",
-                    bgcolor: "#1e1f87",
+                    bgcolor: "var(--primary-color)",
                     fontSize: "1rem",
                     textTransform: "none",
                     boxShadow: "0 4px 14px rgba(30, 31, 135, 0.35)",
-                    "&:hover": { bgcolor: "#17186b" },
+                    "&:hover": { filter: "brightness(0.85)" },
                   }}
                 >
                   Submit Concern
@@ -202,7 +267,7 @@ export default function Concerns() {
               }}
             >
               <CardContent id="contact-info" sx={{ p: { xs: 1.5, sm: 2 } }}>
-                <Typography variant="h5" fontWeight="bold" color="#1e1f87" mb={3}>
+                <Typography variant="h5" fontWeight="bold" color="var(--primary-color)" mb={3}>
                   Contact Information
                 </Typography>
 
@@ -216,7 +281,7 @@ export default function Concerns() {
                         borderRadius: 1.5,
                         flexShrink: 0,
                         bgcolor: "rgba(30, 31, 135, 0.08)",
-                        color: "#1e1f87",
+                        color: "var(--primary-color)",
                       }}
                     >
                       <PlaceIcon />
@@ -239,7 +304,7 @@ export default function Concerns() {
                         borderRadius: 1.5,
                         flexShrink: 0,
                         bgcolor: "rgba(30, 31, 135, 0.08)",
-                        color: "#1e1f87",
+                        color: "var(--primary-color)",
                       }}
                     >
                       <CallIcon />
@@ -265,7 +330,7 @@ export default function Concerns() {
                         borderRadius: 1.5,
                         flexShrink: 0,
                         bgcolor: "rgba(30, 31, 135, 0.08)",
-                        color: "#1e1f87",
+                        color: "var(--primary-color)",
                       }}
                     >
                       <EmailIcon />
@@ -288,7 +353,7 @@ export default function Concerns() {
                         borderRadius: 1.5,
                         flexShrink: 0,
                         bgcolor: "rgba(30, 31, 135, 0.08)",
-                        color: "#1e1f87",
+                        color: "var(--primary-color)",
                       }}
                     >
                       <WatchLaterIcon />
@@ -324,8 +389,8 @@ export default function Concerns() {
                       rel="noopener noreferrer"
                       sx={{
                         bgcolor: "#f1f5f9",
-                        color: "#1e1f87",
-                        "&:hover": { bgcolor: "#1e1f87", color: "white" },
+                        color: "var(--primary-color)",
+                        "&:hover": { bgcolor: "var(--primary-color)", color: "white" },
                         transition: "all 0.2s ease-in-out",
                       }}
                     >
@@ -346,7 +411,7 @@ export default function Concerns() {
         autoHideDuration={6000}
         onClose={() => setSnackbarOpen(false)}
         TransitionComponent={SlideTransition}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
         <Alert
           onClose={() => setSnackbarOpen(false)}

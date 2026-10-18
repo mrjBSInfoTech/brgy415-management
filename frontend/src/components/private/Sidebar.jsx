@@ -18,9 +18,9 @@ import MenuItem from "@mui/material/MenuItem";
 import { modalStyles } from "../../theme/modalTheme";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Stack, Avatar, Typography, Divider, IconButton } from "@mui/material";
-import { ThemeProvider, CssBaseline, useMediaQuery } from "@mui/material";
-import { lightTheme, darkTheme } from "../../theme/customTheme";
-import BarangayIcon from "../assets/BarangayIcon.png";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import { useBarangayTheme } from "../../theme/BarangayThemeContext";
+import BarangayLogo from "../BarangayLogo";
 
 //Icons
 import AccountBoxIcon from "@mui/icons-material/AccountBox";
@@ -196,15 +196,17 @@ export default function DashboardLayout({ children }) {
         sx={{
           backgroundColor: "white",
           borderRadius: "50%",
+          height: 50,
+          flexShrink: 0,
           width: 40,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
         }}
       >
-        <img
-          src={BarangayIcon}
+        <BarangayLogo
           alt="logo"
+          sx={{ maxWidth: 50 }}
           style={{ width: 50, height: 50, position: "relative", bottom: 2 }}
         />
       </Box>
@@ -280,8 +282,7 @@ export default function DashboardLayout({ children }) {
     ></Box>
   );
 
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  const theme = prefersDarkMode ? darkTheme : lightTheme;
+  const { privateTheme: theme } = useBarangayTheme();
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -347,11 +348,11 @@ export default function DashboardLayout({ children }) {
             },
             // Selected text
             "& .MuiDrawer-paper .Mui-selected .MuiListItemText-primary": {
-              color: "#2563eb",
+              color: "#ffffff",
             },
             // Selected icon
             "& .MuiDrawer-paper .Mui-selected .MuiSvgIcon-root": {
-              color: "#2563eb",
+              color: "#ffffff",
             },
             // Sidebar icons color
             "& .MuiDrawer-paper .MuiSvgIcon-root": {

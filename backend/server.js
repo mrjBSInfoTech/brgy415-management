@@ -23,6 +23,9 @@ import householdRoutes from "./routes/household.js";
 import loginRoutes from "./routes/login.js";
 import postRoutes from "./routes/post.js";
 import portRoutes from "./routes/port.js";
+import reportRoutes from "./routes/report.js";
+import brgyInfoRoutes from "./routes/brgyInfo.js";
+import { alarm } from "./services/alarm.js";
 
 dotenv.config();
 
@@ -59,6 +62,8 @@ app.use("/api/post", postRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/authentication", authRoutes);
 app.use("/api/ports", portRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/brgyinfo", brgyInfoRoutes);
 
 // Handle 404 (unknown routes)
 app.use((req, res) => {
@@ -75,4 +80,5 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
+alarm.start();
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

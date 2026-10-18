@@ -46,10 +46,12 @@ export default function AnnouncementCard({ announcements, onEdit, onDelete }) {
     <Box
       sx={{
         display: "flex",
-        flexDirection: "column", // Stack cards vertically like a feed
-        alignItems: "center", // Center the cards horizontally
-        gap: 4, // Spacing between posts
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 4,
         p: 2,
+        width: "100%",
       }}
     >
       {announcements.map((announcement) => (
@@ -57,11 +59,12 @@ export default function AnnouncementCard({ announcements, onEdit, onDelete }) {
           key={announcement.announcement_id}
           sx={{
             width: "100%",
-            maxWidth: 600, // Standard Facebook post width
+            maxWidth: 600,
             display: "flex",
             flexDirection: "column",
-            borderRadius: 2, // Slightly rounded corners
+            borderRadius: 2,
             boxShadow: "0 2px 4px rgba(0,0,0,0.1), 0 8px 16px rgba(0,0,0,0.1)",
+            mx: "auto",
           }}
         >
           {/* Announcement Details (Top) */}

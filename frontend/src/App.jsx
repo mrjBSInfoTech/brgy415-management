@@ -1,7 +1,8 @@
 import AppRoutes from "./routes/AppRoutes";
+import BarangayThemeProvider from "./theme/BarangayThemeProvider";
 
 function App() {
-  return <AppRoutes />;
+  return <BarangayThemeProvider><AppRoutes /></BarangayThemeProvider>;
 }
 
 export default App;

@@ -19,15 +19,22 @@ import {
 import { Slide } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ResidentCard from "../../components/private/Residents/ResidentCard";
+import ResidentTable from "../../components/private/Residents/ResidentTable";
 import ResidentsForm from "../../components/private/Residents/ResidentsForm";
+import ResidentBulkAdd from "../../components/private/Residents/ResidentBulkAdd";
 import ResidentsDelete from "../../components/private/Residents/ResidentsDelete";
 import {
   fetchResidents,
   addResident,
+  bulkAddResidents,
   updateResident,
   deleteResident,
 } from "../../api/private/residentAPI";
 import { fetchHouseholds } from "../../api/private/householdAPI";
+import { useRef } from "react";
+import * as XLSX from "xlsx";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import TableRowsIcon from "@mui/icons-material/TableRows";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
@@ -38,6 +45,7 @@ export default function Resident() {
   const [residents, setResidents] = useState([]);
   const [households, setHouseholds] = useState([]);
   const [openResidentForm, setOpenResidentForm] = useState(false);
+  const [openBulkAdd, setOpenBulkAdd] = useState(false);
   const [openResidentDelete, setOpenResidentDelete] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
   const [residentErrorMessage, setResidentErrorMessage] = useState("");
@@ -47,6 +55,7 @@ export default function Resident() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loading, setLoading] = useState(false);
+  const [viewMode, setViewMode] = useState("grid");
 
   // Fetch all households from API
   const loadHouseholds = async () => {
@@ -273,6 +282,26 @@ export default function Resident() {
         </Box>
       </Paper>
 
+      {/* View modes */}
+      <Paper sx={{ p: 2, mt: 3, borderRadius: 2 }} variant="outlined">
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            variant={viewMode === "grid" ? "contained" : "outlined"}
+            startIcon={<ViewModuleIcon />}
+            onClick={() => setViewMode("grid")}
+          >
+            Grid View
+          </Button>
+          <Button
+            variant={viewMode === "table" ? "contained" : "outlined"}
+            startIcon={<TableRowsIcon />}
+            onClick={() => setViewMode("table")}
+          >
+            Table View
+          </Button>
+        </Box>
+      </Paper>
+
       {/* Residents Display */}
       <Paper sx={{ p: 3, mt: 3, borderRadius: 2 }} variant="outlined">
         <Typography variant="h6" sx={{ mb: 2 }}>
@@ -287,12 +316,21 @@ export default function Resident() {
             {residentErrorMessage}
           </Typography>
         ) : filteredResidents.length > 0 ? (
-          <ResidentCard
-            residents={filteredResidents}
-            onEdit={handleOpenResidentEdit}
-            onDelete={handleOpenResidentDelete}
-            households={households}
-          />
+          viewMode === "table" ? (
+            <ResidentTable
+              residents={filteredResidents}
+              onEdit={handleOpenResidentEdit}
+              onDelete={handleOpenResidentDelete}
+              households={households}
+            />
+          ) : (
+            <ResidentCard
+              residents={filteredResidents}
+              onEdit={handleOpenResidentEdit}
+              onDelete={handleOpenResidentDelete}
+              households={households}
+            />
+          )
         ) : (
           <Typography
             color="text.secondary"
@@ -312,7 +350,16 @@ export default function Resident() {
         onSubmit={handleSubmitResident}
         selectedResident={selectedResident}
         households={households}
+        onOpenBulkImport={() => setOpenBulkAdd(true)}
       />
+      
+      <ResidentBulkAdd 
+        open={openBulkAdd}
+        handleClose={() => setOpenBulkAdd(false)}
+        onSuccess={loadResidents}
+        showSnackbar={showSnackbar}
+      />
+
       <ResidentsDelete
         open={openResidentDelete}
         handleClose={() => setOpenResidentDelete(false)}

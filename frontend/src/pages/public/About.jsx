@@ -12,14 +12,16 @@ import {
 } from "@mui/material";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
 import GroupsIcon from "@mui/icons-material/Groups";
-import BarangayIcon from "../../assets/BarangayIcon.png";
+import BarangayLogo from "../../components/BarangayLogo";
 import Footer from "../../components/public/Footer";
 import { fetchOfficials } from "../../api/public/officialAPI";
+import { fetchBrgyInfo } from "../../api/private/brgyInfoAPI";
 import OfficialCard from "../../components/public/Official/OfficialCard";
 
 export default function About() {
   const location = useLocation();
   const [officials, setOfficials] = useState([]);
+  const [barangayInfo, setBarangayInfo] = useState({});
 
   useEffect(() => {
     if (location.hash) {
@@ -43,6 +45,8 @@ export default function About() {
       }
     };
     loadOfficials();
+    
+    fetchBrgyInfo().then(data => setBarangayInfo(data || {})).catch(err => console.error(err));
   }, []);
 
   return (
@@ -55,7 +59,7 @@ export default function About() {
       <Box
         id="history"
         sx={{
-          background: "linear-gradient(135deg, #1e1f87 0%, #0d0e4c 100%)",
+          background: "var(--primary-color)",
           color: "white",
           pt: { xs: 6, sm: 8, md: 10 },
           pb: { xs: 7, sm: 9, md: 11 },
@@ -86,13 +90,11 @@ export default function About() {
                 flexShrink: 0,
               }}
             >
-              <Box
-                component="img"
-                src={BarangayIcon}
+              <BarangayLogo
                 alt="Barangay Logo"
                 sx={{
                   height: { xs: "150px", sm: "230px", md: "290px" },
-                  width: "auto",
+                  width: { xs: "150px", sm: "230px", md: "290px" },
                   objectFit: "contain",
                   filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.1))",
                 }}
@@ -115,7 +117,7 @@ export default function About() {
               </Box>
 
               <Typography variant="h3" fontWeight="800" sx={{ fontSize: { xs: "2rem", sm: "2.75rem", md: "3rem" } }}>
-                Barangay 415, Zone 42
+                {barangayInfo.brgy_name || "Barangay 415, Zone 42"}
               </Typography>
 
               <Typography
@@ -125,10 +127,14 @@ export default function About() {
                   lineHeight: 1.8,
                 }}
               >
-                Barangay 415 is dedicated to providing efficient public service, maintaining peace and order, 
-                and building a prosperous community for all residents in Sampaloc, Manila. Established with a 
-                rich heritage of community collaboration, we strive to leverage digital tools to enhance administrative 
-                transparency, security, and public welfare.
+                {barangayInfo.about || (
+                  <>
+                    Barangay 415 is dedicated to providing efficient public service, maintaining peace and order, 
+                    and building a prosperous community for all residents in Sampaloc, Manila. Established with a 
+                    rich heritage of community collaboration, we strive to leverage digital tools to enhance administrative 
+                    transparency, security, and public welfare.
+                  </>
+                )}
               </Typography>
             </Stack>
           </Box>
@@ -147,7 +153,7 @@ export default function About() {
           }}
         >
           <Box textAlign="center" mb={{ xs: 4, md: 6 }}>
-            <Typography variant="h4" fontWeight="800" color="#1e1f87" sx={{ fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>
+            <Typography variant="h4" fontWeight="800" color="var(--primary-color)" sx={{ fontSize: { xs: "1.75rem", sm: "2.125rem" } }}>
               Barangay Officials
             </Typography>
             <Typography variant="body2" color="text.secondary" mt={1}>
@@ -163,7 +169,7 @@ export default function About() {
               textAlign="center"
               component="div"
               mb={3}
-              sx={{ color: "#1e1f87", letterSpacing: 1.5, fontSize: "0.9rem" }}
+              sx={{ color: "var(--primary-color)", letterSpacing: 1.5, fontSize: "0.9rem" }}
             >
               BARANGAY CAPTAIN
             </Typography>
@@ -190,7 +196,7 @@ export default function About() {
               textAlign="center"
               component="div"
               mb={4}
-              sx={{ color: "#1e1f87", letterSpacing: 1.5, fontSize: "0.9rem" }}
+              sx={{ color: "var(--primary-color)", letterSpacing: 1.5, fontSize: "0.9rem" }}
             >
               BARANGAY COUNCIL & STAFF
             </Typography>

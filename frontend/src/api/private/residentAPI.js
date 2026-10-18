@@ -108,6 +108,16 @@ export const addResident = async (residentData) => {
   }
 };
 
+// Bulk Add Residents
+export const bulkAddResidents = async (residents) => {
+  try {
+    const res = await api.post("/residents/bulk", { residents });
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // Update resident
 export const updateResident = async (id, residentData) => {
   try {

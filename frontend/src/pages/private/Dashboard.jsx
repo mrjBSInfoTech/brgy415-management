@@ -71,14 +71,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-  const [openPasswordWarning, setOpenPasswordWarning] = useState(false);
-  const passwordChanged = localStorage.getItem("private_password_changed");
-
-  useEffect(() => {
-    if (passwordChanged === 0) {
-      setOpenPasswordWarning(true);
-    }
-  }, [passwordChanged]);
 
   // Load residents count
   const loadResidents = async () => {
@@ -614,44 +606,6 @@ export default function Dashboard() {
           </Box>
         )}
       </Paper>
-      {passwordChanged && (
-        <Dialog
-          open={openPasswordWarning}
-          TransitionComponent={Transition}
-          keepMounted
-          disableEscapeKeyDown // Disables closing with the Escape key
-          onClose={(event, reason) => {
-            // Prevents closing the dialog if the user clicks outside of it
-            if (reason === "backdropClick") return;
-          }}
-        >
-          <DialogTitle sx={{ color: "error.main", fontWeight: "bold" }}>
-            Security Action Required
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Hi there, you are currently using a temporary, system-generated
-              initial password. For security reasons, you must change your
-              password immediately before continuing to access system management
-              features.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => {
-                setOpenPasswordWarning(false);
-                setTimeout(() => {
-                  navigate("/private/settings");
-                }, 300);
-              }}
-            >
-              Change Password Now
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
     </Box>
   );
 }

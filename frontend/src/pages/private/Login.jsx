@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import axios from "axios";
 import {
   TextField,
   Button,
@@ -13,10 +12,11 @@ import {
   Slide,
   InputAdornment,
   IconButton,
-  Link,
   useTheme,
   useMediaQuery,
+  CircularProgress,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import {
   Visibility,
@@ -34,6 +34,7 @@ function SlideTransition(props) {
 }
 
 const Login = () => {
+  const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -51,22 +52,6 @@ const Login = () => {
       navigate("/private/dashboard", { replace: true });
     }
   }, [navigate]);
-
-  // Handle Enter key login
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        handleLogin();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [username, password]);
 
   // Snackbar handlers
   const showSnackbar = (message, severity = "success") => {
@@ -91,12 +76,15 @@ const Login = () => {
     }
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (event) => {
+    event?.preventDefault();
+    if (loading) return;
     if (!username || !password) {
       showSnackbar("Please fill in all fields", "error");
       return;
     }
 
+    setLoading(true);
     try {
       const data = await loginUser({ username, password });
 
@@ -118,6 +106,8 @@ const Login = () => {
       navigate("/private/dashboard", { replace: true });
     } catch (error) {
       showSnackbar(`Login failed: ${error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,7 +120,7 @@ const Login = () => {
         alignItems: "center",
         minHeight: "100vh",
         padding: "20px",
-        background: "#466ABE",
+        background: theme.palette.primary.main,
         overflowY: "auto",
       }}
     >
@@ -141,7 +131,7 @@ const Login = () => {
       <Paper
         elevation={24}
         style={{
-          backgroundColor: "white",
+          backgroundColor: theme.palette.background.paper,
           padding: isMobile ? "25px 20px" : "40px 35px", // Reduced padding
           borderRadius: "20px", // Slightly smaller radius
           width: "100%",
@@ -177,7 +167,7 @@ const Login = () => {
           gutterBottom
           sx={{
             fontWeight: "600",
-            color: "#333",
+            color: "text.primary",
             mb: 3, // Reduced margin
             fontSize: { xs: "1.2rem", sm: "1.4rem" }, // Smaller font
           }}
@@ -187,6 +177,7 @@ const Login = () => {
 
         <Box
           component="form"
+          onSubmit={handleLogin}
           noValidate
           sx={{
             display: "flex",
@@ -200,7 +191,7 @@ const Login = () => {
               variant="body1"
               sx={{
                 fontWeight: "600",
-                color: "#444",
+                color: "text.primary",
                 mb: 0.75, // Reduced margin
                 ml: 0.5,
                 fontSize: "0.95rem", // Smaller font
@@ -219,22 +210,22 @@ const Login = () => {
                 startAdornment: (
                   <InputAdornment position="start">
                     <PersonIcon
-                      sx={{ color: "#466ABE", fontSize: "1.25rem" }}
+                      sx={{ color: "primary.main", fontSize: "1.25rem" }}
                     />{" "}
                     {/* Smaller icon */}
                   </InputAdornment>
                 ),
                 sx: {
                   borderRadius: "10px", // Smaller radius
-                  backgroundColor: "#f8f9fa",
+                  backgroundColor: "action.hover",
                   "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#e0e0e0",
+                    borderColor: "divider",
                   },
                   "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#466ABE",
+                    borderColor: "primary.main",
                   },
                   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#466ABE",
+                    borderColor: "primary.main",
                     borderWidth: "2px",
                   },
                   fontSize: "0.95rem", // Smaller text
@@ -249,7 +240,7 @@ const Login = () => {
               variant="body1"
               sx={{
                 fontWeight: "600",
-                color: "#444",
+                color: "text.primary",
                 mb: 0.75, // Reduced margin
                 ml: 0.5,
                 fontSize: "0.95rem", // Smaller font
@@ -268,21 +259,33 @@ const Login = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <LockIcon sx={{ color: "#466ABE", fontSize: "1.25rem" }} />{" "}
+                    <LockIcon sx={{ color: "primary.main", fontSize: "1.25rem" }} />{" "}
                     {/* Smaller icon */}
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      color="primary"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      onClick={() => setShowPassword((visible) => !visible)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
                   </InputAdornment>
                 ),
                 sx: {
                   borderRadius: "10px", // Smaller radius
-                  backgroundColor: "#f8f9fa",
+                  backgroundColor: "action.hover",
                   "& .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#e0e0e0",
+                    borderColor: "divider",
                   },
                   "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#466ABE",
+                    borderColor: "primary.main",
                   },
                   "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#466ABE",
+                    borderColor: "primary.main",
                     borderWidth: "2px",
                   },
                   fontSize: "0.95rem", // Smaller text
@@ -295,25 +298,27 @@ const Login = () => {
           <Button
             variant="contained"
             fullWidth
-            onClick={handleLogin}
+            type="submit"
+            disabled={loading}
+            aria-busy={loading}
             sx={{
               height: "48px", // Reduced height
               fontWeight: "700",
               textTransform: "none",
               fontSize: "16px", // Smaller font
-              backgroundColor: "#466ABE",
+              backgroundColor: "primary.main",
               borderRadius: "10px", // Smaller radius
               mt: 1.5, // Reduced margin
               "&:hover": {
-                backgroundColor: "#344a7e",
+                backgroundColor: "primary.dark",
                 transform: "translateY(-1px)", // Reduced lift
-                boxShadow: "0px 8px 15px rgba(94, 96, 206, 0.2)", // Reduced shadow
+                boxShadow: `0px 8px 15px ${alpha(theme.palette.primary.main, 0.2)}`, // Reduced shadow
               },
               transition: "all 0.2s ease",
-              boxShadow: "0px 4px 10px rgba(94, 96, 206, 0.15)", // Reduced shadow
+              boxShadow: `0px 4px 10px ${alpha(theme.palette.primary.main, 0.15)}`, // Reduced shadow
             }}
           >
-            Login
+            {loading ? <CircularProgress size={24} color="primary" aria-label="Logging in" /> : "Login"}
           </Button>
         </Box>
       </Paper>

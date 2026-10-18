@@ -1,9 +1,9 @@
-import axios from "axios";
 import express from "express";
 import dotenv from "dotenv";
 import db from "../database/db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { alarm } from "../services/alarm.js";
 
 dotenv.config();
 
@@ -20,21 +20,6 @@ const getGenAI = () => {
   return genAI;
 };
 
-const getEspAddress = () => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT port_number FROM port LIMIT 1"; 
-    db.query(sql, (err, results) => {
-      if (err) return reject(err);
-      if (!results || results.length === 0) {
-        return resolve("192.168.1.9"); 
-      }
-      
-      const config = results[0];
-      resolve(config.port_number);
-    });
-  });
-};
-
 const router = express.Router();
 
 // 🛑 Strict Local Checking for Tripping, Jokes, and Nonsense (Saves API Quota)
@@ -45,31 +30,50 @@ export const detectMessageTripping = (text) => {
     return { valid: false, reason: "Empty message submission." };
   }
 
-  // 1. Check for Keyboard Smashing / No meaningful vowels
+  // Check for Keyboard Smashing / No meaningful vowels
   if (normalized.length > 5 && !/[aeiouy]{2,}/i.test(normalized)) {
     return { valid: false, reason: "Random character typing or keyboard smashing detected." };
   }
 
   const checks = [
+    // Personal medical ailments & physical conditions
     {
-      regex: /\b(?:nakapatay|pinatay|patay|pumatay)\b.*\b(?:ipis)\b/,
-      reason: "Irrelevant joke submission.",
+      regex: /\b(?:masakit\s+(?:ang\s+)?(?:tiyan|ulo|ngipin|katawan|tuhod|likod|balikat|braso|binti)|sumasakit\s+(?:ang\s+)?(?:tiyan|ulo)|nilalagnat|sinisipon|inuubo|lbm|nagtatae|nahihilo|nagsusuka|sinisikmura)\b/i,
+      reason: "Personal medical condition (belongs to a clinic/hospital, not barangay hall).",
+    },
+    // Bugs, pests, and trivial animal occurrences
+    {
+      regex: /\b(?:nakapatay|pinatay|patay|pumatay|nangagat|nanghahabol)\b.*\b(?:ipis|daga|lamok|langgam|surot|kuto|butiki)\b/i,
+      reason: "Trivial household pest complaint.",
+    },
+    // Trivial monetary / joke theft amounts
+    {
+      regex: /\b(?:nanakawan|nagnakaw|nangnakaw|nanakaw)\b.*\b(?:piso|barya|singko|diyes|cents?|candy|kendi|tsinelas)\b/i,
+      reason: "Trivial or joke theft remark.",
+    },
+    // Relationship, romantic, or domestic love life drama
+    {
+      regex: /\b(?:iniwan\s+ako|niloko\s+ako|break\s+na\s+kami|crush\s+ko|mahal\s+ko\s+si|broken\s+hearted|wala\s+akong\s+jowa|gusto\s+ko\s+ng\s+jowa)\b/i,
+      reason: "Irrelevant personal romantic or relationship drama.",
+    },
+    // Personal chores and everyday non-barangay activities
+    {
+      regex: /\b(?:nagugutom\s+ako|anong\s+ulam|pahingi\s+(?:ng\s+)?pagkain|antok\s+na\s+ako|pabili|paload|pautang\s+ng\s+load)\b/i,
+      reason: "Personal non-governmental errand or query.",
+    },
+    // Test configuration or basic greetings
+    {
+      regex: /\b(?:test|testing|gumagana ba ito|lorem ipsum)\b/i,
+      reason: "Test submission.",
     },
     {
-      regex: /\b(?:nanakawan|nagnakaw|nangnakaw|nanakaw)\b.*\b(?:limang|5|five)\b.*\b(?:piso|peso|pesos)\b/,
-      reason: "Trivial or joking theft remark.",
+      regex: /^(?:maganda po ako|pogi ako|kumain ka na ba|hi|hello|kamusta|good morning|good evening)$/i,
+      reason: "Irrelevant conversational greeting.",
     },
-    {
-      regex: /\b(?:test|testing|gumagana ba ito|lorem ipsum)\b/,
-      reason: "Test configuration submission.",
-    },
-    {
-      regex: /^(maganda po ako|pogi ako|kumain ka na ba|hi|hello|crush ko si)$/,
-      reason: "Irrelevant personal conversational remark.",
-    },
+    // Repeated character spam
     {
       regex: /^(?:asdf|qwerty|zxcvbn|lkjhg|hjkl|uiop|asdfghjkl|qwertyuiop|zxcvbnm|abc|abc123|123456)$/i,
-      reason: "Keyboard smashing or random nonsense.",
+      reason: "Nonsense keystroke entry.",
     }
   ];
 
@@ -140,32 +144,35 @@ const classifyMessageWithAI = async (text) => {
       }
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(prompt, { timeout: 15000 });
     const responseText = result.response.text();
-    return JSON.parse(responseText);
+    const classification = JSON.parse(responseText);
+    if (
+      !classification ||
+      typeof classification.valid !== "boolean" ||
+      !["High", "Medium", "Low"].includes(classification.urgency) ||
+      !["Emergency", "Dispute", "General"].includes(classification.type)
+    ) {
+      throw new Error("Gemini returned an invalid classification.");
+    }
+    return classification;
   } catch (error) {
-    console.error("AI Triage failed, running upgraded local safety validation chain:", error.message);
-    const localFallback = classifyMessageLocally(text);
-    return {
-      urgency: localFallback.urgency,
-      type: localFallback.type,
-      valid: localFallback.valid
-    };
+    console.error("AI Triage failed; message submission blocked:", error.message);
+    throw error;
   }
 };
 
 const triggerEspAlert = async (urgency) => {
+  if (!["High", "Medium"].includes(urgency)) return null;
   try {
-    const ESP32_IP = await getEspAddress();
-    if (urgency === "High") {
-      await axios.get(`http://${ESP32_IP}/alert/high`, { timeout: 3000 });
-      console.log("ESP32 High alert triggered");
-    } else if (urgency === "Medium") {
-      await axios.get(`http://${ESP32_IP}/alert/medium`, { timeout: 3000 });
-      console.log("ESP32 Medium alert triggered");
+    const delivery = await alarm.sendAlert(urgency);
+    if (!["confirmed", "sent"].includes(delivery.status)) {
+      console.warn("Concern saved; alarm delivery:", delivery.status);
     }
+    return delivery;
   } catch (error) {
-    console.error("ESP32 trigger error:", error.message || error);
+    console.error("Concern saved; alarm delivery failed:", error.message);
+    return { status: "unavailable", message: "Concern saved, but the alarm could not be sent." };
   }
 };
 
@@ -245,7 +252,14 @@ router.post("/", authenticateToken, async (req, res) => {
     }
 
     // AI Context Evaluation
-    const classification = await classifyMessageWithAI(message);
+    let classification;
+    try {
+      classification = await classifyMessageWithAI(message);
+    } catch {
+      return res.status(503).json({
+        message: "Message could not be sent because the validation service is unavailable. Please try again later.",
+      });
+    }
 
     if (!classification.valid) {
       return res.status(400).json({
@@ -272,11 +286,12 @@ router.post("/", authenticateToken, async (req, res) => {
           return res.status(500).json({ message: err.message });
         }
 
-        await triggerEspAlert(urgency);
+        const alertDelivery = await triggerEspAlert(urgency);
 
         res.json({
           message: "✅ Message categorized and sent",
           id: result.insertId,
+          alertDelivery,
           classification: { 
             type, 
             urgency, 

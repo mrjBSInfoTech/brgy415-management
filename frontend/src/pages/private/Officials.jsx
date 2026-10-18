@@ -52,7 +52,7 @@ export default function Officials() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [sortOption, setSortOption] = useState("verified");
+  const [sortOption, setSortOption] = useState("officials");
   const [loading, setLoading] = useState(false);
   const [part, setPart] = useState(1);
 

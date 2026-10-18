@@ -47,7 +47,7 @@ export default function Announcements() {
       {/* Hero Header */}
       <Box
         sx={{
-          background: "linear-gradient(135deg, #1e1f87 0%, #3a3cb3 100%)",
+          background: "var(--primary-color)",
           color: "white",
           pt: { xs: 5, sm: 7, md: 9 },
           pb: { xs: 6, sm: 8, md: 10 },
@@ -71,7 +71,7 @@ export default function Announcements() {
         <Box sx={{ width: "100%" }}>
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-              <CircularProgress sx={{ color: "#1e1f87" }} />
+              <CircularProgress sx={{ color: "var(--primary-color)" }} />
             </Box>
           ) : announcementErrorMessage ? (
             <Typography align="center" color="text.secondary" sx={{ py: 6, px: 2, bgcolor: "white", borderRadius: 2, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>

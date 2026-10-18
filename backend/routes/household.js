@@ -68,6 +68,34 @@ router.post("/", authenticateToken, (req, res) => {
   );
 });
 
+// ➕ Bulk Add Households from Excel/CSV
+router.post("/bulk", authenticateToken, (req, res) => {
+  const { households } = req.body;
+
+  if (!households || !Array.isArray(households) || households.length === 0) {
+    return res.status(400).json({ error: "No household data provided." });
+  }
+
+  const sql = `
+    INSERT INTO household 
+    (house_number, street_number, barangay, household_members, head_family) 
+    VALUES ?
+  `;
+
+  const values = households.map((h) => [
+    h.house_number || "",
+    h.street_number || "",
+    h.barangay || "",
+    h.household_members || "",
+    h.head_family || ""
+  ]);
+
+  db.query(sql, [values], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: `✅ Successfully imported ${result.affectedRows} households.` });
+  });
+});
+
 // ✏️ Update household
 router.put("/:id", authenticateToken, (req, res) => {
   const { id } = req.params;

@@ -44,6 +44,8 @@ const AccessCardItem = memo(function AccessCardItem({
           flexDirection: "column",
           height: "100%",
           position: "relative",
+          transform: "translateZ(0)",
+          willChange: "transform",
           border: official.official_account_id
             ? "2px solid #4caf50"
             : "1px solid #e0e0e0",
@@ -112,7 +114,7 @@ const AccessCardItem = memo(function AccessCardItem({
         </Box>
 
         {/* Official Details */}
-        <CardContent sx={{ flex: 1, overflow: "auto", pb: 1 }}>
+        <CardContent sx={{ flex: 1, display: "flex", flexDirection: "column", pb: 1 }}>
           <Box sx={{ mb: 1.5 }}>
             <Typography variant="h6" sx={{ fontWeight: "bold", mb: 0.5 }}>
               {official.first_name}{" "}
@@ -223,7 +225,7 @@ const AccessCardItem = memo(function AccessCardItem({
             fullWidth
             startIcon={<InfoIcon />}
             onClick={() => onViewInfo(official)}
-            sx={{ mt: 1 }}
+            sx={{ mt: "auto" }}
           >
             View Info
           </Button>
@@ -259,6 +261,7 @@ export default function AccessCard({
             official={official}
             onCreateAccount={onCreateAccount}
             onEditAccount={onEditAccount}
+            onViewInfo={setSelectedOfficialInfo}
           />
         ))}
       </Box>

@@ -35,7 +35,7 @@ import Logout from "@mui/icons-material/Logout";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
-import BarangayIcon from "../assets/BarangayIcon.png";
+import BarangayLogo from "../BarangayLogo";
 
 // Animation transition
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -181,14 +181,15 @@ function Headers({ children }) {
               sx={{
                 backgroundColor: "white",
                 borderRadius: "50%",
+                height: 50,
+                flexShrink: 0,
                 width: 50,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
               }}
             >
-              <img
-                src={BarangayIcon}
+              <BarangayLogo
                 alt="logo"
                 style={{
                   width: 50,

@@ -166,7 +166,7 @@ export default function Profile() {
           <Typography
             variant="h4"
             sx={{
-              color: "#151663",
+              color: "var(--primary-color)",
               fontWeight: 800,
               fontSize: { xs: "1.8rem", sm: "2.25rem" },
             }}
@@ -195,7 +195,7 @@ export default function Profile() {
                 <Typography
                   variant="h6"
                   sx={{
-                    color: "#151663",
+                    color: "var(--primary-color)",
                     fontWeight: 800,
                     mb: 3,
                   }}
@@ -215,8 +215,6 @@ export default function Profile() {
                       <Box
                         sx={{
                           display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
                           gap: 2,
                           minHeight: 76,
                           p: 2,
@@ -234,14 +232,14 @@ export default function Profile() {
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: 2.5,
-                            color: "#1e1f87",
+                            color: "var(--primary-color)",
                             bgcolor: "rgba(30, 31, 135, 0.1)",
                           }}
                         >
                           {field.icon}
                         </Box>
 
-                        <Box sx={{ minWidth: 0, textAlign: "center" }}>
+                        <Box sx={{ minWidth: 0, textAlign: "left" }}>
                           <Typography
                             variant="caption"
                             color="text.secondary"
@@ -318,7 +316,7 @@ export default function Profile() {
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 3,
-                        color: "#1e1f87",
+                        color: "var(--primary-color)",
                         bgcolor: "rgba(30, 31, 135, 0.1)",
                       }}
                     >
@@ -329,7 +327,7 @@ export default function Profile() {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: "#151663",
+                          color: "var(--primary-color)",
                           fontWeight: 800,
                         }}
                       >
@@ -351,12 +349,12 @@ export default function Profile() {
                       px: 2.5,
                       py: 1.2,
                       borderRadius: 2.5,
-                      bgcolor: "#1e1f87",
+                      bgcolor: "var(--primary-color)",
                       textTransform: "none",
                       fontWeight: 800,
                       boxShadow: "none",
                       "&:hover": {
-                        bgcolor: "#151663",
+                        filter: "brightness(0.85)",
                         boxShadow: "none",
                       },
                     }}

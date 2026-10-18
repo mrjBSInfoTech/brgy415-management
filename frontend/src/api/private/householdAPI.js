@@ -69,6 +69,16 @@ export const createHousehold = async (householdData) => {
   }
 };
 
+// Bulk Add Households
+export const bulkAddHouseholds = async (households) => {
+  try {
+    const res = await api.post("/households/bulk", { households });
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // Add new household (alias)
 export const addHousehold = async (householdData) => {
   return createHousehold(householdData);

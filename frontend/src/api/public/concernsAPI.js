@@ -52,6 +52,7 @@ export const addConcern = async (concernData) => {
     };
 
     const res = await api.post("/concerns", payload, {
+      timeout: 25000,
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

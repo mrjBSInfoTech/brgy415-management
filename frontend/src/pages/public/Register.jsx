@@ -132,7 +132,7 @@ const Register = () => {
       sx={{
         display: "flex",
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #466ABE 0%, #2d4a8e 100%)",
+        background: "var(--primary-color)",
         overflow: "hidden",
       }}
     >
@@ -145,7 +145,7 @@ const Register = () => {
           padding: isSmallMobile ? 2 : isMobile ? 3 : 4,
           minHeight: "100vh",
           order: isMobile ? 1 : 0,
-          backgroundColor: "white",
+          backgroundColor: "transparent",
         }}
       >
         <Paper
@@ -193,7 +193,7 @@ const Register = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <PersonIcon sx={{ color: "#466ABE" }} />
+                    <PersonIcon sx={{ color: "var(--primary-color)" }} />
                   </InputAdornment>
                 ),
               }}
@@ -201,7 +201,7 @@ const Register = () => {
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   "&:hover fieldset": {
-                    borderColor: "#466ABE",
+                    borderColor: "var(--primary-color)",
                   },
                 },
               }}
@@ -218,7 +218,7 @@ const Register = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <PersonIcon sx={{ color: "#466ABE" }} />
+                    <PersonIcon sx={{ color: "var(--primary-color)" }} />
                   </InputAdornment>
                 ),
               }}
@@ -226,7 +226,7 @@ const Register = () => {
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   "&:hover fieldset": {
-                    borderColor: "#466ABE",
+                    borderColor: "var(--primary-color)",
                   },
                 },
               }}
@@ -244,7 +244,7 @@ const Register = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <EmailIcon sx={{ color: "#466ABE" }} />
+                    <EmailIcon sx={{ color: "var(--primary-color)" }} />
                   </InputAdornment>
                 ),
               }}
@@ -252,7 +252,7 @@ const Register = () => {
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   "&:hover fieldset": {
-                    borderColor: "#466ABE",
+                    borderColor: "var(--primary-color)",
                   },
                 },
               }}
@@ -269,7 +269,7 @@ const Register = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <CallIcon sx={{ color: "#466ABE" }} />
+                    <CallIcon sx={{ color: "var(--primary-color)" }} />
                   </InputAdornment>
                 ),
               }}
@@ -277,7 +277,7 @@ const Register = () => {
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   "&:hover fieldset": {
-                    borderColor: "#466ABE",
+                    borderColor: "var(--primary-color)",
                   },
                 },
               }}
@@ -296,7 +296,7 @@ const Register = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <LockIcon sx={{ color: "#466ABE" }} />
+                    <LockIcon sx={{ color: "var(--primary-color)" }} />
                   </InputAdornment>
                 ),
               }}
@@ -304,7 +304,7 @@ const Register = () => {
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   "&:hover fieldset": {
-                    borderColor: "#466ABE",
+                    borderColor: "var(--primary-color)",
                   },
                 },
               }}
@@ -323,7 +323,7 @@ const Register = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <LockIcon sx={{ color: "#466ABE" }} />
+                    <LockIcon sx={{ color: "var(--primary-color)" }} />
                   </InputAdornment>
                 ),
               }}
@@ -331,7 +331,7 @@ const Register = () => {
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   "&:hover fieldset": {
-                    borderColor: "#466ABE",
+                    borderColor: "var(--primary-color)",
                   },
                 },
               }}
@@ -347,7 +347,7 @@ const Register = () => {
             onClick={handleRegister}
             disabled={isLoading}
             sx={{
-              background: "linear-gradient(135deg, #466ABE 0%, #2d4a8e 100%)",
+              background: "var(--primary-color)",
               color: "white",
               fontWeight: "600",
               padding: "12px 24px",
@@ -359,6 +359,7 @@ const Register = () => {
               "&:hover": {
                 boxShadow: "0px 10px 25px rgba(70, 106, 190, 0.4)",
                 transform: "translateY(-2px)",
+                filter: "brightness(0.85)",
               },
               "&:disabled": {
                 background: "#ccc",
@@ -391,7 +392,7 @@ const Register = () => {
               <Link
                 to="/public/login"
                 style={{
-                  color: "#466ABE",
+                  color: "var(--primary-color)",
                   fontWeight: "600",
                   textDecoration: "none",
                   cursor: "pointer",
