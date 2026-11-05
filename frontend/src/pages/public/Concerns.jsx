@@ -31,6 +31,7 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { addConcern } from "../../api/public/concernsAPI";
+import { fetchOtherInfo } from "../../api/public/otherInfoAPI";
 import { getToken as authGetToken } from "../../utils/auth";
 import Footer from "../../components/public/Footer";
 
@@ -43,12 +44,31 @@ export default function Concerns() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [otherInfo, setOtherInfo] = useState(null);
   const [formData, setFormData] = useState({
     message_type: "",
     message: "",
   });
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadOtherInfo = async () => {
+      try {
+        const data = await fetchOtherInfo();
+        if (isMounted && data) {
+          setOtherInfo(data);
+        }
+      } catch (error) {
+        console.error("Error fetching other info for concerns page:", error);
+      }
+    };
+    loadOtherInfo();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!attachment || !attachment.type.startsWith("image/")) {
@@ -91,6 +111,17 @@ export default function Concerns() {
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
   };
+
+  const address = otherInfo?.address?.trim() || "Barangay 415, Zone 42, Sampaloc, Manila, Philippines";
+  const telephone = otherInfo?.tp_number?.trim();
+  const mobile = otherInfo?.phone_number?.trim();
+  const email = otherInfo?.email?.trim() || "info@barangay415.gov.ph";
+
+  const socialLinks = [
+    { icon: <FacebookIcon />, href: otherInfo?.facebook_link?.trim(), name: "Facebook" },
+    { icon: <InstagramIcon />, href: otherInfo?.instagram_link?.trim(), name: "Instagram" },
+    { icon: <XIcon />, href: otherInfo?.x_link?.trim(), name: "X" },
+  ].filter((social) => Boolean(social.href));
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", display: "flex", flexDirection: "column" }}>
@@ -291,7 +322,7 @@ export default function Concerns() {
                         Location
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Barangay 415, Zone 42, Sampaloc, Manila, Philippines
+                        {address}
                       </Typography>
                     </Box>
                   </Box>
@@ -313,12 +344,26 @@ export default function Concerns() {
                       <Typography variant="subtitle2" fontWeight="700" color="text.primary">
                         Contact Numbers
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Main: (02) 1234-5678
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Mobile: 0917-123-4567
-                      </Typography>
+                      {telephone && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          Main: {telephone}
+                        </Typography>
+                      )}
+                      {mobile && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: telephone ? 0 : 0.5 }}>
+                          Mobile: {mobile}
+                        </Typography>
+                      )}
+                      {!telephone && !mobile && (
+                        <>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                            Main: (02) 1234-5678
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Mobile: 0917-123-4567
+                          </Typography>
+                        </>
+                      )}
                     </Box>
                   </Box>
 
@@ -340,7 +385,7 @@ export default function Concerns() {
                         Email Address
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        info@barangay415.gov.ph
+                        {email}
                       </Typography>
                     </Box>
                   </Box>
@@ -370,35 +415,34 @@ export default function Concerns() {
                 </Box>
               </CardContent>
 
-              <Box sx={{ p: { xs: 1.5, sm: 2 }, pt: 0 }}>
-                <Divider sx={{ mb: 2 }} />
-                <Typography variant="subtitle2" fontWeight="700" color="text.primary" mb={1.5}>
-                  Follow Our Socials
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  {[
-                    { icon: <FacebookIcon />, href: "https://facebook.com" },
-                    { icon: <InstagramIcon />, href: "https://instagram.com" },
-                    { icon: <XIcon />, href: "https://x.com" },
-                  ].map((social, index) => (
-                    <IconButton
-                      key={index}
-                      component="a"
-                      href={social.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      sx={{
-                        bgcolor: "#f1f5f9",
-                        color: "var(--primary-color)",
-                        "&:hover": { bgcolor: "var(--primary-color)", color: "white" },
-                        transition: "all 0.2s ease-in-out",
-                      }}
-                    >
-                      {social.icon}
-                    </IconButton>
-                  ))}
+              {socialLinks.length > 0 && (
+                <Box sx={{ p: { xs: 1.5, sm: 2 }, pt: 0 }}>
+                  <Divider sx={{ mb: 2 }} />
+                  <Typography variant="subtitle2" fontWeight="700" color="text.primary" mb={1.5}>
+                    Follow Our Socials
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    {socialLinks.map((social, index) => (
+                      <IconButton
+                        key={index}
+                        component="a"
+                        href={social.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={social.name}
+                        sx={{
+                          bgcolor: "#f1f5f9",
+                          color: "var(--primary-color)",
+                          "&:hover": { bgcolor: "var(--primary-color)", color: "white" },
+                          transition: "all 0.2s ease-in-out",
+                        }}
+                      >
+                        {social.icon}
+                      </IconButton>
+                    ))}
+                  </Box>
                 </Box>
-              </Box>
+              )}
             </Card>
           </Grid>
         </Grid>

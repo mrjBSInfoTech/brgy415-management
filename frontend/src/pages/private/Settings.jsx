@@ -32,9 +32,11 @@ import { fetchPorts, updatePort } from "../../api/private/portAPI";
 import { fetchAlarmStatus, sendAlarmCommand } from "../../api/private/alarmAPI";
 import { changePassword } from "../../api/private/authenticationAPI";
 import { fetchBrgyInfo, updateBrgyInfo } from "../../api/private/brgyInfoAPI";
+import { fetchOtherInfo, updateOtherInfo } from "../../api/private/otherInfoAPI";
 import ChangePassword from "../../components/private/Settings/ChangePassword";
 import PortForm from "../../components/private/Settings/PortForm";
 import BrgyInfoForm from "../../components/private/Settings/BrgyInfoForm";
+import OtherInfoForm from "../../components/private/Settings/OtherInfoForm";
 import InfoIcon from "@mui/icons-material/Info";
 
 // Slide Transition for Snackbar
@@ -50,7 +52,9 @@ export default function Settings() {
   const [openPortForm, setOpenPortForm] = useState(false);
   const [openPasswordForm, setOpenPasswordForm] = useState(false);
   const [openBrgyInfoForm, setOpenBrgyInfoForm] = useState(false);
+  const [openOtherInfoForm, setOpenOtherInfoForm] = useState(false);
   const [brgyInfo, setBrgyInfo] = useState(null);
+  const [otherInfo, setOtherInfo] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -89,6 +93,20 @@ export default function Settings() {
     } catch (err) {
       console.error("Error loading brgy info:", err);
       showSnackbar("Failed to load barangay info", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch Other Info
+  const loadOtherInfo = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchOtherInfo();
+      setOtherInfo(data || {});
+    } catch (err) {
+      console.error("Error loading other info:", err);
+      showSnackbar("Failed to load other info", "error");
     } finally {
       setLoading(false);
     }
@@ -148,6 +166,25 @@ export default function Settings() {
     } catch (err) {
       console.error("Error saving barangay info:", err);
       showSnackbar("Error saving barangay info: " + err.message, "error");
+    }
+  };
+
+  const handleOpenOtherInfoEdit = () => {
+    setOpenOtherInfoForm(true);
+  };
+
+  const handleSubmitOtherInfo = async (formData) => {
+    try {
+      if (!otherInfo || !otherInfo.info_id) {
+        throw new Error("No other info found to update.");
+      }
+      await updateOtherInfo(otherInfo.info_id, formData);
+      showSnackbar("Other info updated successfully", "success");
+      await loadOtherInfo();
+      setOpenOtherInfoForm(false);
+    } catch (err) {
+      console.error("Error saving other info:", err);
+      showSnackbar("Error saving other info: " + err.message, "error");
     }
   };
 
@@ -239,6 +276,7 @@ export default function Settings() {
 
   useEffect(() => {
     loadBrgyInfo();
+    loadOtherInfo();
     setProfile({
       firstName: getStoredValue("private_first_name"),
       lastName: getStoredValue("private_last_name"),
@@ -264,7 +302,9 @@ export default function Settings() {
     .toUpperCase();
 
   const alarmDeviceStatus =
-    alarmError || !alarmStatus?.connected ? "unknown" : alarmStatus.deviceStatus;
+    alarmError || !alarmStatus?.connected
+      ? "unknown"
+      : alarmStatus.deviceStatus;
 
   const getSeverityColor = (severity) => {
     switch (severity) {
@@ -350,7 +390,8 @@ export default function Settings() {
                   bgcolor: "primary.main",
                   fontSize: "2rem",
                   fontWeight: 700,
-                  boxShadow: (theme) => `0 0 0 6px ${theme.palette.action.hover}`,
+                  boxShadow: (theme) =>
+                    `0 0 0 6px ${theme.palette.action.hover}`,
                   mb: 2,
                 }}
               >
@@ -581,7 +622,12 @@ export default function Settings() {
                       {alarmStatus?.transport === "mqtt" ? (
                         "The device connects through the internet. Its Wi-Fi address can change."
                       ) : alarmStatus?.transport === "http" ? (
-                        <>Current address: <strong>{port?.port_number || "Not available"}</strong></>
+                        <>
+                          Current address:{" "}
+                          <strong>
+                            {port?.port_number || "Not available"}
+                          </strong>
+                        </>
                       ) : alarmError ? (
                         "Unable to check the alarm connection."
                       ) : (
@@ -591,12 +637,24 @@ export default function Settings() {
                   </Box>
                 </Box>
 
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  useFlexGap
+                >
                   {alarmStatus?.transport === "mqtt" && (
                     <Chip
                       size="small"
                       label={`MQTT ${alarmDeviceStatus === "online" ? "Online" : alarmDeviceStatus === "offline" ? "Offline" : "Unknown"}`}
-                      color={alarmDeviceStatus === "online" ? "success" : alarmDeviceStatus === "offline" ? "warning" : "default"}
+                      color={
+                        alarmDeviceStatus === "online"
+                          ? "success"
+                          : alarmDeviceStatus === "offline"
+                            ? "warning"
+                            : "default"
+                      }
                     />
                   )}
                   <Button
@@ -612,7 +670,11 @@ export default function Settings() {
                       variant="contained"
                       disabled={!port?.port_id}
                       onClick={() => handleOpenPortEdit(port)}
-                      sx={{ textTransform: "none", fontWeight: "bold", borderRadius: 2 }}
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: "bold",
+                        borderRadius: 2,
+                      }}
                     >
                       Configure
                     </Button>
@@ -620,55 +682,82 @@ export default function Settings() {
                 </Stack>
               </Box>
 
-              {alarmError && <Alert severity="warning" sx={{ mt: 2 }}>{alarmError}</Alert>}
-              {!alarmError && alarmStatus?.transport === "http" && portErrorMessage && (
-                <Alert severity="warning" sx={{ mt: 2 }}>{portErrorMessage}</Alert>
+              {alarmError && (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                  {alarmError}
+                </Alert>
               )}
+              {!alarmError &&
+                alarmStatus?.transport === "http" &&
+                portErrorMessage && (
+                  <Alert severity="warning" sx={{ mt: 2 }}>
+                    {portErrorMessage}
+                  </Alert>
+                )}
               {alarmStatus?.transport === "mqtt" && (
                 <Stack spacing={2} sx={{ mt: 2 }}>
-                  {!alarmError && (!alarmStatus.configured || !alarmStatus.connected) && (
-                    <Alert severity="warning">
-                      {alarmStatus.message || (alarmStatus.configured
-                        ? "The alarm server is disconnected. Alarm delivery is unavailable."
-                        : "MQTT setup is incomplete. Configure it on the server first.")}
-                    </Alert>
-                  )}
+                  {!alarmError &&
+                    (!alarmStatus.configured || !alarmStatus.connected) && (
+                      <Alert severity="warning">
+                        {alarmStatus.message ||
+                          (alarmStatus.configured
+                            ? "The alarm server is disconnected. Alarm delivery is unavailable."
+                            : "MQTT setup is incomplete. Configure it on the server first.")}
+                      </Alert>
+                    )}
                   {alarmStatus.lastDelivery && (
                     <Typography variant="body2" color="text.secondary">
-                      Last alarm: {alarmStatus.lastDelivery.message || ({
-                        confirmed: "Confirmed by the device.",
-                        unconfirmed: "No confirmation received from the device.",
-                        unavailable: "Alarm delivery unavailable.",
-                        sent: "Command sent.",
-                      }[alarmStatus.lastDelivery.status] || "Delivery status unknown.")}
+                      Last alarm:{" "}
+                      {alarmStatus.lastDelivery.message ||
+                        {
+                          confirmed: "Confirmed by the device.",
+                          unconfirmed:
+                            "No confirmation received from the device.",
+                          unavailable: "Alarm delivery unavailable.",
+                          sent: "Command sent.",
+                        }[alarmStatus.lastDelivery.status] ||
+                        "Delivery status unknown."}
                     </Typography>
                   )}
                   <Typography variant="body2" color="text.secondary">
-                    Test alarm sounds the buzzer. Stop it with Clear alarm or the device button.
+                    Test alarm sounds the buzzer. Stop it with Clear alarm or
+                    the device button.
                   </Typography>
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                     <Button
                       variant="contained"
-                      disabled={Boolean(alarmCommandLoading) || Boolean(alarmError) || !alarmStatus.configured || !alarmStatus.connected}
+                      disabled={
+                        Boolean(alarmCommandLoading) ||
+                        Boolean(alarmError) ||
+                        !alarmStatus.configured ||
+                        !alarmStatus.connected
+                      }
                       onClick={() => handleAlarmCommand("high")}
                       sx={{ textTransform: "none" }}
                     >
-                      {alarmCommandLoading === "high" ? "Testing..." : "Test alarm"}
+                      {alarmCommandLoading === "high"
+                        ? "Testing..."
+                        : "Test alarm"}
                     </Button>
                     <Button
                       variant="outlined"
-                      disabled={Boolean(alarmCommandLoading) || Boolean(alarmError) || !alarmStatus.configured || !alarmStatus.connected}
+                      disabled={
+                        Boolean(alarmCommandLoading) ||
+                        Boolean(alarmError) ||
+                        !alarmStatus.configured ||
+                        !alarmStatus.connected
+                      }
                       onClick={() => handleAlarmCommand("clear")}
                       sx={{ textTransform: "none" }}
                     >
-                      {alarmCommandLoading === "clear" ? "Clearing..." : "Clear alarm"}
+                      {alarmCommandLoading === "clear"
+                        ? "Clearing..."
+                        : "Clear alarm"}
                     </Button>
                   </Stack>
                 </Stack>
               )}
             </Paper>
-
-
           </Stack>
         </Grid>
       </Grid>
@@ -686,12 +775,7 @@ export default function Settings() {
             boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
           }}
         >
-          <Typography
-            variant="h6"
-            fontWeight="700"
-            color="text.primary"
-            mb={2}
-          >
+          <Typography variant="h6" fontWeight="700" color="text.primary" mb={2}>
             Barangay Information Configuration
           </Typography>
 
@@ -733,14 +817,65 @@ export default function Settings() {
               variant="contained"
               onClick={handleOpenBrgyInfoEdit}
               sx={{
-                    bgcolor: "primary.main",
-                    textTransform: "none",
-                    fontWeight: "bold",
-                    borderRadius: 2,
-                    px: 2.5,
-                    alignSelf: { xs: "stretch", sm: "auto" },
-                    boxShadow: "none",
-                    "&:hover": { bgcolor: "primary.dark" },
+                bgcolor: "primary.main",
+                textTransform: "none",
+                fontWeight: "bold",
+                borderRadius: 2,
+                px: 2.5,
+                alignSelf: { xs: "stretch", sm: "auto" },
+                boxShadow: "none",
+                "&:hover": { bgcolor: "primary.dark" },
+              }}
+            >
+              Configure
+            </Button>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "stretch", sm: "center" },
+              gap: 2,
+              justifyContent: "space-between",
+              p: { xs: 1.5, sm: 2 },
+              borderRadius: 2,
+              bgcolor: "background.default",
+              border: "1px solid rgba(0, 0, 0, 0.04)",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2.5,
+                  bgcolor: "action.hover",
+                  color: "primary.main",
+                }}
+              >
+                <InfoIcon />
+              </Box>
+              <Box>
+                <Typography variant="body1" fontWeight="700">
+                  Other Information
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Alter other barangay information.
+                </Typography>
+              </Box>
+            </Box>
+
+            <Button
+              variant="contained"
+              onClick={handleOpenOtherInfoEdit}
+              sx={{
+                bgcolor: "primary.main",
+                textTransform: "none",
+                fontWeight: "bold",
+                borderRadius: 2,
+                px: 2.5,
+                alignSelf: { xs: "stretch", sm: "auto" },
+                boxShadow: "none",
+                "&:hover": { bgcolor: "primary.dark" },
               }}
             >
               Configure
@@ -766,6 +901,12 @@ export default function Settings() {
         handleClose={() => setOpenBrgyInfoForm(false)}
         onSubmit={handleSubmitBrgyInfo}
         initialData={brgyInfo}
+      />
+      <OtherInfoForm
+        open={openOtherInfoForm}
+        handleClose={() => setOpenOtherInfoForm(false)}
+        onSubmit={handleSubmitOtherInfo}
+        initialData={otherInfo}
       />
 
       {/* SNACKBAR NOTIFICATION */}

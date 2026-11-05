@@ -25,6 +25,7 @@ import postRoutes from "./routes/post.js";
 import portRoutes from "./routes/port.js";
 import reportRoutes from "./routes/report.js";
 import brgyInfoRoutes from "./routes/brgyInfo.js";
+import otherInfoRoutes from "./routes/otherInfo.js";
 import { alarm } from "./services/alarm.js";
 
 dotenv.config();
@@ -64,7 +65,7 @@ app.use("/api/authentication", authRoutes);
 app.use("/api/ports", portRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/brgyinfo", brgyInfoRoutes);
-
+app.use("/api/otherinfo", otherInfoRoutes);
 // Handle 404 (unknown routes)
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

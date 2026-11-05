@@ -2,86 +2,17 @@ import express from "express";
 import dotenv from "dotenv";
 import db from "../database/db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { classifyMessageWithAI } from "../services/messageClassifier.js";
 import { alarm } from "../services/alarm.js";
+
+import { detectMessageTripping } from "../services/messageValidation.js";
+export { detectMessageTripping } from "../services/messageValidation.js";
 
 dotenv.config();
 
-let genAI = null;
-
-const getGenAI = () => {
-  if (!genAI) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is missing. Add it to backend/.env before calling AI validation.");
-    }
-    genAI = new GoogleGenerativeAI(apiKey);
-  }
-  return genAI;
-};
-
 const router = express.Router();
 
-// 🛑 Strict Local Checking for Tripping, Jokes, and Nonsense (Saves API Quota)
-export const detectMessageTripping = (text) => {
-  const normalized = (text || "").toLowerCase().trim();
-
-  if (!normalized) {
-    return { valid: false, reason: "Empty message submission." };
-  }
-
-  // Check for Keyboard Smashing / No meaningful vowels
-  if (normalized.length > 5 && !/[aeiouy]{2,}/i.test(normalized)) {
-    return { valid: false, reason: "Random character typing or keyboard smashing detected." };
-  }
-
-  const checks = [
-    // Personal medical ailments & physical conditions
-    {
-      regex: /\b(?:masakit\s+(?:ang\s+)?(?:tiyan|ulo|ngipin|katawan|tuhod|likod|balikat|braso|binti)|sumasakit\s+(?:ang\s+)?(?:tiyan|ulo)|nilalagnat|sinisipon|inuubo|lbm|nagtatae|nahihilo|nagsusuka|sinisikmura)\b/i,
-      reason: "Personal medical condition (belongs to a clinic/hospital, not barangay hall).",
-    },
-    // Bugs, pests, and trivial animal occurrences
-    {
-      regex: /\b(?:nakapatay|pinatay|patay|pumatay|nangagat|nanghahabol)\b.*\b(?:ipis|daga|lamok|langgam|surot|kuto|butiki)\b/i,
-      reason: "Trivial household pest complaint.",
-    },
-    // Trivial monetary / joke theft amounts
-    {
-      regex: /\b(?:nanakawan|nagnakaw|nangnakaw|nanakaw)\b.*\b(?:piso|barya|singko|diyes|cents?|candy|kendi|tsinelas)\b/i,
-      reason: "Trivial or joke theft remark.",
-    },
-    // Relationship, romantic, or domestic love life drama
-    {
-      regex: /\b(?:iniwan\s+ako|niloko\s+ako|break\s+na\s+kami|crush\s+ko|mahal\s+ko\s+si|broken\s+hearted|wala\s+akong\s+jowa|gusto\s+ko\s+ng\s+jowa)\b/i,
-      reason: "Irrelevant personal romantic or relationship drama.",
-    },
-    // Personal chores and everyday non-barangay activities
-    {
-      regex: /\b(?:nagugutom\s+ako|anong\s+ulam|pahingi\s+(?:ng\s+)?pagkain|antok\s+na\s+ako|pabili|paload|pautang\s+ng\s+load)\b/i,
-      reason: "Personal non-governmental errand or query.",
-    },
-    // Test configuration or basic greetings
-    {
-      regex: /\b(?:test|testing|gumagana ba ito|lorem ipsum)\b/i,
-      reason: "Test submission.",
-    },
-    {
-      regex: /^(?:maganda po ako|pogi ako|kumain ka na ba|hi|hello|kamusta|good morning|good evening)$/i,
-      reason: "Irrelevant conversational greeting.",
-    },
-    // Repeated character spam
-    {
-      regex: /^(?:asdf|qwerty|zxcvbn|lkjhg|hjkl|uiop|asdfghjkl|qwertyuiop|zxcvbnm|abc|abc123|123456)$/i,
-      reason: "Nonsense keystroke entry.",
-    }
-  ];
-
-  const matched = checks.find(({ regex }) => regex.test(normalized));
-  return matched ? { valid: false, reason: matched.reason } : null;
-};
-
-// 🛡️ Robust Emergency Fallback Mapping if AI goes offline
+// Legacy local urgency helper; submissions require contextual AI validation.
 export const classifyMessageLocally = (text) => {
   const normalized = (text || "").toLowerCase().trim();
 
@@ -107,59 +38,6 @@ export const classifyMessageLocally = (text) => {
   }
 
   return { urgency: "Low", type: "General", valid: true, reason: "Legitimate low-urgency neighborhood query or administrative remark." };
-};
-
-// 🧠 Contextual AI Triage (Upgraded for Distress and High-Accuracy Levels)
-const classifyMessageWithAI = async (text) => {
-  try {
-    const ai = getGenAI();
-    const model = ai.getGenerativeModel({
-      // Changing from 2.0-flash to 1.5-flash stabilizes quota limits significantly
-      model: "gemini-2.5-flash",
-      generationConfig: { responseMimeType: "application/json" },
-    });
-
-    const prompt = `
-      You are an emergency triage validator for Barangay 415 Zone 42, Sampaloc, Manila.
-      Analyze the resident's message and categorize it with empathy and contextual intelligence.
-
-      --- EMOTIONAL CONTEXT & PANIC RULES ---
-      - Expect severe typos, dropped letters, or structural chaos if the user is writing during a violent crisis (e.g., "nagpapatayan", "mamatay po", "nagsasaksakan", "may manyak po").
-      - Understand high-stress situations. If a life-threatening or violent crime is taking place nearby, classify it immediately as HIGH urgency.
-      - Distinguish real violence from casual chat. "May nagpapatayan sa kabilang bahay" means active severe violence (HIGH Urgency). "May utang po si Joseph" or "maganda po ako" are completely irrelevant to a barangay emergency dashboard (VALID: FALSE).
-
-      --- CRITERIA MATRIX ---
-      - HIGH: Violent threats, active altercations, murders/fights ("nagpapatayan"), extreme life safety concerns ("mamatay po na lasingero"), fires, structural disasters.
-      - MEDIUM: Active neighborhood disruptions, severe harassment ("manyak po sa kanto"), rowdy public drunks, property theft, hazardous wiring.
-      - LOW: Document inquiries, garbage collection feedback, missing streetlights, and valid neighborhood accountability complaints such as unpaid debts or non-payment issues.
-      - VALID: FALSE: Joke submissions, gibberish keyboard typing, personal status statements, and unrelated social chat.
-
-      Analyze: "${text}"
-
-      Respond strictly in this JSON format. Provide NO extra prose, conversational remarks, or outside context.
-      {
-        "urgency": "High" | "Medium" | "Low",
-        "type": "Emergency" | "Dispute" | "General",
-        "valid": true | false
-      }
-    `;
-
-    const result = await model.generateContent(prompt, { timeout: 15000 });
-    const responseText = result.response.text();
-    const classification = JSON.parse(responseText);
-    if (
-      !classification ||
-      typeof classification.valid !== "boolean" ||
-      !["High", "Medium", "Low"].includes(classification.urgency) ||
-      !["Emergency", "Dispute", "General"].includes(classification.type)
-    ) {
-      throw new Error("Gemini returned an invalid classification.");
-    }
-    return classification;
-  } catch (error) {
-    console.error("AI Triage failed; message submission blocked:", error.message);
-    throw error;
-  }
 };
 
 const triggerEspAlert = async (urgency) => {
@@ -215,12 +93,15 @@ router.post("/", authenticateToken, async (req, res) => {
   const user_id = req.user.id;
   const { message, message_type } = req.body;
 
-  if (!message || !message_type) {
+  if (typeof message !== "string" || !message.trim() || !message_type) {
     return res
       .status(400)
       .json({ message: "Please fill all required fields." });
   }
 
+  // Daily limit temporarily disabled for testing.
+  // To restore it, remove this block's comment markers and those around its closing callback below.
+  /*
   // Anti-Spam Check - Allow only ONE message per user per day
   const dailyCheckSql = `
     SELECT message_id 
@@ -241,6 +122,8 @@ router.post("/", authenticateToken, async (req, res) => {
         message: "Daily limit reached. You can only submit one concern per day. Please try again tomorrow.",
       });
     }
+
+  */
 
     // Local Regex Tripping Interceptor
     const localCheck = detectMessageTripping(message);
@@ -289,7 +172,7 @@ router.post("/", authenticateToken, async (req, res) => {
         const alertDelivery = await triggerEspAlert(urgency);
 
         res.json({
-          message: "✅ Message categorized and sent",
+          message: "Message categorized and sent",
           id: result.insertId,
           alertDelivery,
           classification: { 
@@ -300,8 +183,10 @@ router.post("/", authenticateToken, async (req, res) => {
         });
       }
     );
+  /* Daily-limit callback closing: uncomment together with the daily check above.
   });
-});
+  */
+  });
 
 // ✏️ UPDATE: Change Status
 router.put("/:id", authenticateToken, (req, res) => {

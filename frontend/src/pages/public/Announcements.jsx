@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Box, Typography, Container, CircularProgress } from "@mui/material";
 import AnnouncementCard from "../../components/public/Announcement/AnnouncementCard";
 import { fetchAnnouncements } from "../../api/public/announcementAPI";
+import Footer from "../../components/public/Footer";
 
 export default function Announcements() {
   const [announcements, setAnnouncements] = useState([]);
@@ -39,7 +40,7 @@ export default function Announcements() {
   }, []);
 
   return (
-    <Box sx={{ backgroundColor: "#f8fafc", minHeight: "100vh", pb: 10 }}>
+    <Box sx={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>
       <Helmet titleTemplate="%s - Barangay 415 Zone 42">
         <title>Announcements</title>
       </Helmet>
@@ -67,7 +68,7 @@ export default function Announcements() {
       </Box>
 
       {/* Main Content Container */}
-      <Container maxWidth="lg" sx={{ py: { xs: 4, sm: 6, md: 8 }, px: { xs: 2, sm: 3 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 4, sm: 6, md: 8 }, px: { xs: 2, sm: 3 }, minHeight: "50vh" }}>
         <Box sx={{ width: "100%" }}>
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
@@ -87,6 +88,7 @@ export default function Announcements() {
           )}
         </Box>
       </Container>
+      <Footer />
     </Box>
   );
 }
