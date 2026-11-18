@@ -23,6 +23,7 @@ import {
   Lock as LockIcon,
 } from "@mui/icons-material";
 import { loginUser } from "../../api/public/authenticationAPI";
+import { fetchBrgyInfo } from "../../api/public/infoAPI";
 import BarangayIcon from "../../assets/BarangayIcon.png";
 import { clearAuthData, isAuthenticated, setToken } from "../../utils/auth";
 
@@ -32,6 +33,7 @@ function SlideTransition(props) {
 }
 
 const Login = () => {
+  const [barangayInfo, setBarangayInfo] = useState({});
   const [connectionError, setConnectionError] = useState(false);
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine !== false : true,
@@ -58,14 +60,10 @@ const Login = () => {
 
     try {
       setConnectionError(false);
-      const [officialsData, brgyData] = await Promise.all([
-        fetchOfficials(),
-        fetchBrgyInfo(),
-      ]);
-      setOfficials(officialsData || []);
+      const brgyData = await fetchBrgyInfo();
       setBarangayInfo(brgyData || {});
     } catch (err) {
-      console.error("Error loading about page data:", err);
+      console.error("Error loading barangay info:", err);
       setConnectionError(true);
     }
   };

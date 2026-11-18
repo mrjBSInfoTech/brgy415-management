@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   Alert,
   Slide,
@@ -26,6 +27,7 @@ import {
   Call as CallIcon,
 } from "@mui/icons-material";
 import { registerUser } from "../../api/public/authenticationAPI";
+import { fetchBrgyInfo } from "../../api/public/infoAPI";
 import BarangayIcon from "../../assets/BarangayIcon.png";
 
 // Slide Transition for Snackbar
@@ -34,9 +36,10 @@ function SlideTransition(props) {
 }
 
 const Register = () => {
+  const [barangayInfo, setBarangayInfo] = useState({});
   const [connectionError, setConnectionError] = useState(false);
   const [isOnline, setIsOnline] = useState(
-    typeof navigator !== "undefined" ? navigator.onLine !== false : true,
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true
   );
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -64,14 +67,10 @@ const Register = () => {
 
     try {
       setConnectionError(false);
-      const [officialsData, brgyData] = await Promise.all([
-        fetchOfficials(),
-        fetchBrgyInfo(),
-      ]);
-      setOfficials(officialsData || []);
+      const brgyData = await fetchBrgyInfo();
       setBarangayInfo(brgyData || {});
     } catch (err) {
-      console.error("Error loading about page data:", err);
+      console.error("Error loading barangay info:", err);
       setConnectionError(true);
     }
   };
@@ -203,7 +202,7 @@ const Register = () => {
   if (!isOnline || connectionError) {
     return (
       <Helmet titleTemplate="%s - Error">
-        <title>Login</title>
+        <title>Register</title>
       </Helmet>
     );
   }
@@ -217,8 +216,8 @@ const Register = () => {
         overflow: "hidden",
       }}
     >
-      <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
-        <title>Login</title>
+      <Helmet titleTemplate={`%s - ${barangayInfo?.brgy_name || "Barangay"}`}>
+        <title>Register</title>
       </Helmet>
       <Box
         sx={{

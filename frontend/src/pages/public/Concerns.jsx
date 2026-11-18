@@ -37,6 +37,7 @@ import { fetchOtherInfo } from "../../api/public/otherInfoAPI";
 import { isAuthenticated as checkIsAuthenticated } from "../../utils/auth";
 import Footer from "../../components/public/Footer";
 import ErrorCard from "../../components/public/ErrorCard";
+import { useBarangayTheme } from "../../theme/BarangayThemeContext";
 
 function SlideTransition(props) {
   return <Slide {...props} direction="up" />;
@@ -49,6 +50,7 @@ const isSafeUrl = (url) => {
 };
 
 export default function Concerns() {
+  const { barangayInfo } = useBarangayTheme();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -170,7 +172,7 @@ export default function Concerns() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", display: "flex", flexDirection: "column" }}>
-        <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
+      <Helmet titleTemplate={`%s - ${barangayInfo?.brgy_name || "Barangay 415"}`}>
         <title>Concerns</title>
       </Helmet>
 

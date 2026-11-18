@@ -27,8 +27,10 @@ import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 import { changePassword, getPublicProfile } from "../../api/public/authenticationAPI";
 import ChangePassword from "../../components/public/Profile/ChangePassword";
 import ErrorCard from "../../components/public/ErrorCard";
+import { useBarangayTheme } from "../../theme/BarangayThemeContext";
 
 export default function Profile() {
+  const { barangayInfo } = useBarangayTheme();
   const [profile, setProfile] = useState({});
   const [openPasswordForm, setOpenPasswordForm] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
@@ -220,7 +222,7 @@ export default function Profile() {
           "linear-gradient(135deg, #f5f7ff 0%, #ffffff 55%, #eef1ff 100%)",
       }}
     >
-      <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
+      <Helmet titleTemplate={`%s - ${barangayInfo?.brgy_name || "Barangay 415"}`}>
         <title>Profile</title>
       </Helmet>
 
