@@ -36,6 +36,8 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import BarangayLogo from "../BarangayLogo";
+import { clearAuthData, isAuthenticated } from "../../utils/auth";
+import { logoutUser } from "../../api/public/authenticationAPI";
 
 // Animation transition
 const Transition = React.forwardRef(function Transition(props, ref) {
@@ -95,20 +97,18 @@ function Headers({ children }) {
   const handleCloseDialog = () => setOpenDialog(false);
 
   useEffect(() => {
-    const storedLoggedIn = getToken("public");
-    const storedFirstName = localStorage.getItem("first_name");
-    const storedLastName = localStorage.getItem("last_name");
+    const storedLoggedIn = isAuthenticated("public");
+    const storedFirstName = localStorage.getItem("public_first_name");
+    const storedLastName = localStorage.getItem("public_last_name");
 
     setFirstName(storedFirstName || "");
     setLastName(storedLastName || "");
     setLoggedIn(!!storedLoggedIn);
   }, []);
 
-  const handleLogout = () => {
-    // Clear all stored data for public auth
-    removeToken("public");
-    localStorage.removeItem("first_name");
-    localStorage.removeItem("last_name");
+  const handleLogout = async () => {
+    await logoutUser();
+    clearAuthData("public");
 
     navigate("/public/login", { replace: true });
 

@@ -5,18 +5,8 @@ const API_URL = "http://localhost:5000/api/files"; // backend endpoint
 // Create an Axios instance (optional but useful)
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
+  withCredentials: true,
   timeout: 5000, // wait max 5 seconds
-});
-
-// This interceptor will automatically add the Authorization header with the token for every request
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("private_token");
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`; 
-  }
-
-  return config;
 });
 
 // Helper function to handle errors globally

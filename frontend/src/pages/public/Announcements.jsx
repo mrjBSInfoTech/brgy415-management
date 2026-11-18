@@ -4,14 +4,25 @@ import { Box, Typography, Container, CircularProgress } from "@mui/material";
 import AnnouncementCard from "../../components/public/Announcement/AnnouncementCard";
 import { fetchAnnouncements } from "../../api/public/announcementAPI";
 import Footer from "../../components/public/Footer";
+import ErrorCard from "../../components/public/ErrorCard";
 
 export default function Announcements() {
   const [announcements, setAnnouncements] = useState([]);
   const [announcementErrorMessage, setAnnouncementErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true
+  );
 
   // Load all announcements
   const loadAnnouncements = async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      setAnnouncementErrorMessage("Offline");
+      setLoading(false);
+      return;
+    }
+
     try {
       setAnnouncementErrorMessage("");
       setLoading(true);
@@ -37,7 +48,35 @@ export default function Announcements() {
 
   useEffect(() => {
     loadAnnouncements();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadAnnouncements();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setAnnouncementErrorMessage("Offline");
+      setLoading(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
+
+  if (!isOnline || (announcementErrorMessage && !loading)) {
+    return (
+      <Box sx={{ minWidth: 0 }}>
+        <Helmet titleTemplate="%s - Barangay 415 Zone 42">
+          <title>Announcements</title>
+        </Helmet>
+        <ErrorCard title="Announcements Unavailable" onRetry={loadAnnouncements} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ backgroundColor: "#f8fafc", minHeight: "100vh" }}>

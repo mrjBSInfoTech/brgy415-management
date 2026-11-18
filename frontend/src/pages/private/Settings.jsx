@@ -37,6 +37,7 @@ import ChangePassword from "../../components/private/Settings/ChangePassword";
 import PortForm from "../../components/private/Settings/PortForm";
 import BrgyInfoForm from "../../components/private/Settings/BrgyInfoForm";
 import OtherInfoForm from "../../components/private/Settings/OtherInfoForm";
+import ErrorCard from "../../components/private/ErrorCard";
 import InfoIcon from "@mui/icons-material/Info";
 
 // Slide Transition for Snackbar
@@ -63,6 +64,8 @@ export default function Settings() {
   const [alarmError, setAlarmError] = useState("");
   const [alarmLoading, setAlarmLoading] = useState(true);
   const [alarmCommandLoading, setAlarmCommandLoading] = useState("");
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
   const refreshAlarmRef = useRef(null);
 
   useEffect(() => {
@@ -76,9 +79,11 @@ export default function Settings() {
       const data = await fetchPorts();
       setPort(data?.[0] || {});
       setPortErrorMessage("");
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading ports:", err);
       setPortErrorMessage("Failed to load ports: " + err.message);
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -90,9 +95,11 @@ export default function Settings() {
       setLoading(true);
       const data = await fetchBrgyInfo();
       setBrgyInfo(data || {});
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading brgy info:", err);
       showSnackbar("Failed to load barangay info", "error");
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -104,9 +111,11 @@ export default function Settings() {
       setLoading(true);
       const data = await fetchOtherInfo();
       setOtherInfo(data || {});
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading other info:", err);
       showSnackbar("Failed to load other info", "error");
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -288,6 +297,25 @@ export default function Settings() {
     });
   }, []);
 
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadBrgyInfo();
+      loadOtherInfo();
+      refreshAlarmRef.current?.();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   const profileName =
     [profile.firstName, profile.lastName].filter(Boolean).join(" ") ||
     profile.username ||
@@ -318,6 +346,24 @@ export default function Settings() {
         return "primary.light";
     }
   };
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Settings</title>
+        </Helmet>
+        <ErrorCard
+          title="Settings Page Unavailable"
+          onRetry={() => {
+            loadBrgyInfo();
+            loadOtherInfo();
+            refreshAlarmRef.current?.();
+          }}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>

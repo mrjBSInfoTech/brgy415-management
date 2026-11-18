@@ -22,6 +22,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AnnouncementForm from "../../components/private/Announcement/AnnouncementForm";
 import AnnouncementDelete from "../../components/private/Announcement/AnnouncementDelete";
 import AnnouncementCard from "../../components/private/Announcement/AnnouncementCard";
+import ErrorCard from "../../components/private/ErrorCard";
 import {
   fetchAnnouncements,
   addAnnouncement,
@@ -46,6 +47,8 @@ export default function Announcements() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [sortOption, setSortOption] = useState("newest");
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // Load all announcements
   const loadAnnouncements = async () => {
@@ -55,8 +58,10 @@ export default function Announcements() {
       const response = await fetchAnnouncements();
       if (response && Array.isArray(response)) {
         setAnnouncements(response);
+        setConnectionError(false);
       } else if (response && response.data && Array.isArray(response.data)) {
         setAnnouncements(response.data);
+        setConnectionError(false);
       } else {
         setAnnouncements([]);
         setAnnouncementErrorMessage("No data received from server.");
@@ -66,6 +71,7 @@ export default function Announcements() {
       setAnnouncementErrorMessage(
         "Failed to load announcements: " + err.message,
       );
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -73,6 +79,23 @@ export default function Announcements() {
 
   useEffect(() => {
     loadAnnouncements();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadAnnouncements();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // Open Add Announcement Modal
@@ -172,6 +195,20 @@ export default function Announcements() {
         return "primary.light";
     }
   };
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Announcements</title>
+        </Helmet>
+        <ErrorCard
+          title="Announcements Page Unavailable"
+          onRetry={loadAnnouncements}
+        />
+      </Box>
+    );
+  }
+
   return (
     <Box p={3}>
       <Helmet titleTemplate="%s - Barangay Management System">

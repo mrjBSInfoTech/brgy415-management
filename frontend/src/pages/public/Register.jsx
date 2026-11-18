@@ -8,6 +8,9 @@ import {
   Typography,
   Paper,
   Box,
+  Checkbox,
+  FormControlLabel,
+  Link as MuiLink,
   InputAdornment,
   IconButton,
   Snackbar,
@@ -31,12 +34,17 @@ function SlideTransition(props) {
 }
 
 const Register = () => {
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true,
+  );
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [contact, setContact] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -46,6 +54,45 @@ const Register = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const loadAboutData = async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      setConnectionError(true);
+      return;
+    }
+
+    try {
+      setConnectionError(false);
+      const [officialsData, brgyData] = await Promise.all([
+        fetchOfficials(),
+        fetchBrgyInfo(),
+      ]);
+      setOfficials(officialsData || []);
+      setBarangayInfo(brgyData || {});
+    } catch (err) {
+      console.error("Error loading about page data:", err);
+      setConnectionError(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadAboutData();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Handle Enter key register
   useEffect(() => {
@@ -61,7 +108,16 @@ const Register = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [firstName, lastName, email, contact, password, confirmPassword, isLoading]);
+  }, [
+    firstName,
+    lastName,
+    email,
+    contact,
+    password,
+    confirmPassword,
+    consentAccepted,
+    isLoading,
+  ]);
 
   // Snackbar handlers
   const showSnackbar = (message) => {
@@ -75,7 +131,14 @@ const Register = () => {
   };
 
   const handleRegister = async () => {
-    if (!firstName || !lastName || !email || !contact || !password || !confirmPassword) {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !contact ||
+      !password ||
+      !confirmPassword
+    ) {
       showSnackbar("❌ Please fill in all fields");
       return;
     }
@@ -90,14 +153,23 @@ const Register = () => {
       return;
     }
 
+    if (!consentAccepted) {
+      showSnackbar(
+        "❌ Please agree to the Terms of Service and Data Privacy Policy (RA 10173) to create an account.",
+      );
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await registerUser({ 
-        first_name: firstName, 
-        last_name: lastName, 
-        email, 
-        contact, 
-        password 
+      const response = await registerUser({
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        contact,
+        password,
+        consent_accepted: true,
+        consent_version: "1.0",
       });
       console.log("Register response:", response);
 
@@ -110,6 +182,7 @@ const Register = () => {
       setContact("");
       setPassword("");
       setConfirmPassword("");
+      setConsentAccepted(false);
 
       setTimeout(() => {
         navigate("/public/success");
@@ -127,6 +200,14 @@ const Register = () => {
     }
   };
 
+  if (!isOnline || connectionError) {
+    return (
+      <Helmet titleTemplate="%s - Error">
+        <title>Login</title>
+      </Helmet>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -136,6 +217,9 @@ const Register = () => {
         overflow: "hidden",
       }}
     >
+      <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
+        <title>Login</title>
+      </Helmet>
       <Box
         sx={{
           flex: 1,
@@ -179,7 +263,6 @@ const Register = () => {
               gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
               gap: 2,
               mb: 3,
-              
             }}
           >
             {/* First Name Field */}
@@ -339,6 +422,53 @@ const Register = () => {
             />
           </Box>
 
+          {/* Data Privacy Consent (RA 10173) */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={consentAccepted}
+                onChange={(e) => setConsentAccepted(e.target.checked)}
+                disabled={isLoading}
+                sx={{
+                  color: "var(--primary-color)",
+                  "&.Mui-checked": { color: "var(--primary-color)" },
+                }}
+              />
+            }
+            label={
+              <Typography
+                variant="body2"
+                sx={{ color: "#555", fontSize: "0.85rem" }}
+              >
+                I have read and agree to the{" "}
+                <MuiLink
+                  component={Link}
+                  to="/public/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                  sx={{ fontWeight: 700, color: "var(--primary-color)" }}
+                >
+                  Terms of Service
+                </MuiLink>{" "}
+                and{" "}
+                <MuiLink
+                  component={Link}
+                  to="/public/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  underline="hover"
+                  sx={{ fontWeight: 700, color: "var(--primary-color)" }}
+                >
+                  Data Privacy Policy (RA 10173)
+                </MuiLink>
+                , and I consent to the collection and processing of my personal
+                data.
+              </Typography>
+            }
+            sx={{ alignItems: "flex-start", mt: 0.5, ml: 0, mb: 2 }}
+          />
+
           {/* Register Button */}
           <Button
             fullWidth
@@ -408,18 +538,6 @@ const Register = () => {
               </Link>
             </Typography>
           </Box>
-
-          {/* Footer Note */}
-          <Typography
-            sx={{
-              textAlign: "center",
-              fontSize: "0.75rem",
-              color: "#999",
-              mt: 3,
-            }}
-          >
-            By registering, you agree to our terms of service
-          </Typography>
         </Paper>
       </Box>
 

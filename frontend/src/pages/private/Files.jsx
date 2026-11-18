@@ -34,6 +34,7 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilesForm from "../../components/private/Files/FilesForm";
 import FilesDelete from "../../components/private/Files/FilesDelete";
+import ErrorCard from "../../components/private/ErrorCard";
 import { fetchFiles, addFile, deleteFile } from "../../api/private/fileAPI";
 
 // Slide Transition for Snackbar
@@ -53,6 +54,8 @@ export default function Files() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [sortOption, setSortOption] = useState("all");
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // ========== FILES HANDLERS ==========
   // ➕ Open Add Files Modal
@@ -77,8 +80,10 @@ export default function Files() {
       console.log("Files response:", response);
       if (response && response.data) {
         setFiles(Array.isArray(response.data) ? response.data : []);
+        setConnectionError(false);
       } else if (Array.isArray(response)) {
         setFiles(response);
+        setConnectionError(false);
       } else {
         setFiles([]);
         setFilesErrorMessage("No data received from server.", "error");
@@ -87,12 +92,30 @@ export default function Files() {
       console.error("Failed to fetch files:", err);
       setFiles([]);
       setFilesErrorMessage("Failed to load files: " + err.message, "error");
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
   };
   useEffect(() => {
     loadFiles();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadFiles();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // ========== FILE HANDLERS ==========
@@ -185,6 +208,17 @@ export default function Files() {
         return "primary.light";
     }
   };
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Files</title>
+        </Helmet>
+        <ErrorCard title="Files Page Unavailable" onRetry={loadFiles} />
+      </Box>
+    );
+  }
+
   return (
     <Box p={3}>
       <Helmet titleTemplate="%s - Barangay Management System">

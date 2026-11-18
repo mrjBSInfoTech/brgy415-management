@@ -27,6 +27,7 @@ import reportRoutes from "./routes/report.js";
 import brgyInfoRoutes from "./routes/brgyInfo.js";
 import otherInfoRoutes from "./routes/otherInfo.js";
 import { alarm } from "./services/alarm.js";
+import { cookieMiddleware } from "./utils/authCookies.js";
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieMiddleware);
 
 // Serve static files with absolute path and cross-origin resource policy
 app.use(

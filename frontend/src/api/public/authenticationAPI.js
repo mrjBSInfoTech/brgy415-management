@@ -1,4 +1,9 @@
 import axios from "axios";
+import {
+  clearAuthData,
+  getToken as authGetToken,
+  isAuthenticated as checkIsAuthenticated,
+} from "../../utils/auth";
 
 // Axios instance (centralized config)
 const api = axios.create({
@@ -6,35 +11,33 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
   timeout: 5000,
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("public_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
 });
 
 // Centralized error handler
 const handleError = (error) => {
   if (error.response) {
-    // Backend responded with an error
     const errorObj = new Error(error.response.data.message || "Server error");
     errorObj.response = error.response;
     throw errorObj;
   } else if (error.request) {
-    // Request sent but no response
     throw new Error("Server not responding");
   } else {
-    // Something else happened
     throw new Error("Unexpected error occurred");
   }
 };
 
 // REGISTER
-export const registerUser = async ({ first_name, last_name, email, contact, password }) => {
+export const registerUser = async ({
+  first_name,
+  last_name,
+  email,
+  contact,
+  password,
+  consent_accepted = true,
+  consent_version = "1.0",
+}) => {
   try {
     const res = await api.post("/login/register", {
       first_name,
@@ -42,6 +45,8 @@ export const registerUser = async ({ first_name, last_name, email, contact, pass
       email,
       contact,
       password,
+      consent_accepted,
+      consent_version,
     });
     return res.data;
   } catch (error) {
@@ -64,6 +69,16 @@ export const loginUser = async ({ email, password }) => {
   }
 };
 
+// GET CURRENT PUBLIC PROFILE
+export const getPublicProfile = async () => {
+  try {
+    const res = await api.get("/login/me");
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 // CHANGE PASSWORD
 export const changePassword = async (currentPassword, newPassword) => {
   try {
@@ -77,25 +92,23 @@ export const changePassword = async (currentPassword, newPassword) => {
   }
 };
 
-// LOGOUT (frontend only)
-export const logoutUser = () => {
-  localStorage.removeItem("public_token");
-  localStorage.removeItem("public_email");
-  localStorage.removeItem("public_first_name");
-  localStorage.removeItem("public_last_name");
-  localStorage.removeItem("public_contact");
-  localStorage.removeItem("public_status");
-  localStorage.removeItem("public_type");
-  localStorage.removeItem("public_date_created");
-  localStorage.removeItem("public_auth_section");
+// LOGOUT (clears HttpOnly cookie + localStorage state)
+export const logoutUser = async () => {
+  try {
+    await api.post("/login/logout");
+  } catch {
+    // Proceed with local cleanup even if network call fails
+  } finally {
+    clearAuthData("public");
+  }
 };
 
 // CHECK IF USER IS AUTHENTICATED
 export const isAuthenticated = () => {
-  return !!localStorage.getItem("public_token");
+  return checkIsAuthenticated("public");
 };
 
-// GET TOKEN
+// GET TOKEN (returns null since JWT is in HttpOnly cookie)
 export const getToken = () => {
-  return localStorage.getItem("public_token");
+  return authGetToken("public");
 };

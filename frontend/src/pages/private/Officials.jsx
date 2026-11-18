@@ -23,6 +23,7 @@ import AccessCard from "../../components/private/Official/AccessCard";
 import OfficialCard from "../../components/private/Official/OfficialCard";
 import OfficialForm from "../../components/private/Official/OfficialForm";
 import OfficialDelete from "../../components/private/Official/OfficialDelete";
+import ErrorCard from "../../components/private/ErrorCard";
 import {
   fetchOfficials,
   addOfficial,
@@ -55,6 +56,8 @@ export default function Officials() {
   const [sortOption, setSortOption] = useState("officials");
   const [loading, setLoading] = useState(false);
   const [part, setPart] = useState(1);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // ========== ACCESS HANDLERS ==========
   // ➕ Open Create Account Modal
@@ -95,10 +98,28 @@ export default function Officials() {
     loadOfficials();
   }, [part]);
 
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadOfficials();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [part]);
+
   // Fetch all officials from API
   const loadOfficials = async () => {
     try {
       setLoading(true);
+      setOfficialErrorMessage("");
       let data;
       if (part === 2) {
         // Load officials with account information for Access Control
@@ -109,9 +130,11 @@ export default function Officials() {
       }
       console.log("Officials loaded:", data);
       setOfficials(data || []);
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading officials:", err);
       setOfficialErrorMessage("Failed to load officials: " + err.message);
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -262,6 +285,17 @@ export default function Officials() {
       setPart(2);
     }
   }, [sortOption]);
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Officials</title>
+        </Helmet>
+        <ErrorCard title="Officials Page Unavailable" onRetry={loadOfficials} />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>

@@ -33,6 +33,7 @@ import { fetchResidents } from "../../api/private/residentAPI";
 import HouseholdForm from "../../components/private/Household/HouseholdForm";
 import HouseholBulkAdd from "../../components/private/Household/HouseholBulkAdd";
 import HouseholdDelete from "../../components/private/Household/HouseholdDelete";
+import ErrorCard from "../../components/private/ErrorCard";
 import Slide from "@mui/material/Slide";
 
 function SlideTransition(props) {
@@ -52,6 +53,8 @@ export default function Household() {
   const [householdErrorMessage, setHouseholdErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // Fetch all residents from API
   const loadResidents = async () => {
@@ -62,6 +65,7 @@ export default function Household() {
     } catch (err) {
       console.error("Error loading residents:", err);
       setResidents([]);
+      setConnectionError(true);
     }
   };
 
@@ -69,13 +73,16 @@ export default function Household() {
   const loadHouseholds = async () => {
     setLoading(true);
     try {
+      setHouseholdErrorMessage("");
       const data = await fetchHouseholds();
-      setHouseholds(data);
+      setHouseholds(data || []);
+      setConnectionError(false);
     } catch (error) {
       setHouseholdErrorMessage(
         "Failed to load households: " + error.message,
         "error",
       );
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -84,6 +91,24 @@ export default function Household() {
   useEffect(() => {
     loadHouseholds();
     loadResidents();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadHouseholds();
+      loadResidents();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // Add household
@@ -172,6 +197,23 @@ export default function Household() {
       h.barangay.toLowerCase().includes(searchQuery.toLowerCase()) ||
       h.head_family.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Household</title>
+        </Helmet>
+        <ErrorCard
+          title="Household Page Unavailable"
+          onRetry={() => {
+            loadHouseholds();
+            loadResidents();
+          }}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>

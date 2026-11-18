@@ -4,6 +4,7 @@ const COMMON_AUTH_KEYS = ["auth_section"];
 // For Public Panel
 const PUBLIC_AUTH_KEYS = [
   "public_token",
+  "public_logged_in",
   "public_email",
   "public_first_name",
   "public_last_name",
@@ -16,6 +17,7 @@ const PUBLIC_AUTH_KEYS = [
 // For Private Panel
 const PRIVATE_AUTH_KEYS = [
   "private_token",
+  "private_logged_in",
   "private_official_account_id",
   "private_password_changed",
   "private_username",
@@ -42,11 +44,6 @@ const PRIVATE_AUTH_KEYS = [
   "contact",
 ];
 
-const TOKEN_KEYS = {
-  public: "public_token",
-  private: "private_token",
-};
-
 /**
  * Clears authentication data for a specific section.
  * If no section is provided, it completely clears everything (Global Reset).
@@ -54,22 +51,19 @@ const TOKEN_KEYS = {
 export function clearAuthData(section = null) {
   if (section === "public") {
     PUBLIC_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
-    // If the active track matches, clear the section marker too
     if (localStorage.getItem("auth_section") === "public") {
       localStorage.removeItem("auth_section");
     }
   } else if (section === "private") {
     PRIVATE_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
-    // If the active track matches, clear the section marker too
     if (localStorage.getItem("auth_section") === "private") {
       localStorage.removeItem("auth_section");
     }
   } else {
-    // Brutal cleanup: Wipe absolutely everything out to be completely safe
     PUBLIC_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
     PRIVATE_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
     COMMON_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
-    localStorage.removeItem("token"); // Clean up legacy key remnants
+    localStorage.removeItem("token");
   }
 }
 
@@ -89,8 +83,8 @@ export function hasValidToken(token) {
         atob(payload)
           .split("")
           .map((char) => `%${`00${char.charCodeAt(0).toString(16)}`.slice(-2)}`)
-          .join(""),
-      ),
+          .join("")
+      )
     );
 
     if (decoded.exp) {
@@ -98,24 +92,35 @@ export function hasValidToken(token) {
     }
 
     return true;
-  } catch (error) {
-    console.warn("Invalid token format evaluation failed.", error);
+  } catch {
     return false;
   }
 }
 
 /**
- * Evaluates whether a user has permission to access a targeted section.
+ * Evaluates whether a user is currently authenticated in the targeted panel.
  * Expects explicit string parameter: "public" or "private"
  */
 export function isAuthenticated(section) {
   if (!section) return false;
 
-  const token = getToken(section);
-  if (!hasValidToken(token)) return false;
+  if (section === "private") {
+    return Boolean(
+      localStorage.getItem("private_logged_in") === "true" ||
+        localStorage.getItem("private_official_account_id") ||
+        localStorage.getItem("private_username")
+    );
+  }
 
-  // Ensure they possess the token assigned specifically to this sub-route segment
-  return true;
+  if (section === "public") {
+    return Boolean(
+      localStorage.getItem("public_logged_in") === "true" ||
+        localStorage.getItem("public_first_name") ||
+        localStorage.getItem("public_email")
+    );
+  }
+
+  return false;
 }
 
 export function setAuthSection(section) {
@@ -127,29 +132,30 @@ export function getAuthSection() {
 }
 
 /**
- * Sets a token to its dedicated key assignment based on panel scope
+ * Sets authenticated state for the given section without storing JWT in localStorage.
  */
-export function setToken(section, token) {
-  if (!token || !TOKEN_KEYS[section]) return;
-  localStorage.setItem(TOKEN_KEYS[section], token);
+export function setToken(section) {
+  if (!section) return;
+  localStorage.removeItem(`${section}_token`);
+  localStorage.setItem(`${section}_logged_in`, "true");
   setAuthSection(section);
 }
 
 /**
- * Gets a token strictly matching the requested panel scope
+ * Returns null as JWT tokens are now strictly kept in HttpOnly cookies.
  */
-export function getToken(section) {
-  const key = TOKEN_KEYS[section];
-  return key ? localStorage.getItem(key) : null;
+export function getToken() {
+  return null;
 }
 
 /**
- * Clears out individual token data and sections
+ * Clears out session marker and sections
  */
 export function removeToken(section) {
-  if (!section || !TOKEN_KEYS[section]) return;
-  
-  localStorage.removeItem(TOKEN_KEYS[section]);
+  if (!section) return;
+
+  localStorage.removeItem(`${section}_logged_in`);
+  localStorage.removeItem(`${section}_token`);
   if (localStorage.getItem("auth_section") === section) {
     localStorage.removeItem("auth_section");
   }

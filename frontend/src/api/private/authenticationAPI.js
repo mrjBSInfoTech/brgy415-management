@@ -1,4 +1,9 @@
 import axios from "axios";
+import {
+  clearAuthData,
+  getToken as authGetToken,
+  isAuthenticated as checkIsAuthenticated,
+} from "../../utils/auth";
 
 // Axios instance (centralized config)
 const api = axios.create({
@@ -6,34 +11,25 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
   timeout: 5000,
 });
 
 // Centralized error handler
 const handleError = (error) => {
   if (error.response) {
-    // Backend responded with an error
-    const errorObj = new Error(error.response.data.message || "Server error");
+    const errorObj = new Error(
+      error.response.data.message || error.response.data.error || "Server error"
+    );
     errorObj.response = error.response;
     throw errorObj;
   } else if (error.request) {
-    // Request sent but no response
     throw new Error("Server not responding");
   } else {
-    // Something else happened
     console.error("Request error:", error.message);
     throw new Error("Unexpected error occurred: " + error.message);
   }
 };
-
-// Interceptor to add token to all requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("private_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 /* ============================
    AUTHENTICATION REQUESTS
@@ -52,31 +48,35 @@ export const loginUser = async ({ username, password }) => {
   }
 };
 
-// LOGOUT (frontend only)
-export const logoutUser = () => {
-  localStorage.removeItem("private_token");
-  localStorage.removeItem("token");
-  localStorage.removeItem("official_account_id");
-  localStorage.removeItem("password_changed");
-  localStorage.removeItem("username");
-  localStorage.removeItem("first_name");
-  localStorage.removeItem("last_name");
-  localStorage.removeItem("position");
-  localStorage.removeItem("image");
-  localStorage.removeItem("account_type");
-  localStorage.removeItem("can_add");
-  localStorage.removeItem("can_edit");
-  localStorage.removeItem("can_delete");
+// GET CURRENT OFFICIAL PROFILE
+export const getOfficialProfile = async () => {
+  try {
+    const res = await api.get("/authentication/me");
+    return res.data;
+  } catch (error) {
+    handleError(error);
+  }
+};
+
+// LOGOUT (clears HttpOnly cookie + localStorage state)
+export const logoutUser = async () => {
+  try {
+    await api.post("/authentication/logout");
+  } catch {
+    // Proceed with local cleanup even if network call fails
+  } finally {
+    clearAuthData("private");
+  }
 };
 
 // CHECK IF USER IS AUTHENTICATED
 export const isAuthenticated = () => {
-  return !!localStorage.getItem("private_token");
-};  
+  return checkIsAuthenticated("private");
+};
 
-// GET TOKEN
+// GET TOKEN (returns null since JWT is in HttpOnly cookie)
 export const getToken = () => {
-  return localStorage.getItem("private_token");
+  return authGetToken("private");
 };
 
 // CHANGE PASSWORD

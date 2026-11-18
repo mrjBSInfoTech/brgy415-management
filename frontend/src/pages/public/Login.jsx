@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   Box,
   Button,
@@ -23,7 +24,7 @@ import {
 } from "@mui/icons-material";
 import { loginUser } from "../../api/public/authenticationAPI";
 import BarangayIcon from "../../assets/BarangayIcon.png";
-import { setToken } from "../../utils/auth";
+import { clearAuthData, isAuthenticated, setToken } from "../../utils/auth";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
@@ -31,6 +32,10 @@ function SlideTransition(props) {
 }
 
 const Login = () => {
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true,
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +48,45 @@ const Login = () => {
 
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isSmallMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const loadAboutData = async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      setConnectionError(true);
+      return;
+    }
+
+    try {
+      setConnectionError(false);
+      const [officialsData, brgyData] = await Promise.all([
+        fetchOfficials(),
+        fetchBrgyInfo(),
+      ]);
+      setOfficials(officialsData || []);
+      setBarangayInfo(brgyData || {});
+    } catch (err) {
+      console.error("Error loading about page data:", err);
+      setConnectionError(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadAboutData();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   // Handle Enter key login
   useEffect(() => {
@@ -93,7 +137,8 @@ const Login = () => {
     try {
       const data = await loginUser({ email: email, password });
 
-      setToken("public", data.token);
+      clearAuthData("public");
+      setToken("public");
 
       localStorage.setItem("public_email", data.email);
       localStorage.setItem("public_type", data.type);
@@ -106,18 +151,25 @@ const Login = () => {
       showSnackbar("Login successful!", "success");
       setTimeout(() => {
         navigate("/public/main", { replace: true });
-      }, 1000); 
+      }, 1000);
     } catch (error) {
-      const message =
-        error.message?.includes("verified")
-          ? error.message
-          : `Login failed: ${error.message}`;
+      const message = error.message?.includes("verified")
+        ? error.message
+        : `Login failed: ${error.message}`;
 
       showSnackbar(message, "error");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!isOnline || connectionError) {
+    return (
+      <Helmet titleTemplate="%s - Error">
+        <title>Login</title>
+      </Helmet>
+    );
+  }
 
   return (
     <Box
@@ -128,6 +180,9 @@ const Login = () => {
         overflow: "hidden",
       }}
     >
+      <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name || "Barangay"}`}>
+        <title>Login</title>
+      </Helmet>
       {/* LEFT SIDE - ICON ONLY (Hidden on mobile) */}
       {!isMobile && (
         <Box
@@ -364,7 +419,7 @@ const Login = () => {
               mt: 3,
             }}
           >
-            For guest access, {" "}
+            For guest access,{" "}
             <Link
               to="/public/main"
               style={{

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
-import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
+import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import EmailIcon from "@mui/icons-material/Email";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
@@ -9,6 +10,8 @@ import XIcon from "@mui/icons-material/X";
 import HomeIcon from "@mui/icons-material/Home";
 import "./Footer.css";
 import { fetchOtherInfo } from "../../api/public/otherInfoAPI";
+import { subscribeConnectionError } from "../../utils/connectionErrorState";
+import { useBarangayTheme } from "../../theme/BarangayThemeContext";
 
 const isSafeUrl = (url) => {
   if (!url || typeof url !== "string") return false;
@@ -17,25 +20,78 @@ const isSafeUrl = (url) => {
 };
 
 const Footer = () => {
+  const location = useLocation();
+  const { barangayInfo } = useBarangayTheme();
   const [otherInfo, setOtherInfo] = useState(null);
+  const [hasError, setHasError] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true
+  );
+  const [hasPageConnectionError, setHasPageConnectionError] = useState(false);
+  const prevPageErrorRef = useRef(false);
+  const prevPathnameRef = useRef(location.pathname);
+  const hasErrorRef = useRef(false);
+
+  const loadOtherInfo = useCallback(async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      hasErrorRef.current = true;
+      setHasError(true);
+      return;
+    }
+
+    try {
+      const data = await fetchOtherInfo();
+      if (data) {
+        setOtherInfo(data);
+      }
+      hasErrorRef.current = false;
+      setHasError(false);
+    } catch (error) {
+      console.error("Error fetching other info for footer:", error);
+      hasErrorRef.current = true;
+      setHasError(true);
+    }
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    const getOtherInfo = async () => {
-      try {
-        const data = await fetchOtherInfo();
-        if (isMounted && data) {
-          setOtherInfo(data);
-        }
-      } catch (error) {
-        console.error("Error fetching other info for footer:", error);
-      }
+    loadOtherInfo();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadOtherInfo();
     };
-    getOtherInfo();
+    const handleOffline = () => {
+      setIsOnline(false);
+      hasErrorRef.current = true;
+      setHasError(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    const unsubscribeError = subscribeConnectionError(setHasPageConnectionError);
+
     return () => {
-      isMounted = false;
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      unsubscribeError();
     };
-  }, []);
+  }, [loadOtherInfo]);
+
+  useEffect(() => {
+    const recoveredFromPageError = prevPageErrorRef.current && !hasPageConnectionError;
+    const navigated = prevPathnameRef.current !== location.pathname;
+    prevPageErrorRef.current = hasPageConnectionError;
+    prevPathnameRef.current = location.pathname;
+
+    if ((recoveredFromPageError || (navigated && hasErrorRef.current)) && isOnline) {
+      loadOtherInfo();
+    }
+  }, [hasPageConnectionError, location.pathname, isOnline, loadOtherInfo]);
+
+  if (!isOnline || hasError || hasPageConnectionError) {
+    return null;
+  }
 
   const address = otherInfo?.address?.trim() || "Sampaloc, Manila, Philippines";
   const telephone = otherInfo?.tp_number?.trim() || "(02) 1234-5678";
@@ -54,7 +110,7 @@ const Footer = () => {
           <div className="footer-header-content">
             <div className="footer-logo">
               <HomeIcon className="logo-icon" color="var(--primary-color)" />
-              <h2>Barangay 415 Zone 42</h2>
+              <h2>{barangayInfo?.brgy_name || "Barangay 415 Zone 42"}</h2>
             </div>
           </div>
           <p className="footer-description">
@@ -106,9 +162,15 @@ const Footer = () => {
               <li>
                 <a href="/public/concerns">Concerns</a>
               </li>
+              <li>
+                <a href="/public/terms">Terms of Service</a>
+              </li>
+              <li>
+                <a href="/public/privacy-policy">Data Privacy Policy (RA 10173)</a>
+              </li>
             </ul>
             {(facebookLink || instagramLink || xLink) && (
-              <div className="social-links" style={{ marginTop: '1rem' }}>
+              <div className="social-links" style={{ marginTop: "1rem" }}>
                 {facebookLink && (
                   <a href={facebookLink} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                     <FacebookIcon className="social-icon" />
@@ -132,7 +194,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="footer-copyright">
           <p>
-            &copy; {new Date().getFullYear()} Barangay 415 Zone 42. All Rights
+            &copy; {new Date().getFullYear()} {barangayInfo?.brgy_name || "Barangay 415 Zone 42"}. All Rights
             Reserved.
           </p>
         </div>

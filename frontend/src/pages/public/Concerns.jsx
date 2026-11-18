@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Button,
   Grid,
+  Link,
   MenuItem,
   Paper,
   Snackbar,
@@ -32,8 +34,9 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { addConcern } from "../../api/public/concernsAPI";
 import { fetchOtherInfo } from "../../api/public/otherInfoAPI";
-import { getToken as authGetToken } from "../../utils/auth";
+import { isAuthenticated as checkIsAuthenticated } from "../../utils/auth";
 import Footer from "../../components/public/Footer";
+import ErrorCard from "../../components/public/ErrorCard";
 
 function SlideTransition(props) {
   return <Slide {...props} direction="up" />;
@@ -51,6 +54,10 @@ export default function Concerns() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loggedIn, setLoggedIn] = useState(false);
   const [otherInfo, setOtherInfo] = useState(null);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true
+  );
   const [formData, setFormData] = useState({
     message_type: "",
     message: "",
@@ -58,21 +65,42 @@ export default function Concerns() {
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadOtherInfo = async () => {
-      try {
-        const data = await fetchOtherInfo();
-        if (isMounted && data) {
-          setOtherInfo(data);
-        }
-      } catch (error) {
-        console.error("Error fetching other info for concerns page:", error);
+  const loadOtherInfo = async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      setConnectionError(true);
+      return;
+    }
+
+    try {
+      setConnectionError(false);
+      const data = await fetchOtherInfo();
+      if (data) {
+        setOtherInfo(data);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching other info for concerns page:", error);
+      setConnectionError(true);
+    }
+  };
+
+  useEffect(() => {
     loadOtherInfo();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadOtherInfo();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
     return () => {
-      isMounted = false;
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, []);
 
@@ -88,7 +116,7 @@ export default function Concerns() {
   }, [attachment]);
 
   useEffect(() => {
-    const storedLoggedIn = authGetToken("public");
+    const storedLoggedIn = checkIsAuthenticated("public");
     setLoggedIn(!!storedLoggedIn);
   }, []);
 
@@ -129,9 +157,20 @@ export default function Concerns() {
     { icon: <XIcon />, href: otherInfo?.x_link?.trim(), name: "X" },
   ].filter((social) => isSafeUrl(social.href));
 
+  if (!isOnline || connectionError) {
+    return (
+      <Box sx={{ minWidth: 0 }}>
+        <Helmet titleTemplate="%s - Error">
+          <title>Concerns</title>
+        </Helmet>
+        <ErrorCard title="Concerns Page Unavailable" onRetry={loadOtherInfo} />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", display: "flex", flexDirection: "column" }}>
-      <Helmet titleTemplate="%s - Barangay 415 Zone 42">
+        <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
         <title>Concerns</title>
       </Helmet>
 
@@ -284,6 +323,28 @@ export default function Concerns() {
                 >
                   Submit Concern
                 </Button>
+
+                <Typography variant="caption" color="text.secondary" sx={{ textAlign: "center", lineHeight: 1.6 }}>
+                  By submitting a report, you agree to our{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/public/terms"
+                    underline="hover"
+                    sx={{ fontWeight: 700, color: "var(--primary-color)" }}
+                  >
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    component={RouterLink}
+                    to="/public/privacy-policy"
+                    underline="hover"
+                    sx={{ fontWeight: 700, color: "var(--primary-color)" }}
+                  >
+                    Data Privacy Policy (RA 10173)
+                  </Link>
+                  .
+                </Typography>
               </Box>
             </Paper>
           </Grid>

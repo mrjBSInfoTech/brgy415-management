@@ -31,6 +31,7 @@ import {
   deleteResident,
 } from "../../api/private/residentAPI";
 import { fetchHouseholds } from "../../api/private/householdAPI";
+import ErrorCard from "../../components/private/ErrorCard";
 import { useRef } from "react";
 import * as XLSX from "xlsx";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
@@ -56,6 +57,8 @@ export default function Resident() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // Fetch all households from API
   const loadHouseholds = async () => {
@@ -66,6 +69,7 @@ export default function Resident() {
     } catch (err) {
       console.error("Error loading households:", err);
       setHouseholds([]);
+      setConnectionError(true);
     }
   };
 
@@ -73,15 +77,18 @@ export default function Resident() {
   const loadResidents = async () => {
     try {
       setLoading(true);
+      setResidentErrorMessage("");
       const data = await fetchResidents();
       console.log("Residents loaded:", data);
       setResidents(data || []);
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading residents:", err);
       setResidentErrorMessage(
         "Failed to load residents: " + err.message,
         "error",
       );
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -91,6 +98,24 @@ export default function Resident() {
   useEffect(() => {
     loadResidents();
     loadHouseholds();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadResidents();
+      loadHouseholds();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // ========== RESIDENT HANDLERS ==========
@@ -186,6 +211,23 @@ export default function Resident() {
         return "primary.light";
     }
   };
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Resident</title>
+        </Helmet>
+        <ErrorCard
+          title="Residents Page Unavailable"
+          onRetry={() => {
+            loadResidents();
+            loadHouseholds();
+          }}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>

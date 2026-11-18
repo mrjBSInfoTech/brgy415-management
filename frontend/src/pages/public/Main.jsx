@@ -19,6 +19,7 @@ import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import BarangayLogo from "../../components/BarangayLogo";
 import Footer from "../../components/public/Footer";
+import ErrorCard from "../../components/public/ErrorCard";
 import { fetchAnnouncements } from "../../api/public/announcementAPI";
 import { fetchBrgyInfo } from "../../api/private/brgyInfoAPI";
 
@@ -28,22 +29,41 @@ export default function Main() {
   const [announcements, setAnnouncements] = useState([]);
   const [announcementErrorMessage, setAnnouncementErrorMessage] = useState("");
   const [barangayInfo, setBarangayInfo] = useState({});
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true
+  );
 
-  const loadAnnouncements = async () => {
+  const loadMainData = async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      setConnectionError(true);
+      return;
+    }
+
     try {
       setAnnouncementErrorMessage("");
-      const response = await fetchAnnouncements();
-      if (response && Array.isArray(response)) {
-        setAnnouncements(response);
-      } else if (response && response.data && Array.isArray(response.data)) {
-        setAnnouncements(response.data);
+      setConnectionError(false);
+      const [announcementRes, brgyData] = await Promise.all([
+        fetchAnnouncements(),
+        fetchBrgyInfo(),
+      ]);
+
+      if (brgyData) {
+        setBarangayInfo(brgyData);
+      }
+
+      if (announcementRes && Array.isArray(announcementRes)) {
+        setAnnouncements(announcementRes);
+      } else if (announcementRes && announcementRes.data && Array.isArray(announcementRes.data)) {
+        setAnnouncements(announcementRes.data);
       } else {
         setAnnouncements([]);
-        setAnnouncementErrorMessage("No data received from server.");
       }
     } catch (err) {
-      console.error("Failed to fetch announcements:", err);
+      console.error("Failed to fetch home page data:", err);
       setAnnouncements([]);
+      setConnectionError(true);
       setAnnouncementErrorMessage(
         `${err.message || "Failed to fetch announcements. Please try again later."}`
       );
@@ -51,8 +71,23 @@ export default function Main() {
   };
 
   useEffect(() => {
-    loadAnnouncements();
-    fetchBrgyInfo().then(data => setBarangayInfo(data || {})).catch(err => console.error("Failed to load brgy info:", err));
+    loadMainData();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadMainData();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   useEffect(() => {
@@ -67,9 +102,20 @@ export default function Main() {
     }
   }, [location]);
 
+  if (!isOnline || connectionError) {
+    return (
+      <Box sx={{ minWidth: 0 }}>
+        <Helmet titleTemplate="%s - Error">
+          <title>Home</title>
+        </Helmet>
+        <ErrorCard title="Home Page Unavailable" onRetry={loadMainData} />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc" }}>
-      <Helmet titleTemplate="%s - Barangay 415 Zone 42">
+      <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
         <title>Home</title>
       </Helmet>
 

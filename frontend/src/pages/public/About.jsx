@@ -14,6 +14,7 @@ import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
 import GroupsIcon from "@mui/icons-material/Groups";
 import BarangayLogo from "../../components/BarangayLogo";
 import Footer from "../../components/public/Footer";
+import ErrorCard from "../../components/public/ErrorCard";
 import { fetchOfficials } from "../../api/public/officialAPI";
 import { fetchBrgyInfo } from "../../api/private/brgyInfoAPI";
 import OfficialCard from "../../components/public/Official/OfficialCard";
@@ -22,6 +23,10 @@ export default function About() {
   const location = useLocation();
   const [officials, setOfficials] = useState([]);
   const [barangayInfo, setBarangayInfo] = useState({});
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true
+  );
 
   useEffect(() => {
     if (location.hash) {
@@ -35,23 +40,61 @@ export default function About() {
     }
   }, [location]);
 
+  const loadAboutData = async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      setConnectionError(true);
+      return;
+    }
+
+    try {
+      setConnectionError(false);
+      const [officialsData, brgyData] = await Promise.all([
+        fetchOfficials(),
+        fetchBrgyInfo(),
+      ]);
+      setOfficials(officialsData || []);
+      setBarangayInfo(brgyData || {});
+    } catch (err) {
+      console.error("Error loading about page data:", err);
+      setConnectionError(true);
+    }
+  };
+
   useEffect(() => {
-    const loadOfficials = async () => {
-      try {
-        const data = await fetchOfficials();
-        setOfficials(data || []);
-      } catch (err) {
-        console.error("Error loading officials:", err);
-      }
+    loadAboutData();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadAboutData();
     };
-    loadOfficials();
-    
-    fetchBrgyInfo().then(data => setBarangayInfo(data || {})).catch(err => console.error(err));
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box sx={{ minWidth: 0 }}>
+        <Helmet titleTemplate="%s - Error">
+          <title>About Us</title>
+        </Helmet>
+        <ErrorCard title="About Page Unavailable" onRetry={loadAboutData} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc" }}>
-      <Helmet titleTemplate="%s - Barangay Management System">
+      <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
         <title>About Us</title>
       </Helmet>
 

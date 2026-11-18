@@ -43,6 +43,7 @@ import ConcernBulkDelete from "../../components/private/Concern/ConcernBulkDelet
 import ConcernCard from "../../components/private/Concern/ConcernCard";
 import ConcernTable from "../../components/private/Concern/ConcernTable";
 import ReportForm from "../../components/private/Report/ReportForm";
+import ErrorCard from "../../components/private/ErrorCard";
 import { addReport } from "../../api/private/reportAPI";
 
 // Slide Transition for Snackbar
@@ -69,20 +70,25 @@ export default function Concern() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [part, setPart] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // Fetch all residents from API
   const loadConcerns = async () => {
     try {
       setLoading(true);
+      setConcernErrorMessage("");
       const data = await fetchConcerns();
       console.log("Concerns loaded:", data);
       setConcerns(data || []);
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading concerns:", err);
       setConcernErrorMessage(
         "Failed to load concerns: " + err.message,
         "error",
       );
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -90,6 +96,23 @@ export default function Concern() {
 
   useEffect(() => {
     loadConcerns();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadConcerns();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // Open Bulk Solve Concern Modal
@@ -270,6 +293,17 @@ export default function Concern() {
         return "primary.light";
     }
   };
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Concern</title>
+        </Helmet>
+        <ErrorCard title="Concerns Page Unavailable" onRetry={loadConcerns} />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>

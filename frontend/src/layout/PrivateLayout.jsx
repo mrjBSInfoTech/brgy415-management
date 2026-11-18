@@ -18,6 +18,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { modalStyles } from "../theme/modalTheme";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { clearAuthData } from "../utils/auth";
+import { logoutUser } from "../api/private/authenticationAPI";
 import { Stack, Avatar, Typography, Divider, IconButton } from "@mui/material";
 import BarangayLogo from "../components/BarangayLogo";
 import { useBarangayTheme } from "../theme/BarangayThemeContext";
@@ -124,7 +125,8 @@ export default function DashboardLayout({ children }) {
     },
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutUser();
     clearAuthData("private");
     navigate("/private/login", { replace: true });
 
@@ -219,7 +221,7 @@ export default function DashboardLayout({ children }) {
           borderRadius: "50%",
           height: 50,
           flexShrink: 0,
-          width: 40,
+          width: 50,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -240,7 +242,7 @@ export default function DashboardLayout({ children }) {
           fontSize: 22,
         }}
       >
-        {barangayInfo.brgy_name || "Loading..."}
+        {barangayInfo.brgy_name || "Barangay..."}
       </Typography>
     ),
     homeUrl: "/dashboard",

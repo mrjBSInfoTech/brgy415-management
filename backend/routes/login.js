@@ -3,21 +3,31 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../database/db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import {
+  clearAuthCookieOptions,
+  getAuthCookieOptions,
+} from "../utils/authCookies.js";
 
 const router = express.Router();
 
 // Register route
 router.post("/register", (req, res) => {
-  const { first_name, last_name, email, contact, password } = req.body;
+  const { first_name, last_name, email, contact, password, consent_accepted } = req.body;
 
   if (!first_name || !last_name || !email || !contact || !password) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
+  if (consent_accepted !== true) {
+    return res.status(400).json({
+      message: "You must agree to the Terms of Service and Data Privacy Policy (RA 10173).",
+    });
+  }
+
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   const sql = "INSERT INTO user_account (first_name, last_name, email, contact, password) VALUES (?, ?, ?, ?, ?)";
-  
+
   db.query(sql, [first_name, last_name, email, contact, hashedPassword], (err) => {
     if (err) {
       if (err.code === "ER_DUP_ENTRY") {
@@ -73,16 +83,21 @@ router.post("/login", (req, res) => {
     const token = jwt.sign(
       {
         id: user.user_id,
+        user_id: user.user_id,
         email: user.email,
         type: user.type,
-        status: user.status
+        status: user.status,
+        role: "public",
       },
       process.env.JWT_SECRET,
-      { expiresIn: "10d" },
+      { expiresIn: "10d", algorithm: "HS256" }
     );
 
+    res.cookie("public_token", token, getAuthCookieOptions(10));
+
     res.json({
-      token,
+      success: true,
+      user_id: user.user_id,
       first_name: user.first_name,
       last_name: user.last_name,
       email: user.email,
@@ -92,6 +107,25 @@ router.post("/login", (req, res) => {
       date_created: user.date_created,
     });
   });
+});
+
+// Logout route
+router.post("/logout", (req, res) => {
+  res.clearCookie("public_token", clearAuthCookieOptions());
+  res.json({ success: true, message: "Logged out successfully" });
+});
+
+// Get current authenticated public user
+router.get("/me", authenticateToken, (req, res) => {
+  db.query(
+    "SELECT user_id, first_name, last_name, email, contact, date_created, type, status FROM user_account WHERE user_id = ?",
+    [req.user.id],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: "Database error" });
+      if (!result.length) return res.status(404).json({ message: "User not found" });
+      res.json(result[0]);
+    }
+  );
 });
 
 // Change password for an authenticated public user
@@ -133,12 +167,12 @@ router.put("/changePassword", authenticateToken, async (req, res) => {
           (updateError) => {
             if (updateError) return res.status(500).json({ message: "Database error" });
             return res.json({ message: "Password updated successfully" });
-          },
+          }
         );
       } catch {
         return res.status(500).json({ message: "Unable to update password" });
       }
-    },
+    }
   );
 });
 

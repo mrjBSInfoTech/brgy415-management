@@ -47,6 +47,7 @@ import { fetchResidents } from "../../api/private/residentAPI";
 import { fetchHouseholds } from "../../api/private/householdAPI";
 import { fetchOfficials } from "../../api/private/officialAPI";
 import { fetchConcerns } from "../../api/private/concernAPI";
+import ErrorCard from "../../components/private/ErrorCard";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return (
@@ -70,6 +71,8 @@ export default function Dashboard() {
   const [concerns, setConcerns] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
   const navigate = useNavigate();
 
   // Load residents count
@@ -80,6 +83,7 @@ export default function Dashboard() {
       const response = await fetchResidents();
       if (response) {
         setResidents(Array.isArray(response) ? response : []);
+        setConnectionError(false);
       } else {
         setResidents([]);
         setErrorMessage("0");
@@ -88,6 +92,7 @@ export default function Dashboard() {
       console.error("0", err);
       setResidents([]);
       setErrorMessage("0");
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -105,6 +110,7 @@ export default function Dashboard() {
       const response = await fetchHouseholds();
       if (response) {
         setHouseholds(Array.isArray(response) ? response : []);
+        setConnectionError(false);
       } else {
         setHouseholds([]);
         setErrorMessage("0");
@@ -113,6 +119,7 @@ export default function Dashboard() {
       console.error("0", err);
       setHouseholds([]);
       setErrorMessage("0");
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -131,6 +138,7 @@ export default function Dashboard() {
 
       if (response) {
         setUserAccounts(Array.isArray(response) ? response : []);
+        setConnectionError(false);
       } else {
         setUserAccounts([]);
         setErrorMessage("0");
@@ -139,6 +147,7 @@ export default function Dashboard() {
       console.error("0", err);
       setUserAccounts([]);
       setErrorMessage("0");
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -156,6 +165,7 @@ export default function Dashboard() {
 
       if (response) {
         setConcerns(Array.isArray(response) ? response : []);
+        setConnectionError(false);
       } else {
         setConcerns([]);
         setErrorMessage("0");
@@ -164,6 +174,7 @@ export default function Dashboard() {
       console.error("0", err);
       setConcerns([]);
       setErrorMessage("0");
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -172,6 +183,30 @@ export default function Dashboard() {
   useEffect(() => {
     loadConcerns();
   }, []);
+
+  const loadDashboardData = useCallback(() => {
+    loadResidents();
+    loadHouseholds();
+    loadUserAccounts();
+    loadConcerns();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadDashboardData();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, [loadDashboardData]);
 
   const totalResidents = residents.length;
   const totalHouseholds = households.length;
@@ -278,6 +313,17 @@ export default function Dashboard() {
 
     return { type: typeLabel, topics };
   });
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Dashboard</title>
+        </Helmet>
+        <ErrorCard title="Dashboard Page Unavailable" onRetry={loadDashboardData} />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>

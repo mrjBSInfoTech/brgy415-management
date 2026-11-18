@@ -31,6 +31,8 @@ import PublicProfile from "../pages/public/Profile";
 import PublicLogin from "../pages/public/Login";
 import PublicRegister from "../pages/public/Register";
 import PublicSuccessPending from "../pages/public/SuccessPending";
+import PublicPrivacyPolicy from "../pages/public/PrivacyPolicy";
+import PublicTermsOfService from "../pages/public/TermsOfService";
 
 export default function AppRoutes() {
   return (
@@ -54,6 +56,8 @@ export default function AppRoutes() {
             <Route path="announcements" element={<PublicAnnouncements />} />
             <Route path="about" element={<PublicAbout />} />
             <Route path="profile" element={<PublicProfile />} />
+            <Route path="privacy-policy" element={<PublicPrivacyPolicy />} />
+            <Route path="terms" element={<PublicTermsOfService />} />
           </Route>
         </Route>
 

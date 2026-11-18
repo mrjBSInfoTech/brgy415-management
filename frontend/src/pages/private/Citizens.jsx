@@ -41,6 +41,7 @@ import {
 } from "../../api/private/citizenAPI";
 import { fetchResidents } from "../../api/private/residentAPI";
 import CitizenCard from "../../components/private/Citizen/CitizenCard";
+import ErrorCard from "../../components/private/ErrorCard";
 
 // Slide Transition for Snackbar
 function SlideTransition(props) {
@@ -61,6 +62,8 @@ export default function Citizens() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [part, setPart] = useState(2);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // Fetch all residents from API
   const loadResidents = async () => {
@@ -71,6 +74,7 @@ export default function Citizens() {
     } catch (err) {
       console.error("Error loading residents:", err);
       setResidents([]);
+      setConnectionError(true);
     }
   };
 
@@ -78,14 +82,17 @@ export default function Citizens() {
   const loadCitizens = async () => {
     try {
       setLoading(true);
+      setCitizensErrorMessage("");
       const data = await fetchCitizens();
       console.log("Citizens loaded:", data);
       setCitizens(data || []);
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading citizens:", err);
       const message = setCitizensErrorMessage(
         "Failed to load citizens: " + err.message,
       );
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -94,6 +101,24 @@ export default function Citizens() {
   useEffect(() => {
     loadCitizens();
     loadResidents();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadCitizens();
+      loadResidents();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   const [formData, setFormData] = useState({
@@ -242,6 +267,23 @@ export default function Citizens() {
       setPart(2);
     }
   }, [sortOption]);
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Citizens</title>
+        </Helmet>
+        <ErrorCard
+          title="Citizens Page Unavailable"
+          onRetry={() => {
+            loadCitizens();
+            loadResidents();
+          }}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>

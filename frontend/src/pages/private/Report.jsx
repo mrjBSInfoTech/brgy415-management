@@ -24,6 +24,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import ReportCard from "../../components/private/Report/ReportCard";
 import ReportForm from "../../components/private/Report/ReportForm";
 import ReportDelete from "../../components/private/Report/ReportDelete";
+import ErrorCard from "../../components/private/ErrorCard";
 
 
 // Slide Transition for Snackbar
@@ -44,6 +45,8 @@ export default function Report() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [loading, setLoading] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine !== false);
 
   // Fetch all reports from API
   const loadReports = async () => {
@@ -52,9 +55,11 @@ export default function Report() {
       const data = await fetchReports();
       setReports(data || []);
       setReportErrorMessage("");
+      setConnectionError(false);
     } catch (err) {
       console.error("Error loading reports:", err);
       setReportErrorMessage("Failed to load reports: " + err.message);
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -62,6 +67,23 @@ export default function Report() {
 
   useEffect(() => {
     loadReports();
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadReports();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   // Open Edit Report Modal
@@ -227,6 +249,17 @@ export default function Report() {
         return "primary.light";
     }
   };
+
+  if (!isOnline || connectionError) {
+    return (
+      <Box p={3}>
+        <Helmet titleTemplate="%s - Barangay Management System">
+          <title>Reports</title>
+        </Helmet>
+        <ErrorCard title="Reports Page Unavailable" onRetry={loadReports} />
+      </Box>
+    );
+  }
 
   return (
     <Box p={3}>

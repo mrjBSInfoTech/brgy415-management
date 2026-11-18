@@ -20,6 +20,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Stack, Avatar, Typography, Divider, IconButton } from "@mui/material";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { useBarangayTheme } from "../../theme/BarangayThemeContext";
+import { clearAuthData } from "../../utils/auth";
+import { logoutUser } from "../../api/private/authenticationAPI";
 import BarangayLogo from "../BarangayLogo";
 
 //Icons
@@ -97,21 +99,10 @@ export default function DashboardLayout({ children }) {
     navigate: (path) => navigate(path),
   };
 
-  const handleLogout = () => {
-    // Clear all stored data
-    removeToken("private");
-    localStorage.removeItem("username");
-    localStorage.removeItem("account_type");
-    localStorage.removeItem("can_add");
-    localStorage.removeItem("can_edit");
-    localStorage.removeItem("can_delete");
-    localStorage.removeItem("password_changed");
-    localStorage.removeItem("first_name");
-    localStorage.removeItem("last_name");
-    localStorage.removeItem("position");
-    localStorage.removeItem("image");
-
-    navigate("/", { replace: true }); // redirect to your Dashboard page
+  const handleLogout = async () => {
+    await logoutUser();
+    clearAuthData("private");
+    navigate("/private/login", { replace: true });
 
     // Clear browser history for extra security
     window.history.pushState(null, null, window.location.href);

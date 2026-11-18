@@ -24,12 +24,17 @@ import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import VerifiedUserOutlinedIcon from "@mui/icons-material/VerifiedUserOutlined";
 
-import { changePassword } from "../../api/public/authenticationAPI";
+import { changePassword, getPublicProfile } from "../../api/public/authenticationAPI";
 import ChangePassword from "../../components/public/Profile/ChangePassword";
+import ErrorCard from "../../components/public/ErrorCard";
 
 export default function Profile() {
   const [profile, setProfile] = useState({});
   const [openPasswordForm, setOpenPasswordForm] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== "undefined" ? navigator.onLine !== false : true
+  );
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -42,7 +47,13 @@ export default function Profile() {
     return value && value !== "undefined" && value !== "null" ? value : "";
   };
 
-  useEffect(() => {
+  const loadProfileData = async () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      setIsOnline(false);
+      setConnectionError(true);
+      return;
+    }
+
     setProfile({
       first_name: getStoredValue("public_first_name"),
       last_name: getStoredValue("public_last_name"),
@@ -54,6 +65,47 @@ export default function Profile() {
         getStoredValue("public_account_type"),
       date_created: getStoredValue("public_date_created"),
     });
+
+    try {
+      setConnectionError(false);
+      const liveProfile = await getPublicProfile();
+      if (liveProfile) {
+        setProfile((prev) => ({
+          ...prev,
+          first_name: liveProfile.first_name ?? prev.first_name,
+          last_name: liveProfile.last_name ?? prev.last_name,
+          email: liveProfile.email ?? prev.email,
+          contact: liveProfile.contact ?? prev.contact,
+          status: liveProfile.status ?? prev.status,
+          type: liveProfile.type ?? prev.type,
+          date_created: liveProfile.date_created ?? prev.date_created,
+        }));
+      }
+    } catch (error) {
+      if (!error.response) {
+        setConnectionError(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    loadProfileData();
+
+    const handleOnline = () => {
+      setIsOnline(true);
+      loadProfileData();
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setConnectionError(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
   }, []);
 
   const profileName =
@@ -148,6 +200,17 @@ export default function Profile() {
     },
   ];
 
+  if (!isOnline || connectionError) {
+    return (
+      <Box sx={{ minWidth: 0 }}>
+        <Helmet titleTemplate="%s - Error">
+          <title>Profile</title>
+        </Helmet>
+        <ErrorCard title="Profile Temporarily Unavailable" onRetry={loadProfileData} />
+      </Box>
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -157,7 +220,7 @@ export default function Profile() {
           "linear-gradient(135deg, #f5f7ff 0%, #ffffff 55%, #eef1ff 100%)",
       }}
     >
-      <Helmet titleTemplate="%s - Barangay Management System">
+      <Helmet titleTemplate={`%s - ${barangayInfo.brgy_name}`}>
         <title>Profile</title>
       </Helmet>
 

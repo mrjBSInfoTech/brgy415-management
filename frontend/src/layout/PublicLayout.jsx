@@ -30,7 +30,8 @@ import {
 import { useBarangayTheme } from "../theme/BarangayThemeContext";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import { clearAuthData, isAuthenticated } from "../utils/auth";
-import { isAuthenticated as isPublicAuthenticated } from "../api/public/authenticationAPI";
+import { isAuthenticated as isPublicAuthenticated, logoutUser } from "../api/public/authenticationAPI";
+// Icons
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import SearchIcon from "@mui/icons-material/Search";
 import Settings from "@mui/icons-material/Settings";
@@ -122,7 +123,8 @@ function PublicRoute({ children }) {
     setLoggedIn(isPublicAuthenticated());
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutUser();
     clearAuthData("public");
     navigate("/public/login", { replace: true });
 
@@ -223,7 +225,7 @@ function PublicRoute({ children }) {
                 display: { xs: "none", lg: "block" },
               }}
             >
-              {barangayInfo.brgy_name || "Barangay Name"}
+              {barangayInfo.brgy_name || "Barangay..."}
             </Typography>
           </Box>
 

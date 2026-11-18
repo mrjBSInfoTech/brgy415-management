@@ -3,8 +3,13 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import db from "../database/db.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import {
+  clearAuthCookieOptions,
+  getAuthCookieOptions,
+} from "../utils/authCookies.js";
 
 const router = express.Router();
+
 // Login route
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
@@ -44,15 +49,20 @@ router.post("/login", (req, res) => {
     const token = jwt.sign(
       {
         id: user.official_account_id,
+        official_account_id: user.official_account_id,
         username: user.username,
         account_type: user.account_type,
+        password_changed: user.password_changed,
+        role: "private",
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1d" },
+      { expiresIn: "1d", algorithm: "HS256" }
     );
 
+    res.cookie("private_token", token, getAuthCookieOptions(1));
+
     res.json({
-      token,
+      success: true,
       official_account_id: user.official_account_id,
       username: user.username,
       account_type: user.account_type,
@@ -65,6 +75,39 @@ router.post("/login", (req, res) => {
       can_delete: user.can_delete,
       password_changed: user.password_changed,
     });
+  });
+});
+
+// Logout route
+router.post("/logout", (req, res) => {
+  res.clearCookie("private_token", clearAuthCookieOptions());
+  res.json({ success: true, message: "Logged out successfully" });
+});
+
+// Get current authenticated official
+router.get("/me", authenticateToken, (req, res) => {
+  const officialId = req.user.official_account_id || req.user.id;
+  const sql = `
+    SELECT 
+      oa.official_account_id, 
+      oa.username, 
+      oa.account_type, 
+      oa.can_add, 
+      oa.can_edit, 
+      oa.can_delete,
+      oa.password_changed,
+      o.first_name, 
+      o.last_name, 
+      o.position,
+      o.image
+    FROM official_account oa
+    INNER JOIN official o ON oa.official_account_id = o.official_account_id
+    WHERE oa.official_account_id = ?`;
+
+  db.query(sql, [officialId], (err, result) => {
+    if (err) return res.status(500).json({ message: "Database error" });
+    if (!result.length) return res.status(404).json({ message: "Official not found" });
+    res.json(result[0]);
   });
 });
 
@@ -83,40 +126,53 @@ router.put("/changePassword", authenticateToken, async (req, res) => {
 
   // First, get the user's current password to verify
   db.query(
-    "SELECT password FROM official_account WHERE official_account_id = ?",
+    "SELECT password, username, account_type, password_changed FROM official_account WHERE official_account_id = ?",
     [userId],
     async (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
-      
+
       if (result.length === 0) {
         return res.status(404).json({ error: "User not found" });
       }
 
+      const account = result[0];
+
       // Verify current password
-      const isMatch = bcrypt.compareSync(currentPassword, result[0].password);
+      const isMatch = bcrypt.compareSync(currentPassword, account.password);
       if (!isMatch) {
         return res.status(401).json({ error: "Current password is incorrect" });
       }
 
       // Hash new password
       const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const nextPasswordChanged = Number(account.password_changed ?? 0) + 1;
 
-      // Build dynamic update query (similar to officialAccount.js pattern)
-      const updates = [];
-      const values = [];
+      const sql =
+        "UPDATE official_account SET password = ?, password_changed = ? WHERE official_account_id = ?";
 
-      updates.push("password = ?");
-      values.push(hashedPassword);
+      db.query(sql, [hashedPassword, nextPasswordChanged, userId], (updateErr) => {
+        if (updateErr) return res.status(500).json({ error: updateErr.message });
 
-      updates.push("password_changed = password_changed + 1");
+        // Re-issue cookie with updated password_changed counter
+        const nextToken = jwt.sign(
+          {
+            id: userId,
+            official_account_id: userId,
+            username: account.username,
+            account_type: account.account_type,
+            password_changed: nextPasswordChanged,
+            role: "private",
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: "1d", algorithm: "HS256" }
+        );
 
-      values.push(userId);
+        res.cookie("private_token", nextToken, getAuthCookieOptions(1));
 
-      const sql = `UPDATE official_account SET ${updates.join(", ")} WHERE official_account_id = ?`;
-
-      db.query(sql, values, (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: "✅ Password updated successfully" });
+        res.json({
+          message: "✅ Password updated successfully",
+          password_changed: nextPasswordChanged,
+        });
       });
     }
   );
