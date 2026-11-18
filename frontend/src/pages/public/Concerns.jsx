@@ -39,6 +39,12 @@ function SlideTransition(props) {
   return <Slide {...props} direction="up" />;
 }
 
+const isSafeUrl = (url) => {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  return /^https?:\/\//i.test(trimmed);
+};
+
 export default function Concerns() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -121,7 +127,7 @@ export default function Concerns() {
     { icon: <FacebookIcon />, href: otherInfo?.facebook_link?.trim(), name: "Facebook" },
     { icon: <InstagramIcon />, href: otherInfo?.instagram_link?.trim(), name: "Instagram" },
     { icon: <XIcon />, href: otherInfo?.x_link?.trim(), name: "X" },
-  ].filter((social) => Boolean(social.href));
+  ].filter((social) => isSafeUrl(social.href));
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#f8fafc", display: "flex", flexDirection: "column" }}>

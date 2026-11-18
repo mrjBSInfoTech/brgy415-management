@@ -76,13 +76,24 @@ router.post("/bulk", authenticateToken, (req, res) => {
     return res.status(400).json({ error: "No household data provided." });
   }
 
+  const validHouseholds = households.filter(
+    (h) =>
+      (h.house_number && String(h.house_number).trim()) ||
+      (h.street_number && String(h.street_number).trim()) ||
+      (h.head_family && String(h.head_family).trim())
+  );
+
+  if (validHouseholds.length === 0) {
+    return res.status(400).json({ error: "No valid household records found to import." });
+  }
+
   const sql = `
     INSERT INTO household 
     (house_number, street_number, barangay, household_members, head_family) 
     VALUES ?
   `;
 
-  const values = households.map((h) => [
+  const values = validHouseholds.map((h) => [
     h.house_number || "",
     h.street_number || "",
     h.barangay || "",

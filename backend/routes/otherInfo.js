@@ -4,9 +4,29 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-const normalizeLink = (value) => {
-  if (typeof value !== "string") return "";
-  return value.trim();
+const sanitizeUrl = (value) => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  // Block dangerous pseudo-protocols (XSS prevention)
+  if (/^(javascript|data|vbscript):/i.test(trimmed)) {
+    return null;
+  }
+  // Enforce http/https
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  // If user entered e.g. facebook.com/... or www.facebook.com/..., default to https://
+  if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+  return null;
+};
+
+const normalizeText = (value) => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed || null;
 };
 
 router.get("/", (req, res) => {
@@ -35,6 +55,11 @@ router.get("/", (req, res) => {
 });
 
 router.put("/:id", authenticateToken, (req, res) => {
+  // 1. Role-Based Access Control: ensure caller has official Admin/Staff role
+  if (!["Admin", "Staff"].includes(req.user?.account_type)) {
+    return res.status(403).json({ error: "Access denied. Admin or Staff privileges required." });
+  }
+
   const { id } = req.params;
   const {
     email,
@@ -46,12 +71,26 @@ router.put("/:id", authenticateToken, (req, res) => {
     address,
   } = req.body;
 
-  const normalizedFacebook = normalizeLink(facebook_link);
-  const normalizedInstagram = normalizeLink(instagram_link);
-  const normalizedX = normalizeLink(x_link);
+  // 2. Reject dangerous URL schemes
+  const rawFacebook = typeof facebook_link === "string" ? facebook_link.trim() : "";
+  const rawInstagram = typeof instagram_link === "string" ? instagram_link.trim() : "";
+  const rawX = typeof x_link === "string" ? x_link.trim() : "";
 
-  if (!normalizedFacebook && !normalizedInstagram && !normalizedX) {
-    return res.status(400).json({ error: "At least one social media link is required" });
+  if (
+    /^(javascript|data|vbscript):/i.test(rawFacebook) ||
+    /^(javascript|data|vbscript):/i.test(rawInstagram) ||
+    /^(javascript|data|vbscript):/i.test(rawX)
+  ) {
+    return res.status(400).json({ error: "Invalid URL scheme detected. Dangerous protocols are not allowed." });
+  }
+
+  // 3. Sanitize and format valid URLs
+  const sanitizedFacebook = sanitizeUrl(facebook_link);
+  const sanitizedInstagram = sanitizeUrl(instagram_link);
+  const sanitizedX = sanitizeUrl(x_link);
+
+  if (!sanitizedFacebook && !sanitizedInstagram && !sanitizedX) {
+    return res.status(400).json({ error: "At least one valid social media link is required (e.g. https://facebook.com/yourpage)." });
   }
 
   const sql = `
@@ -69,13 +108,13 @@ router.put("/:id", authenticateToken, (req, res) => {
   db.query(
     sql,
     [
-      normalizeLink(email) || null,
-      normalizeLink(tp_number) || null,
-      normalizeLink(phone_number) || null,
-      normalizedFacebook || null,
-      normalizedInstagram || null,
-      normalizedX || null,
-      normalizeLink(address) || null,
+      normalizeText(email),
+      normalizeText(tp_number),
+      normalizeText(phone_number),
+      sanitizedFacebook,
+      sanitizedInstagram,
+      sanitizedX,
+      normalizeText(address),
       id,
     ],
     (err, result) => {

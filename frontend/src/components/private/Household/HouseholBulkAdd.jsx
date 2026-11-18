@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import * as XLSX from "xlsx";
-import { bulkAddResidents } from "../../../api/private/residentAPI";
+import { bulkAddHouseholds } from "../../../api/private/householdAPI";
 
 const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
@@ -36,29 +36,41 @@ export default function HouseholdBulkAdd({ open, handleClose, onSuccess, showSna
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        const bstr = evt.target.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
+        const buffer = evt.target.result;
+        const wb = XLSX.read(buffer, { type: "array" });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws, { raw: false });
 
-        const formattedData = data.map((row) => ({
-          first_name: row["First Name"] || row.first_name || "",
-          middle_name: row["Middle Name"] || row.middle_name || "",
-          last_name: row["Last Name"] || row.last_name || "",
-          gender: row["Gender"] || row.gender || "",
-          dob: row["Date of Birth"] || row.dob || "",
-          address: row["Address"] || row.address || "",
-          phone_number: String(row["Phone Number"] || row.phone_number || ""),
-          email: row["Email"] || row.email || "",
-        }));
+        const findVal = (row, ...keys) => {
+          for (const k of keys) {
+            if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== "") {
+              return String(row[k]).trim();
+            }
+          }
+          return "";
+        };
+
+        const formattedData = data
+          .map((row) => ({
+            house_number: findVal(row, "House Number", "house_number", "House No", "House #", "HouseNum"),
+            street_number: findVal(row, "Street Number", "street_number", "Street", "Street Name", "Street No", "Street#"),
+            barangay: findVal(row, "Barangay", "barangay", "Brgy"),
+            household_members: findVal(row, "Household Members", "household_members", "Members", "No. of Members", "Household Count"),
+            head_family: findVal(row, "Household Head", "Head Family", "Head of Family", "head_family", "Head"),
+          }))
+          .filter((h) => h.house_number || h.street_number || h.head_family);
+
+        if (formattedData.length === 0) {
+          setError("No valid household records found. Please ensure the columns match the template.");
+        }
 
         setParsedData(formattedData);
       } catch (err) {
         setError("Failed to parse the file. Ensure it is a valid Excel or CSV file.");
       }
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   const handleSubmit = async () => {
@@ -69,7 +81,7 @@ export default function HouseholdBulkAdd({ open, handleClose, onSuccess, showSna
 
     setIsSubmitting(true);
     try {
-      await bulkAddResidents(parsedData);
+      await bulkAddHouseholds(parsedData);
       showSnackbar(`Successfully imported ${parsedData.length} households`, "success");
       onSuccess();
       handleCloseDialog();

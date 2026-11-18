@@ -10,6 +10,12 @@ import HomeIcon from "@mui/icons-material/Home";
 import "./Footer.css";
 import { fetchOtherInfo } from "../../api/public/otherInfoAPI";
 
+const isSafeUrl = (url) => {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  return /^https?:\/\//i.test(trimmed);
+};
+
 const Footer = () => {
   const [otherInfo, setOtherInfo] = useState(null);
 
@@ -36,9 +42,9 @@ const Footer = () => {
   const mobile = otherInfo?.phone_number?.trim() || "+63 912 345 6789";
   const email = otherInfo?.email?.trim() || "info@barangay415.gov.ph";
 
-  const facebookLink = otherInfo?.facebook_link?.trim();
-  const instagramLink = otherInfo?.instagram_link?.trim();
-  const xLink = otherInfo?.x_link?.trim();
+  const facebookLink = isSafeUrl(otherInfo?.facebook_link) ? otherInfo.facebook_link.trim() : null;
+  const instagramLink = isSafeUrl(otherInfo?.instagram_link) ? otherInfo.instagram_link.trim() : null;
+  const xLink = isSafeUrl(otherInfo?.x_link) ? otherInfo.x_link.trim() : null;
 
   return (
     <footer className="footer">

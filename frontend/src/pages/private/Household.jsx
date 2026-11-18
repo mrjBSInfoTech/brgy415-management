@@ -347,7 +347,10 @@ export default function Household() {
       <HouseholBulkAdd
         open={openBulkAdd}
         handleClose={() => setOpenBulkAdd(false)}
-        onSuccess={loadResidents}
+        onSuccess={() => {
+          loadHouseholds();
+          loadResidents();
+        }}
         showSnackbar={showSnackbar}
       />
       <HouseholdDelete

@@ -19,6 +19,43 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
+// Helper to reliably format Excel dates into YYYY-MM-DD for MySQL
+const normalizeDate = (val) => {
+  if (!val) return "";
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const year = val.getFullYear();
+    const month = String(val.getMonth() + 1).padStart(2, "0");
+    const day = String(val.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  const str = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+  // Check MM/DD/YYYY or DD/MM/YYYY
+  const parts = str.split(/[/.-]/);
+  if (parts.length === 3) {
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD
+      return `${parts[0]}-${parts[1].padStart(2, "0")}-${parts[2].padStart(2, "0")}`;
+    } else if (parts[2].length === 4) {
+      // MM/DD/YYYY or DD/MM/YYYY
+      const year = parts[2];
+      const month = parts[0].padStart(2, "0");
+      const day = parts[1].padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  return str;
+};
+
 export default function ResidentBulkAdd({ open, handleClose, onSuccess, showSnackbar }) {
   const fileInputRef = useRef(null);
   const [parsedData, setParsedData] = useState([]);
@@ -36,29 +73,44 @@ export default function ResidentBulkAdd({ open, handleClose, onSuccess, showSnac
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
-        const bstr = evt.target.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
+        const buffer = evt.target.result;
+        const wb = XLSX.read(buffer, { type: "array", cellDates: true });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws, { raw: false });
 
-        const formattedData = data.map((row) => ({
-          first_name: row["First Name"] || row.first_name || "",
-          middle_name: row["Middle Name"] || row.middle_name || "",
-          last_name: row["Last Name"] || row.last_name || "",
-          gender: row["Gender"] || row.gender || "",
-          dob: row["Date of Birth"] || row.dob || "",
-          address: row["Address"] || row.address || "",
-          phone_number: String(row["Phone Number"] || row.phone_number || ""),
-          email: row["Email"] || row.email || "",
-        }));
+        const findVal = (row, ...keys) => {
+          for (const k of keys) {
+            if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== "") {
+              return String(row[k]).trim();
+            }
+          }
+          return "";
+        };
+
+        const formattedData = data
+          .map((row) => ({
+            first_name: findVal(row, "First Name", "first_name", "FirstName", "First"),
+            middle_name: findVal(row, "Middle Name", "middle_name", "MiddleName", "Middle"),
+            last_name: findVal(row, "Last Name", "last_name", "LastName", "Last", "Surname"),
+            gender: findVal(row, "Gender", "gender", "Sex", "sex"),
+            dob: normalizeDate(findVal(row, "Date of Birth", "dob", "Birthday", "BirthDate", "Birth Date")),
+            address: findVal(row, "Address", "address"),
+            phone_number: String(findVal(row, "Phone Number", "phone_number", "Phone", "Contact Number", "Mobile")),
+            email: findVal(row, "Email", "email", "Email Address"),
+          }))
+          .filter((r) => r.first_name || r.last_name);
+
+        if (formattedData.length === 0) {
+          setError("No valid resident records found. Please ensure the columns match the template.");
+        }
 
         setParsedData(formattedData);
       } catch (err) {
         setError("Failed to parse the file. Ensure it is a valid Excel or CSV file.");
       }
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
 
   const handleSubmit = async () => {

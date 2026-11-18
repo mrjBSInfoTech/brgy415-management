@@ -118,13 +118,23 @@ router.post("/bulk", authenticateToken, (req, res) => {
     return res.status(400).json({ error: "No resident data provided." });
   }
 
+  const validResidents = residents.filter(
+    (r) =>
+      (r.first_name && String(r.first_name).trim()) ||
+      (r.last_name && String(r.last_name).trim())
+  );
+
+  if (validResidents.length === 0) {
+    return res.status(400).json({ error: "No valid resident records found to import." });
+  }
+
   const sql = `
     INSERT INTO resident 
     (first_name, middle_name, last_name, gender, dob, address, phone_number, email) 
     VALUES ?
   `;
 
-  const values = residents.map((r) => [
+  const values = validResidents.map((r) => [
     r.first_name || "",
     r.middle_name || null,
     r.last_name || "",

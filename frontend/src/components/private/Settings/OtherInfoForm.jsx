@@ -88,6 +88,12 @@ export default function OtherInfoForm({ open, handleClose, onSubmit, initialData
       return;
     }
 
+    const hasDangerousProtocol = (val) => Boolean(val && /^(javascript|data|vbscript):/i.test(val.trim()));
+    if (hasDangerousProtocol(facebook) || hasDangerousProtocol(instagram) || hasDangerousProtocol(x)) {
+      setSocialError("Invalid link format. Links must be standard web URLs (e.g. https://...).");
+      return;
+    }
+
     setSocialError("");
 
     const payload = {
