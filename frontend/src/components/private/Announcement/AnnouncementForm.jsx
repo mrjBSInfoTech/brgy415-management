@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Dialog,
   DialogTitle,
@@ -157,7 +158,7 @@ function AnnouncementForm({
 
       // Set image preview for existing announcement
       if (selectedAnnouncement.image) {
-        setImagePreview(`http://localhost:5000/uploads/uploadAnnouncement/${selectedAnnouncement.image}`);
+        setImagePreview(getUploadUrl("uploadAnnouncement", selectedAnnouncement.image));
       } else {
         setImagePreview(null);
       }

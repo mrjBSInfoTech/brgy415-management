@@ -7,6 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import BarangayIcon from "../../../assets/BarangayIcon.png";
+import { getUploadUrl } from "../../../utils/apiConfig";
 
 export default function AnnouncementCard({ announcements }) {
   const formatDate = (dateString) => {
@@ -92,7 +93,7 @@ export default function AnnouncementCard({ announcements }) {
               }}
               image={
                 announcement.image
-                  ? `http://localhost:5000/uploads/uploadAnnouncement/${encodeURIComponent(announcement.image)}`
+                  ? getUploadUrl("uploadAnnouncement", announcement.image)
                   : BarangayIcon
               }
               alt={announcement.title}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Dialog,
   DialogTitle,
@@ -162,7 +163,7 @@ function OfficialForm({
       // Set image preview for existing official only
       if (selectedOfficial.image) {
         setImagePreview(
-          `http://localhost:5000/uploads/uploadOfficial/${selectedOfficial.image}`,
+          getUploadUrl("uploadOfficial", selectedOfficial.image),
         );
       } else {
         setImagePreview(null);

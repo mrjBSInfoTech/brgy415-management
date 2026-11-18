@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Box,
   Button,
@@ -92,8 +93,8 @@ export default function ResidentCard({ residents, onEdit, onDelete, households =
               }}
               image={
                 resident.image
-                  ? `http://localhost:5000/uploads/uploadResident/${encodeURIComponent(resident.image)}`
-                  : `http://localhost:5000/uploads/uploadResident/profile.jpg`
+                  ? getUploadUrl("uploadResident", resident.image)
+                  : getUploadUrl("uploadResident", "profile.jpg")
               }
               onError={(e) => {
                 console.error("Image failed to load:", resident.image);

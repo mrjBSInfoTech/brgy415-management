@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Box,
   Button,
@@ -65,8 +66,8 @@ export default function SupplierCard({ supplier, onEdit, onDelete }) {
           }}
           image={
             supplier.image
-              ? `http://localhost:5000/uploads/uploadSupplier/${supplier.image}`
-              : `http://localhost:5000/uploads/uploadSupplier/profile.jpg`
+              ? getUploadUrl("uploadSupplier", supplier.image)
+              : getUploadUrl("uploadSupplier", "profile.jpg")
           }
           alt={supplier.name}
           onError={(e) => {

@@ -1,10 +1,11 @@
 import axios from "axios";
+import { API_BASE_URL } from "../../utils/apiConfig";
 
-const API_URL = "http://localhost:5000/api/files"; // backend endpoint
+const API_URL = `${API_BASE_URL}/files`; // backend endpoint
 
 // Create an Axios instance (optional but useful)
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
   timeout: 5000, // wait max 5 seconds
 });

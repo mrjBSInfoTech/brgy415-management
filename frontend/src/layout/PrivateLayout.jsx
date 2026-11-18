@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState, useEffect } from "react";
+import { getUploadUrl } from "../utils/apiConfig";
 import { AppProvider } from "@toolpad/core";
 import Backdrop from "@mui/material/Backdrop";
 import Button from "@mui/material/Button";
@@ -268,8 +269,8 @@ export default function DashboardLayout({ children }) {
         <Avatar
           src={
             image
-              ? `http://localhost:5000/uploads/uploadOfficial/${encodeURIComponent(image)}`
-              : `http://localhost:5000/uploads/uploadOfficial/profile.jpg`
+              ? getUploadUrl("uploadOfficial", image)
+              : getUploadUrl("uploadOfficial", "profile.jpg")
           }
           alt="Brgy. 415"
           sx={{ width: 40, height: 40 }}

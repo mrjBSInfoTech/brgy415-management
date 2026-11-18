@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BACKEND_BASE_URL } from "../../../utils/apiConfig";
 import {
   Box,
   Table,
@@ -38,7 +39,7 @@ const getAttachmentUrl = (concern) => {
   // Relative upload URLs come from the same backend as the concerns API.
   if (!/^https?:\/\//i.test(path) && !path.startsWith("/uploads/")) return null;
   try {
-    const url = new URL(path, "http://localhost:5000");
+    const url = new URL(path, BACKEND_BASE_URL);
     return ["http:", "https:"].includes(url.protocol) ? url.href : null;
   } catch {
     return null;

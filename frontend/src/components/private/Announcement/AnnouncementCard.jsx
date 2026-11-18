@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Avatar,
   Box,
@@ -153,7 +154,7 @@ export default function AnnouncementCard({ announcements, onEdit, onDelete }) {
               }}
               image={
                 announcement.image
-                  ? `http://localhost:5000/uploads/uploadAnnouncement/${encodeURIComponent(announcement.image)}`
+                  ? getUploadUrl("uploadAnnouncement", announcement.image)
                   : "https://via.placeholder.com/600x400?text=No+Image"
               }
               alt={announcement.title}

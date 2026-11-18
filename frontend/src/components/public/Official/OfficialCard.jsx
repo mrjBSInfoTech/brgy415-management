@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Box,
   Button,
@@ -75,8 +76,8 @@ export default function OfficialCard({ officials, columns}) {
               }}
               image={
                 official.image
-                  ? `http://localhost:5000/uploads/uploadOfficial/${encodeURIComponent(official.image)}`
-                  : `http://localhost:5000/uploads/uploadOfficial/profile.jpg`
+                  ? getUploadUrl("uploadOfficial", official.image)
+                  : getUploadUrl("uploadOfficial", "profile.jpg")
               }
               onError={(e) => {
                 console.error("Image failed to load:", official.image);

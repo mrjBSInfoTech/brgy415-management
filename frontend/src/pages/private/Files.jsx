@@ -35,6 +35,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import FilesForm from "../../components/private/Files/FilesForm";
 import FilesDelete from "../../components/private/Files/FilesDelete";
 import ErrorCard from "../../components/private/ErrorCard";
+import { getUploadUrl } from "../../utils/apiConfig";
 import { fetchFiles, addFile, deleteFile } from "../../api/private/fileAPI";
 
 // Slide Transition for Snackbar
@@ -386,7 +387,7 @@ export default function Files() {
                           size="small"
                           color="success"
                           onClick={() => {
-                            const fileUrl = `http://localhost:5000/uploads/uploadFiles/pdf/${file.file_name}`;
+                            const fileUrl = getUploadUrl("uploadFiles/pdf", file.file_name);
                             window.open(fileUrl, "_blank");
                           }}
                         >
@@ -398,7 +399,7 @@ export default function Files() {
                           size="small"
                           color="primary"
                           onClick={() => {
-                            const fileUrl = `http://localhost:5000/uploads/uploadFiles/pdf/${file.file_name}`;
+                            const fileUrl = getUploadUrl("uploadFiles/pdf", file.file_name);
                             window.open(fileUrl, "_blank");
                           }}
                         >

@@ -1,4 +1,5 @@
 import { useState, memo } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Box,
   Button,
@@ -99,8 +100,8 @@ const AccessCardItem = memo(function AccessCardItem({
             }}
             image={
               official.image
-                ? `http://localhost:5000/uploads/uploadOfficial/${encodeURIComponent(official.image)}`
-                : `http://localhost:5000/uploads/uploadOfficial/profile.jpg`
+                ? getUploadUrl("uploadOfficial", official.image)
+                : getUploadUrl("uploadOfficial", "profile.jpg")
             }
             loading="lazy"
             onError={(e) => {

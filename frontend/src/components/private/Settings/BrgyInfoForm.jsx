@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Dialog,
   DialogTitle,
@@ -75,7 +76,7 @@ export default function BrgyInfoForm({ open, handleClose, onSubmit, initialData 
         if (initialData.brgy_logo === "BarangayIcon.png") {
           setImagePreview("BarangayIcon.png"); // Handled as fallback
         } else {
-          setImagePreview(`http://localhost:5000/uploads/uploadOfficial/${initialData.brgy_logo}`);
+          setImagePreview(getUploadUrl("uploadOfficial", initialData.brgy_logo));
         }
       }
     }

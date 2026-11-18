@@ -38,6 +38,7 @@ import PortForm from "../../components/private/Settings/PortForm";
 import BrgyInfoForm from "../../components/private/Settings/BrgyInfoForm";
 import OtherInfoForm from "../../components/private/Settings/OtherInfoForm";
 import ErrorCard from "../../components/private/ErrorCard";
+import { getUploadUrl } from "../../utils/apiConfig";
 import InfoIcon from "@mui/icons-material/Info";
 
 // Slide Transition for Snackbar
@@ -422,7 +423,7 @@ export default function Settings() {
               <Avatar
                 src={
                   profile.image
-                    ? `http://localhost:5000/uploads/uploadOfficial/${encodeURIComponent(profile.image)}`
+                    ? getUploadUrl("uploadOfficial", profile.image)
                     : undefined
                 }
                 imgProps={{

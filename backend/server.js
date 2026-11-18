@@ -36,6 +36,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.set("trust proxy", 1);
 
 // Security: Hide server signature (OWASP Server Leaks via X-Powered-By)
 app.disable("x-powered-by");
@@ -55,14 +56,20 @@ app.use("/api", (req, res, next) => {
 });
 
 // Configure CORS with allowed origins
+const configuredOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
   "http://127.0.0.1:5173",
   "http://127.0.0.1:5174",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
+  "https://brgy415-management.vercel.app",
+  ...configuredOrigins,
+];
 
 app.use(
   cors({

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
     Box,
     Button,
@@ -64,9 +65,7 @@ export default function ReportCard({ reports = [], onEdit, onDelete }) {
                 const position = report.position || "Barangay Official";
 
                 const attachmentUrl = report.attachment
-                    ? `http://localhost:5000/uploads/uploadReport/${encodeURIComponent(
-                        report.attachment
-                    )}`
+                    ? getUploadUrl("uploadReport", report.attachment)
                     : null;
 
                 const formattedDate = report.date_created
@@ -108,8 +107,8 @@ export default function ReportCard({ reports = [], onEdit, onDelete }) {
                                         alt={report.first_name.charAt(0).toUpperCase()}
                                         src={
                                             report.image
-                                                ? `http://localhost:5000/uploads/uploadOfficial/${encodeURIComponent(report.image)}`
-                                                : `http://localhost:5000/uploads/uploadOfficial/profile.jpg`
+                                                ? getUploadUrl("uploadOfficial", report.image)
+                                                : getUploadUrl("uploadOfficial", "profile.jpg")
                                         }
                                     />
                                     <Box>

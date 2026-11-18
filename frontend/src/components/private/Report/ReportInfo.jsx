@@ -1,4 +1,5 @@
 import React from "react";
+import { getUploadUrl } from "../../../utils/apiConfig";
 import {
   Dialog,
   DialogTitle,
@@ -36,9 +37,7 @@ export default function ReportInfo({ open, handleClose, selectedReport }) {
   };
 
   const attachmentUrl = selectedReport.attachment
-    ? `http://localhost:5000/uploads/uploadReport/${encodeURIComponent(
-        selectedReport.attachment
-      )}`
+    ? getUploadUrl("uploadReport", selectedReport.attachment)
     : null;
 
   return (
