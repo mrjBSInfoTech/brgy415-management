@@ -82,6 +82,7 @@ export function createAlarmService({
           }
           connected = client.connected;
           connectionError = null;
+          console.log("✅ Connected to MQTT broker");
         });
       });
 
@@ -162,11 +163,19 @@ export function createAlarmService({
       }
     }
 
-    if (!connected || !client?.connected || deviceStatus === "offline") {
+    if (!connected || !client?.connected) {
       return record({
         ...result,
         status: "unavailable",
-        message: "Alarm not sent: the MQTT connection or ESP32 is offline. This command will not be replayed later.",
+        message: "Alarm not sent: the backend is not connected to MQTT. This command will not be replayed later.",
+      });
+    }
+
+    if (deviceStatus === "offline") {
+      return record({
+        ...result,
+        status: "unavailable",
+        message: "Alarm not sent: the ESP32 is offline. This command will not be replayed later.",
       });
     }
 

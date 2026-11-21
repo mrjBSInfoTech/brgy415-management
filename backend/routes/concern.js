@@ -145,7 +145,7 @@ router.post("/", authenticateToken, async (req, res) => {
       classification = await classifyMessageWithAI(message);
     } catch {
       return res.status(503).json({
-        message: "Message could not be sent because the validation service is unavailable. Please try again later.",
+        message: "Message is unavailable. Please try again later.",
       });
     }
 

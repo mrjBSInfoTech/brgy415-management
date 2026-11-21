@@ -4,7 +4,9 @@ import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Button,
+  CircularProgress,
   Grid,
+  LinearProgress,
   Link,
   MenuItem,
   Paper,
@@ -66,6 +68,7 @@ export default function Concerns() {
   });
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadOtherInfo = async () => {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
@@ -123,6 +126,7 @@ export default function Concerns() {
   }, []);
 
   const handleSubmitConcern = async () => {
+    if (isSubmitting) return;
     if (!formData.message_type) {
       showSnackbar("Please select a message type", "error");
       return;
@@ -132,6 +136,7 @@ export default function Concerns() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       await addConcern(formData);
       showSnackbar("Concern successfully submitted", "success");
@@ -139,6 +144,8 @@ export default function Concerns() {
       setAttachment(null);
     } catch (err) {
       showSnackbar(err.message || "Error saving concern", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -238,6 +245,7 @@ export default function Concerns() {
                 <TextField
                   select
                   fullWidth
+                  disabled={isSubmitting}
                   label="Message Type"
                   value={formData.message_type}
                   onChange={(e) => setFormData({ ...formData, message_type: e.target.value })}
@@ -251,6 +259,7 @@ export default function Concerns() {
 
                 <TextField
                   fullWidth
+                  disabled={isSubmitting}
                   label="Message Details"
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -261,10 +270,18 @@ export default function Concerns() {
                 />
 
                 <Box>
-                  <Button component="label" variant="outlined" fullWidth startIcon={<CloudUploadIcon />} sx={{ textTransform: "none", color:"var(--primary-color)", borderColor:"var(--primary-color)"}}>
+                  <Button
+                    component="label"
+                    variant="outlined"
+                    fullWidth
+                    disabled={isSubmitting}
+                    startIcon={<CloudUploadIcon />}
+                    sx={{ textTransform: "none", color: "var(--primary-color)", borderColor: "var(--primary-color)" }}
+                  >
                     Add attachment
                     <input
                       hidden
+                      disabled={isSubmitting}
                       type="file"
                       accept="image/*,.pdf,.doc,.docx,.txt"
                       onChange={(event) => {
@@ -296,6 +313,7 @@ export default function Concerns() {
                       <Button
                         size="small"
                         color="error"
+                        disabled={isSubmitting}
                         startIcon={<DeleteOutlineIcon />}
                         onClick={() => setAttachment(null)}
                         sx={{ textTransform: "none" }}
@@ -306,11 +324,22 @@ export default function Concerns() {
                   </Box>
                 )}
 
+                {isSubmitting && (
+                  <Box sx={{ width: "100%" }}>
+                    <LinearProgress sx={{ borderRadius: 1, height: 6 }} />
+                    <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.75, textAlign: "center" }}>
+                      Validating and submitting your concern...
+                    </Typography>
+                  </Box>
+                )}
+
                 <Button
                   type="submit"
                   variant="contained"
                   size="large"
-                  endIcon={<SendIcon />}
+                  disabled={isSubmitting}
+                  startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : undefined}
+                  endIcon={isSubmitting ? undefined : <SendIcon />}
                   sx={{
                     mt: 1,
                     py: 1.5,
@@ -321,9 +350,14 @@ export default function Concerns() {
                     textTransform: "none",
                     boxShadow: "0 4px 14px rgba(30, 31, 135, 0.35)",
                     "&:hover": { filter: "brightness(0.85)" },
+                    "&.Mui-disabled": {
+                      bgcolor: "var(--primary-color)",
+                      color: "white",
+                      opacity: 0.75,
+                    },
                   }}
                 >
-                  Submit Concern
+                  {isSubmitting ? "Validating Concern..." : "Submit Concern"}
                 </Button>
 
                 <Typography variant="caption" color="text.secondary" sx={{ textAlign: "center", lineHeight: 1.6 }}>

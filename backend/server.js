@@ -71,11 +71,14 @@ const allowedOrigins = [
   ...configuredOrigins,
 ];
 
+const isAllowedVercelPreview = (origin) =>
+  /^https:\/\/brgy415-management-[a-z0-9-]+\.vercel\.app$/i.test(origin);
+
 app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || isAllowedVercelPreview(origin)) {
         return callback(null, true);
       }
       return callback(new Error("Blocked by CORS policy"));
