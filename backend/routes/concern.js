@@ -45,7 +45,12 @@ const triggerEspAlert = async (urgency) => {
   try {
     const delivery = await alarm.sendAlert(urgency);
     if (!["confirmed", "sent"].includes(delivery.status)) {
-      console.warn("Concern saved; alarm delivery:", delivery.status);
+      console.warn(
+        "Concern saved; alarm delivery:",
+        delivery.status,
+        `(${delivery.transport})`,
+        delivery.message || "",
+      );
     }
     return delivery;
   } catch (error) {

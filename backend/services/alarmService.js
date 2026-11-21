@@ -113,8 +113,9 @@ export function createAlarmService({
       };
       client.on("offline", disconnected);
       client.on("close", disconnected);
-      client.on("error", () => {
+      client.on("error", (error) => {
         // Do not expose broker URLs or credentials in API responses or logs.
+        console.error("MQTT connection error code:", error?.code || "UNKNOWN");
         connectionError = "Cannot connect to MQTT. Check the server, login, and internet connection.";
       });
     } catch {
